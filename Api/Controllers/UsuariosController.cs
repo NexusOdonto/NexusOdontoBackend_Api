@@ -54,9 +54,9 @@ namespace Api.Controllers
             return Ok(response);
         }
 
-        [HttpPut("{id:long}")]
+        [HttpPut("{id:guid}")]
         public async Task<ActionResult<UsuarioResponseDto>> Editar(
-            long id,
+            Guid id,
             [FromBody] UpdateUsuarioRequestDto request,
             CancellationToken cancellationToken)
         {
@@ -84,9 +84,9 @@ namespace Api.Controllers
             });
         }
 
-        [HttpPatch("{id:long}/desactivar")]
+        [HttpPatch("{id:guid}/desactivar")]
         public async Task<IActionResult> Desactivar(
-            long id,
+            Guid id,
             CancellationToken cancellationToken)
         {
             var usuario = await _usuarioRepository.GetByIdWithRoleAsync(id, cancellationToken);

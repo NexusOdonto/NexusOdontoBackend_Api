@@ -8,6 +8,6 @@ namespace Application.DTOs.Auth
 
         public string Password { get; set; } = string.Empty;
 
-        public long RolId { get; set; }
+        public Guid RolId { get; set; }
     }
 }

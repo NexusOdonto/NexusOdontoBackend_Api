@@ -4,7 +4,7 @@ namespace Domain.Entities;
 
 public class Paciente : BaseEntity
 {
-    public long PersonaId { get; set; }
+    public Guid PersonaId { get; set; }
     public string? ContactoEmergencia { get; set; }
     public string? TelefonoEmergencia { get; set; }
 

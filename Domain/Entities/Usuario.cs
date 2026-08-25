@@ -9,7 +9,7 @@ public sealed class Usuario : BaseEntity
     {
     }
 
-    public Usuario(string nombre, string correo, string passwordHash, long rolId)
+    public Usuario(string nombre, string correo, string passwordHash, Guid rolId)
     {
         Nombre = NombreUsuario.Create(nombre);
         Correo = Domain.ValueObjects.Correo.Create(correo);
@@ -23,7 +23,7 @@ public sealed class Usuario : BaseEntity
 
     public PasswordHash PasswordHash { get; private set; } = null!;
 
-    public long RolId { get; private set; }
+    public Guid RolId { get; private set; }
 
     public Rol Rol { get; private set; } = null!;
 
@@ -42,15 +42,15 @@ public sealed class Usuario : BaseEntity
         PasswordHash = Domain.ValueObjects.PasswordHash.Create(passwordHash);
     }
 
-    public void CambiarRol(long rolId)
+    public void CambiarRol(Guid rolId)
     {
         RolId = ValidateRolId(rolId);
     }
 
-    private static long ValidateRolId(long rolId)
-        => rolId > 0
+    private static Guid ValidateRolId(Guid rolId)
+        => rolId != Guid.Empty
             ? rolId
             : throw new ArgumentException(
-                "RolId debe ser mayor que cero.",
+                "RolId no puede ser un GUID vacío.",
                 nameof(rolId));
 }
