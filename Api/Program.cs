@@ -1,4 +1,9 @@
 using Api.Extensions;
+using Application.Mappings;
+using Application.Validators;
+using FluentValidation;
+using Mapster;
+using MapsterMapper;
 using Serilog;
 using Infrastructure;
 
@@ -12,6 +17,13 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .WriteTo.Console());
 
 builder.Services.AddControllers();
+
+// FluentValidation: registra los validadores de la capa Application
+builder.Services.AddValidatorsFromAssemblyContaining<CrearPacienteRequestDtoValidator>();
+
+// Mapster: carga los IRegister de la capa Application
+TypeAdapterConfig.GlobalSettings.Scan(typeof(ClinicalMappingRegister).Assembly);
+builder.Services.AddMapster();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
