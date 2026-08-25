@@ -6,5 +6,5 @@ public sealed class UpdateUsuarioRequestDto
 
     public string Correo { get; set; } = string.Empty;
 
-    public long RolId { get; set; }
+    public Guid RolId { get; set; }
 }

@@ -12,7 +12,7 @@ namespace Application.Contracts.Repositories
             CancellationToken cancellationToken = default);
 
         Task<Usuario?> GetByIdWithRoleAsync(
-            long id,
+            Guid id,
             CancellationToken cancellationToken = default);
     }
 }
