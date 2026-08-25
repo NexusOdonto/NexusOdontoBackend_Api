@@ -1,5 +1,6 @@
 using Api.Extensions;
 using Serilog;
+using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddInfrastructure(builder.Configuration);
+
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
@@ -23,7 +28,7 @@ app.UseGlobalExceptionMiddleware();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
 }
 
 app.UseHttpsRedirection();
