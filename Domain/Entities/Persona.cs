@@ -17,3 +17,4 @@ public class Persona : BaseEntity
     // Navegacion hacia el dependiente (1:1, lado "uno" opcional)
     public virtual Paciente? Paciente { get; set; }
 }
+
