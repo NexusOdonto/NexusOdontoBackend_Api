@@ -2,12 +2,12 @@ using Domain.Common;
 
 namespace Application.Contracts.Repositories
 {
-    public interface IRepository<T> where T : BaseEntity
+    public interface IRepository<TEntity> where TEntity : BaseEntity
     {
-        Task<T?> GetByIdAsync(Guid id);
-        Task<IReadOnlyList<T>> GetAllAsync();
-        Task AddAsync(T entity);
-        void Update(T entity);
-        void Remove(T entity);
+        Task<TEntity?> GetByIdAsync(Guid id);
+        Task<IReadOnlyList<TEntity>> GetAllAsync();
+        Task AddAsync(TEntity entity);
+        void Update(TEntity entity);
+        void Remove(TEntity entity);
     }
 }
