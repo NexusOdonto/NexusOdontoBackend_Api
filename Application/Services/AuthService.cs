@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace Application.Services;
 
 public sealed class AuthService(
+    IUsuarioRepository usuarioRepository,
     IUnitOfWork unitOfWork,
     JwtSettings jwtSettings) : IAuthService
 {
@@ -20,7 +21,7 @@ public sealed class AuthService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var usuario = await unitOfWork.Usuarios.GetByCorreoWithRoleAsync(
+        var usuario = await usuarioRepository.GetByCorreoWithRoleAsync(
             request.Correo,
             cancellationToken);
 
@@ -39,7 +40,7 @@ public sealed class AuthService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var usuarioExistente = await unitOfWork.Usuarios.GetByCorreoWithRoleAsync(
+        var usuarioExistente = await usuarioRepository.GetByCorreoWithRoleAsync(
             request.Correo,
             cancellationToken);
 
@@ -55,7 +56,7 @@ public sealed class AuthService(
             passwordHash,
             request.RolId);
 
-        await unitOfWork.Usuarios.AddAsync(usuario);
+        await usuarioRepository.AddAsync(usuario);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new UsuarioResponseDto
