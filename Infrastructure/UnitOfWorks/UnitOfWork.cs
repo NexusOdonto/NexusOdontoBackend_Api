@@ -1,19 +1,17 @@
 ﻿using Application.Contracts.Repositories;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore.Storage;
-using System.Runtime.CompilerServices;
 
-namespace Infrastructure.UnitOfWork
+namespace Infrastructure.UnitOfWorks
 {
     public sealed class UnitOfWork : IUnitOfWork, IAsyncDisposable
     {
         private readonly AppDbContext _context;
         private IDbContextTransaction? _transaction;
 
-        public UnitOfWork(AppDbContext context, IDbContextTransaction transaction)
+        public UnitOfWork(AppDbContext context)
         {
             _context = context;
-            _transaction = transaction;
         }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
