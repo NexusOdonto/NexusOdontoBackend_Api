@@ -67,10 +67,7 @@ namespace Api.Controllers
                 return NotFound();
             }
 
-            usuario.CambiarNombre(request.Nombre);
-            usuario.CambiarCorreo(request.Correo);
-            usuario.CambiarRol(request.RolId);
-            usuario.FechaActualizacion = DateTime.UtcNow;
+            usuario.Actualizar(request.Nombre, request.Correo, request.RolId);
 
             _usuarioRepository.Update(usuario);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -96,8 +93,7 @@ namespace Api.Controllers
                 return NotFound();
             }
 
-            usuario.Activo = false;
-            usuario.FechaActualizacion = DateTime.UtcNow;
+            usuario.Desactivar();
 
             _usuarioRepository.Update(usuario);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

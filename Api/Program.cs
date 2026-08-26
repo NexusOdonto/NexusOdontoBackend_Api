@@ -6,8 +6,12 @@ using Mapster;
 using MapsterMapper;
 using Serilog;
 using Infrastructure;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
+
+LoadEnvFile(builder.Environment.ContentRootPath);
+builder.Configuration.AddEnvironmentVariables();
 
 // Configure Serilog structured logging
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -52,3 +56,24 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static void LoadEnvFile(string contentRoot)
+{
+    var dir = new DirectoryInfo(contentRoot);
+
+    while (dir is not null)
+    {
+        var candidate = Path.Combine(dir.FullName, ".env");
+
+        if (File.Exists(candidate))
+        {
+            Env.Load(candidate);
+            return;
+        }
+
+        dir = dir.Parent;
+    }
+
+    throw new FileNotFoundException(
+        "No se encontró el archivo .env desde la raíz de la API.");
+}

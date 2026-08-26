@@ -5,6 +5,16 @@ namespace Domain.Entities;
 
 public sealed class Usuario : BaseEntity
 {
+    public NombreUsuario Nombre { get; private set; } = null!;
+
+    public Correo Correo { get; private set; } = null!;
+
+    public PasswordHash PasswordHash { get; private set; } = null!;
+
+    public Guid RolId { get; private set; }
+
+    public Rol Rol { get; private set; } = null!;
+
     private Usuario()
     {
     }
@@ -17,33 +27,11 @@ public sealed class Usuario : BaseEntity
         RolId = ValidateRolId(rolId);
     }
 
-    public NombreUsuario Nombre { get; private set; } = null!;
-
-    public Correo Correo { get; private set; } = null!;
-
-    public PasswordHash PasswordHash { get; private set; } = null!;
-
-    public Guid RolId { get; private set; }
-
-    public Rol Rol { get; private set; } = null!;
-
-    public void CambiarNombre(string nombre)
+    public void Actualizar(string nombre, string correo, Guid rolId)
     {
+        FechaActualizacion = DateTime.UtcNow;
         Nombre = NombreUsuario.Create(nombre);
-    }
-
-    public void CambiarCorreo(string correo)
-    {
         Correo = Domain.ValueObjects.Correo.Create(correo);
-    }
-
-    public void CambiarPasswordHash(string passwordHash)
-    {
-        PasswordHash = Domain.ValueObjects.PasswordHash.Create(passwordHash);
-    }
-
-    public void CambiarRol(Guid rolId)
-    {
         RolId = ValidateRolId(rolId);
     }
 

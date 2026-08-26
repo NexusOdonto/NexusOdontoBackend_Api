@@ -14,7 +14,50 @@ public class Persona : BaseEntity
     public string? Email { get; set; }
     public string? Direccion { get; set; }
 
-    // Navegacion hacia el dependiente (1:1, lado "uno" opcional)
-    public virtual Paciente? Paciente { get; set; }
-}
+    public Paciente? Paciente { get; set; }
 
+    private Persona()
+    {
+    }
+
+    public Persona(
+        Guid tipoDocumentoId,
+        string numeroDocumento,
+        string nombres,
+        string apellidos,
+        DateTime? fechaNacimiento = null,
+        Guid? sexoId = null,
+        string? telefono = null,
+        string? email = null,
+        string? direccion = null)
+    {
+        TipoDocumentoId = tipoDocumentoId;
+        NumeroDocumento = numeroDocumento;
+        Nombres = nombres;
+        Apellidos = apellidos;
+        FechaNacimiento = fechaNacimiento;
+        SexoId = sexoId;
+        Telefono = telefono;
+        Email = email;
+        Direccion = direccion;
+    }
+
+    public void Actualizar(
+        string nombres,
+        string apellidos,
+        DateTime? fechaNacimiento,
+        Guid? sexoId,
+        string? telefono,
+        string? email,
+        string? direccion)
+    {
+        FechaActualizacion = DateTime.UtcNow;
+        Nombres = nombres;
+        Apellidos = apellidos;
+        FechaNacimiento = fechaNacimiento;
+        SexoId = sexoId;
+        Telefono = telefono;
+        Email = email;
+        Direccion = direccion;
+    }
+}
