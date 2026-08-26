@@ -1,16 +1,20 @@
 namespace Domain.Common;
 
-public abstract class BaseEntity
+public abstract class BaseEntity : Entity
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
-    public DateTime? FechaActualizacion { get; set; } = DateTime.UtcNow;
-
-    public bool Activo { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
     protected BaseEntity()
     {
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

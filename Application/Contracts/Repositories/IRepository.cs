@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Application.Contracts.Repositories
 {
-    public interface IRepository<TEntity> where TEntity : BaseEntity
+    public interface IRepository<TEntity> where TEntity : Entity
     {
         Task<TEntity?> GetByIdAsync(Guid id);
         Task<IReadOnlyList<TEntity>> GetAllAsync();

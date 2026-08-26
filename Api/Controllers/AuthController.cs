@@ -3,36 +3,35 @@ using Application.DTOs.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers
+namespace Api.Controllers;
+
+[ApiController]
+[Route("api/auth")]
+public sealed class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("api/auth")]
-    public sealed class AuthController : ControllerBase
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
     {
-        private readonly IAuthService _authService;
+        _authService = authService;
+    }
 
-        public AuthController(IAuthService authService)
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _authService.LoginAsync(request, cancellationToken);
+
+        if (result is null)
         {
-            _authService = authService;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(
-            [FromBody] LoginRequestDto request,
-            CancellationToken cancellationToken)
-        {
-            var result = await _authService.LoginAsync(request, cancellationToken);
-
-            if (result is null)
+            return Unauthorized(new
             {
-                return Unauthorized(new
-                {
-                    message = "Correo o contraseña incorrectos."
-                });
-            }
-
-            return Ok(result);
+                message = "Invalid email or password."
+            });
         }
+
+        return Ok(result);
     }
 }
