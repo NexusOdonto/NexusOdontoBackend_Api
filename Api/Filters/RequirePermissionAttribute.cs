@@ -28,7 +28,7 @@ public sealed class RequirePermissionAttribute : TypeFilterAttribute
 public sealed class RequirePermissionFilter(
     string module,
     PermissionAction action,
-    IUsuarioRepository usuarioRepository) : IAsyncAuthorizationFilter
+    IUserRepository userRepository) : IAsyncAuthorizationFilter
 {
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
@@ -42,40 +42,47 @@ public sealed class RequirePermissionFilter(
 
         var userIdClaim = principal.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        var roleIdClaim = principal.FindFirstValue("rolId");
 
-        if (!Guid.TryParse(userIdClaim, out var userId) ||
-            !Guid.TryParse(roleIdClaim, out var roleId))
+        if (!Guid.TryParse(userIdClaim, out var userId))
         {
             context.Result = new ForbidResult();
             return;
         }
 
-        var usuario = await usuarioRepository.GetByIdWithRoleAsync(
+        var user = await userRepository.GetByIdWithRolesAsync(
             userId,
             context.HttpContext.RequestAborted);
 
-        if (usuario is null || usuario.RolId != roleId || usuario.Rol is null)
+        if (user is null)
         {
             context.Result = new ForbidResult();
             return;
         }
 
         var normalizedModule = module.Trim().ToUpperInvariant();
-        var permiso = usuario.Rol.Permisos.FirstOrDefault(permission =>
-            string.Equals(
-                permission.Modulo.Value,
-                normalizedModule,
-                StringComparison.Ordinal));
-
-        var isAllowed = permiso is not null && action switch
+        var requiredActionCode = action switch
         {
-            PermissionAction.Create => permiso.PuedeCrear,
-            PermissionAction.Edit => permiso.PuedeEditar,
-            PermissionAction.View => permiso.PuedeVer,
-            PermissionAction.Delete => permiso.PuedeEliminar,
-            _ => false
+            PermissionAction.Create => "CREATE",
+            PermissionAction.Edit => "EDIT",
+            PermissionAction.View => "VIEW",
+            PermissionAction.Delete => "DELETE",
+            _ => null
         };
+
+        if (requiredActionCode is null)
+        {
+            context.Result = new ForbidResult();
+            return;
+        }
+
+        var isAllowed = user.UserRoles
+            .SelectMany(ur => ur.Role?.Permissions ?? [])
+            .Any(permission =>
+                string.Equals(permission.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(
+                    permission.ActionPermission?.Code,
+                    requiredActionCode,
+                    StringComparison.OrdinalIgnoreCase));
 
         if (!isAllowed)
         {

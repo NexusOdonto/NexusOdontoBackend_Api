@@ -4,14 +4,14 @@ using System.Text;
 using Application.Contracts.Repositories;
 using Application.Contracts.Services;
 using Application.DTOs.Auth;
-using Application.Exceptions;
-using Domain.Entities;
+using Domain.Entities.People;
+using Domain.Entities.Security;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Services;
 
 public sealed class AuthService(
-    IUsuarioRepository usuarioRepository,
+    IUserRepository userRepository,
     IUnitOfWork unitOfWork,
     JwtSettings jwtSettings) : IAuthService
 {
@@ -21,64 +21,64 @@ public sealed class AuthService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var usuario = await usuarioRepository.GetByCorreoWithRoleAsync(
-            request.Correo,
+        var user = await userRepository.GetByEmailWithRolesAsync(
+            request.Email,
             cancellationToken);
 
-        if (usuario is null ||
-            !BCrypt.Net.BCrypt.Verify(request.Password, usuario.PasswordHash.Value))
+        if (user is null ||
+            !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             return null;
         }
 
-        return GenerateToken(usuario);
+        user.RegisterAccess(DateTime.UtcNow);
+        userRepository.Update(user);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return GenerateToken(user);
     }
 
-    public async Task<UsuarioResponseDto> RegisterAsync(
+    public async Task<UserResponseDto> RegisterAsync(
         RegisterRequestDto request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var usuarioExistente = await usuarioRepository.GetByCorreoWithRoleAsync(
-            request.Correo,
-            cancellationToken);
-
-        if (usuarioExistente is not null)
-        {
-            throw new ValidationException("Ya existe un usuario registrado con ese correo.");
-        }
-
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var usuario = new Usuario(
-            request.Nombre,
-            request.Correo,
-            passwordHash,
-            request.RolId);
+        var user = new User(request.PersonId, passwordHash);
+        user.UserRoles.Add(new UserRole(user.Id, request.RoleId));
 
-        await usuarioRepository.AddAsync(usuario);
+        await userRepository.AddAsync(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new UsuarioResponseDto
-        {
-            Id = usuario.Id,
-            Nombre = usuario.Nombre.Value,
-            Correo = usuario.Correo.Value,
-            RolId = usuario.RolId
-        };
+        var loaded = await userRepository.GetByIdWithRolesAsync(user.Id, cancellationToken)
+            ?? user;
+
+        return MapToResponse(loaded);
     }
 
-    private AuthResponseDto GenerateToken(Usuario usuario)
+    private AuthResponseDto GenerateToken(User user)
     {
         ValidateJwtSettings();
 
         var expiresAtUtc = DateTime.UtcNow.AddMinutes(jwtSettings.ExpirationMinutes);
-        var claims = new[]
+        var primaryRole = user.UserRoles.FirstOrDefault()?.Role;
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
-            new Claim("rolId", usuario.RolId.ToString()),
-            new Claim(ClaimTypes.Role, usuario.Rol.Nombre.Value)
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
+
+        if (primaryRole is not null)
+        {
+            claims.Add(new Claim("roleId", primaryRole.Id.ToString()));
+            claims.Add(new Claim(ClaimTypes.Role, primaryRole.Name));
+        }
+
+        foreach (var userRole in user.UserRoles)
+        {
+            claims.Add(new Claim("roleId", userRole.RoleId.ToString()));
+        }
 
         var signingKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtSettings.SigningKey));
@@ -100,25 +100,40 @@ public sealed class AuthService(
         };
     }
 
+    public static UserResponseDto MapToResponse(User user)
+    {
+        var person = user.Person;
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            PersonId = user.PersonId,
+            Name = person is null
+                ? string.Empty
+                : $"{person.FirstName} {person.LastName}".Trim(),
+            Email = person?.Email ?? string.Empty,
+            RoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList()
+        };
+    }
+
     private void ValidateJwtSettings()
     {
         if (string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
             string.IsNullOrWhiteSpace(jwtSettings.Audience) ||
             string.IsNullOrWhiteSpace(jwtSettings.SigningKey))
         {
-            throw new InvalidOperationException("La configuración JWT está incompleta.");
+            throw new InvalidOperationException("JWT configuration is incomplete.");
         }
 
         if (Encoding.UTF8.GetByteCount(jwtSettings.SigningKey) < 32)
         {
             throw new InvalidOperationException(
-                "La clave de firma JWT debe contener al menos 32 bytes.");
+                "The JWT signing key must contain at least 32 bytes.");
         }
 
         if (jwtSettings.ExpirationMinutes <= 0)
         {
             throw new InvalidOperationException(
-                "La duración del JWT debe ser mayor que cero.");
+                "JWT expiration must be greater than zero.");
         }
     }
 }
