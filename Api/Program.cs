@@ -24,10 +24,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Mapster kept registered for future DTO mapping configs.
-builder.Services.AddSingleton(TypeAdapterConfig.GlobalSettings);
-builder.Services.AddScoped<IMapper, ServiceMapper>();
-
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddResilientHttpClients();
