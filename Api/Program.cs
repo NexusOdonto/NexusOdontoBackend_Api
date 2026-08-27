@@ -1,9 +1,10 @@
-using Api.Extensions;
+﻿using Api.Extensions;
 using Application.Validators;
 using FluentValidation;
 using Mapster;
 using MapsterMapper;
 using Serilog;
+using Application;
 using Infrastructure;
 using DotNetEnv;
 
@@ -24,6 +25,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddResilientHttpClients();
