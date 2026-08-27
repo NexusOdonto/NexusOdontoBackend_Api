@@ -21,8 +21,25 @@ public sealed class AuthService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        string? email;
+        if (request.Login.Contains('@'))
+        {
+            email = request.Login;
+        }
+        else
+        {
+            email = await userRepository.GetEmailByDocumentNumberAsync(
+                request.Login,
+                cancellationToken);
+
+            if (email is null)
+            {
+                return null;
+            }
+        }
+
         var user = await userRepository.GetByEmailWithRolesAsync(
-            request.Email,
+            email,
             cancellationToken);
 
         if (user is null ||

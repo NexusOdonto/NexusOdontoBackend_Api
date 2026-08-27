@@ -1,0 +1,648 @@
+Project Dental_System {
+  database_type: 'Oracle'
+  Note: 'Normalized relational model for .NET API, React, SignalR, WhatsApp, Python chatbot with RAG, and Oracle.'
+}
+
+/*
+  =====================================================================
+  GENERAL MODEL RULES
+  =====================================================================
+  1. No business ENUMs: all configurable values live in catalog tables.
+  2. PERSONS centralizes personal data. One person can be patient,
+     employee, and system user at the same time.
+  3. PATIENTS and EMPLOYEES have their own IDs and a unique person_id.
+  4. SignalR delivers real-time alerts; HUB_NOTIFICATIONS keeps
+     alerts for users who were disconnected.
+  5. WhatsApp is an external channel. Sends are logged in
+     WHATSAPP_NOTIFICATIONS.
+  6. All catalogs allow adding, editing, sorting, or deactivating
+     options from administration without changing the schema or code.
+  =====================================================================
+*/
+
+// =====================================================================
+// CATALOGS
+// =====================================================================
+
+Table document_types {
+  id raw(16) [pk, note: 'GUID']
+  code varchar2(20) [not null, unique]
+  name varchar2(80) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+  Note: 'Identity document types (CC, CE, passport, etc.).'
+}
+
+Table genders {
+  id raw(16) [pk]
+  code varchar2(20) [not null, unique]
+  name varchar2(80) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+  Note: 'Sex / gender catalog.'
+}
+
+Table job_positions {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+  Note: 'Employee job titles / positions.'
+}
+
+Table specialties {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+  Note: 'Professional specialties.'
+}
+
+Table permission_actions {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+  Note: 'Permission actions (CREATE, READ, UPDATE, DELETE, etc.).'
+}
+
+Table session_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table appointment_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  color_hex varchar2(7)
+  display_order number
+  is_final number(1) [not null, default: 0]
+  is_active number(1) [not null, default: 1]
+}
+
+Table appointment_origins {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table background_types {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+  Note: 'Patient antecedent / background types.'
+}
+
+Table dentition_types {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table tooth_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  color_hex varchar2(7)
+  visual_code varchar2(30)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table tooth_surfaces {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  applies_to_anterior number(1) [not null, default: 1]
+  applies_to_posterior number(1) [not null, default: 1]
+  is_active number(1) [not null, default: 1]
+  visual_order number
+}
+
+Table finding_types {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  color_hex varchar2(7)
+  visual_symbol varchar2(30)
+  requires_surface number(1) [not null, default: 0]
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table finding_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  color_hex varchar2(7)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table services {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(120) [not null, unique]
+  description clob
+  duration_minutes number [not null]
+  price number(12,2)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table notification_priorities {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  color_hex varchar2(7)
+  level number
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table hub_notification_types {
+  id raw(16) [pk]
+  code varchar2(60) [not null, unique]
+  name varchar2(120) [not null, unique]
+  description varchar2(300)
+  icon varchar2(100)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table hub_notification_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table whatsapp_notification_types {
+  id raw(16) [pk]
+  code varchar2(60) [not null, unique]
+  name varchar2(120) [not null, unique]
+  description varchar2(300)
+  default_template varchar2(100)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table whatsapp_notification_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table chat_channels {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table chatbot_conversation_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table chatbot_message_roles {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table support_ticket_reasons {
+  id raw(16) [pk]
+  code varchar2(60) [not null, unique]
+  name varchar2(120) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table support_ticket_statuses {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_final number(1) [not null, default: 0]
+  allows_assignment number(1) [not null, default: 0]
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+Table audit_event_types {
+  id raw(16) [pk]
+  code varchar2(60) [not null, unique]
+  name varchar2(150) [not null, unique]
+  description varchar2(300)
+  category varchar2(80)
+  risk_level number
+  is_active number(1) [not null, default: 1]
+  display_order number
+}
+
+// =====================================================================
+// PEOPLE / SECURITY
+// =====================================================================
+
+Table persons {
+  id raw(16) [pk]
+  document_type_id raw(16) [not null, ref: > document_types.id]
+  document_number varchar2(30) [not null]
+  first_name varchar2(100) [not null]
+  last_name varchar2(100) [not null]
+  birth_date date
+  gender_id raw(16) [ref: > genders.id]
+  phone varchar2(30)
+  email varchar2(150)
+  address varchar2(250)
+  is_active number(1) [not null, default: 1]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+
+  indexes {
+    (document_type_id, document_number) [unique]
+    email
+  }
+}
+
+Table patients {
+  id raw(16) [pk]
+  person_id raw(16) [not null, unique, ref: - persons.id]
+  emergency_contact varchar2(150)
+  emergency_phone varchar2(30)
+  is_active number(1) [not null, default: 1]
+  registration_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+}
+
+Table employees {
+  id raw(16) [pk]
+  person_id raw(16) [not null, unique, ref: - persons.id]
+  job_position_id raw(16) [not null, ref: > job_positions.id]
+  hire_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  is_active number(1) [not null, default: 1]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+}
+
+Table professionals {
+  id raw(16) [pk]
+  employee_id raw(16) [not null, unique, ref: - employees.id]
+  professional_license varchar2(50) [not null, unique]
+  is_active number(1) [not null, default: 1]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+}
+
+Table professional_specialties {
+  professional_id raw(16) [not null, ref: > professionals.id]
+  specialty_id raw(16) [not null, ref: > specialties.id]
+
+  indexes {
+    (professional_id, specialty_id) [pk]
+  }
+}
+
+Table users {
+  id raw(16) [pk]
+  person_id raw(16) [not null, unique, ref: - persons.id]
+  password_hash varchar2(500) [not null]
+  last_access_at timestamp
+  is_active number(1) [not null, default: 1]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+
+  Note: 'System login account linked 1:1 to persons. Login via persons.document_number or persons.email (no username column).'
+}
+
+Table roles {
+  id raw(16) [pk]
+  code varchar2(50) [not null, unique]
+  name varchar2(100) [not null, unique]
+  description varchar2(300)
+  is_active number(1) [not null, default: 1]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+}
+
+Table permissions {
+  id raw(16) [pk]
+  module varchar2(80) [not null]
+  permission_action_id raw(16) [not null, ref: > permission_actions.id]
+  description varchar2(300)
+}
+
+Table role_permissions {
+  role_id raw(16) [not null, ref: > roles.id]
+  permission_id raw(16) [not null, ref: > permissions.id]
+
+  indexes {
+    (role_id, permission_id) [pk]
+  }
+}
+
+Table user_roles {
+  user_id raw(16) [not null, ref: > users.id]
+  role_id raw(16) [not null, ref: > roles.id]
+  assigned_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table sessions {
+  id raw(16) [pk]
+  user_id raw(16) [not null, ref: > users.id]
+  refresh_token_hash varchar2(512) [not null, unique]
+  token_family varchar2(100) [not null]
+  device varchar2(200)
+  ip_address varchar2(64)
+  user_agent varchar2(1000)
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  expiration_date timestamp [not null]
+  last_used_at timestamp
+  revoked_at timestamp
+  session_status_id raw(16) [not null, ref: > session_statuses.id]
+}
+
+// =====================================================================
+// SCHEDULE
+// =====================================================================
+
+Table availabilities {
+  id raw(16) [pk]
+  professional_id raw(16) [not null, ref: > professionals.id]
+  start_day number [not null, note: 'Day of week (e.g. 1=Monday)']
+  end_day number [not null]
+  start_time varchar2(5) [not null, note: 'HH:mm']
+  lunch_start_time varchar2(5) [not null]
+  lunch_end_time varchar2(5) [not null]
+  end_time varchar2(5) [not null]
+  is_active number(1) [not null, default: 1]
+}
+
+Table appointments {
+  id raw(16) [pk]
+  patient_id raw(16) [not null, ref: > patients.id]
+  professional_id raw(16) [not null, ref: > professionals.id]
+  service_id raw(16) [not null, ref: > services.id]
+  start_date_time timestamp [not null]
+  end_date_time timestamp [not null]
+  appointment_status_id raw(16) [not null, ref: > appointment_statuses.id]
+  appointment_origin_id raw(16) [not null, ref: > appointment_origins.id]
+  chief_complaint varchar2(1000)
+  notes varchar2(2000)
+  created_by_user_id raw(16) [ref: > users.id]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp
+  canceled_at timestamp
+  cancellation_reason varchar2(1000)
+}
+
+// =====================================================================
+// CLINICAL
+// =====================================================================
+
+Table clinical_histories {
+  id raw(16) [pk]
+  patient_id raw(16) [not null, unique, ref: - patients.id]
+  opening_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  is_active number(1) [not null, default: 1]
+  general_notes clob
+}
+
+Table patient_backgrounds {
+  id raw(16) [pk]
+  patient_id raw(16) [not null, ref: > patients.id]
+  background_type_id raw(16) [not null, ref: > background_types.id]
+  description clob [not null]
+  is_active number(1) [not null, default: 1]
+  registered_by_user_id raw(16) [not null, ref: > users.id]
+  registered_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table clinical_attentions {
+  id raw(16) [pk]
+  appointment_id raw(16) [not null, unique, ref: - appointments.id]
+  attention_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  clinical_exam clob
+  evolution_notes clob
+  treatment_plan clob
+}
+
+Table diagnoses {
+  id raw(16) [pk]
+  clinical_attention_id raw(16) [not null, ref: > clinical_attentions.id]
+  code varchar2(30)
+  description clob [not null]
+  type varchar2(30) [not null, default: 'ODONTOLOGICO']
+}
+
+Table performed_procedures {
+  id raw(16) [pk]
+  clinical_attention_id raw(16) [not null, ref: > clinical_attentions.id]
+  service_id raw(16) [ref: > services.id]
+  description clob [not null]
+  performed_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  charged_amount number(12,2)
+}
+
+// =====================================================================
+// ODONTOGRAM
+// =====================================================================
+
+Table teeth {
+  code varchar2(2) [pk, note: 'FDI tooth code']
+  name varchar2(120) [not null]
+  dentition_type_id raw(16) [not null, ref: > dentition_types.id]
+  quadrant number [not null]
+  position number [not null]
+}
+
+Table odontograms {
+  id raw(16) [pk]
+  clinical_history_id raw(16) [not null, ref: > clinical_histories.id]
+  clinical_attention_id raw(16) [ref: > clinical_attentions.id]
+  professional_id raw(16) [not null, ref: > professionals.id]
+  registration_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  notes clob
+}
+
+Table odontogram_teeth {
+  id raw(16) [pk]
+  odontogram_id raw(16) [not null, ref: > odontograms.id]
+  tooth_code varchar2(2) [not null, ref: > teeth.code]
+  tooth_status_id raw(16) [not null, ref: > tooth_statuses.id]
+  notes clob
+
+  indexes {
+    (odontogram_id, tooth_code) [unique]
+  }
+}
+
+Table dental_findings {
+  id raw(16) [pk]
+  odontogram_tooth_id raw(16) [not null, ref: > odontogram_teeth.id]
+  tooth_surface_id raw(16) [ref: > tooth_surfaces.id]
+  finding_type_id raw(16) [not null, ref: > finding_types.id]
+  finding_status_id raw(16) [not null, ref: > finding_statuses.id]
+  notes clob
+  registered_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+// =====================================================================
+// NOTIFICATIONS
+// =====================================================================
+
+Table hub_notifications {
+  id raw(16) [pk]
+  sender_user_id raw(16) [ref: > users.id]
+  recipient_user_id raw(16) [ref: > users.id]
+  recipient_role_id raw(16) [ref: > roles.id]
+  hub_notification_type_id raw(16) [not null, ref: > hub_notification_types.id]
+  notification_priority_id raw(16) [not null, ref: > notification_priorities.id]
+  title varchar2(200) [not null]
+  content clob [not null]
+  entity_type varchar2(80)
+  entity_id raw(16)
+  hub_notification_status_id raw(16) [not null, ref: > hub_notification_statuses.id]
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  delivered_at timestamp
+  read_at timestamp
+}
+
+Table whatsapp_notifications {
+  id raw(16) [pk]
+  appointment_id raw(16) [ref: > appointments.id]
+  patient_id raw(16) [ref: > patients.id]
+  whatsapp_notification_type_id raw(16) [not null, ref: > whatsapp_notification_types.id]
+  whatsapp_notification_status_id raw(16) [not null, ref: > whatsapp_notification_statuses.id]
+  destination_phone varchar2(30) [not null]
+  content clob [not null]
+  template_name varchar2(100)
+  template_parameters clob
+  provider varchar2(50)
+  provider_message_id varchar2(150)
+  scheduled_for timestamp [not null]
+  sent_at timestamp
+  delivered_at timestamp
+  read_at timestamp
+  failed_at timestamp
+  provider_response clob
+  error_detail varchar2(1000)
+}
+
+// =====================================================================
+// CHATBOT / SUPPORT
+// =====================================================================
+
+Table chatbot_conversations {
+  id raw(16) [pk]
+  patient_id raw(16) [ref: > patients.id]
+  chat_identifier varchar2(150) [not null]
+  chat_channel_id raw(16) [not null, ref: > chat_channels.id]
+  conversation_status_id raw(16) [not null, ref: > chatbot_conversation_statuses.id]
+  started_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  last_interaction_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  closed_at timestamp
+
+  indexes {
+    (chat_channel_id, chat_identifier) [unique]
+  }
+}
+
+Table chatbot_messages {
+  id raw(16) [pk]
+  chatbot_conversation_id raw(16) [not null, ref: > chatbot_conversations.id]
+  message_role_id raw(16) [not null, ref: > chatbot_message_roles.id]
+  content clob [not null]
+  rag_confidence number(5,4)
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table support_tickets {
+  id raw(16) [pk]
+  chatbot_conversation_id raw(16) [not null, ref: > chatbot_conversations.id]
+  patient_id raw(16) [ref: > patients.id]
+  support_ticket_reason_id raw(16) [not null, ref: > support_ticket_reasons.id]
+  notification_priority_id raw(16) [not null, ref: > notification_priorities.id]
+  ticket_status_id raw(16) [not null, ref: > support_ticket_statuses.id]
+  title varchar2(200) [not null]
+  description clob
+  chatbot_summary clob
+  rag_confidence number(5,4)
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  assigned_to_user_id raw(16) [ref: > users.id]
+  assigned_at timestamp
+  attended_at timestamp
+  resolved_by_user_id raw(16) [ref: > users.id]
+  resolved_at timestamp
+  resolution clob
+  closed_at timestamp
+}
+
+// =====================================================================
+// AUDIT
+// =====================================================================
+
+Table audit_events {
+  id raw(16) [pk]
+  user_id raw(16) [ref: > users.id]
+  session_id raw(16) [ref: > sessions.id]
+  audit_event_type_id raw(16) [not null, ref: > audit_event_types.id]
+  entity_type varchar2(80)
+  entity_id raw(16)
+  description varchar2(1000) [not null]
+  previous_data clob
+  new_data clob
+  ip_address varchar2(64)
+  user_agent varchar2(1000)
+  event_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  is_success number(1) [not null, default: 1]
+  error_detail varchar2(1000)
+}
