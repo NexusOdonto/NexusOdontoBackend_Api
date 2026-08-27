@@ -8,6 +8,14 @@ public interface IUserRepository : IRepository<User>
         string email,
         CancellationToken cancellationToken = default);
 
+    Task<string?> GetEmailByDocumentNumberAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default);
+
+    Task<User?> GetByPersonIdAsync(
+        Guid personId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<User>> GetAllWithRolesAsync(
         CancellationToken cancellationToken = default);
 
