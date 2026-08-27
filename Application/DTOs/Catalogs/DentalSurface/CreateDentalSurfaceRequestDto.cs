@@ -1,0 +1,12 @@
+namespace Application.DTOs.Catalogs.DentalSurface
+{
+    public class CreateDentalSurfaceRequestDto
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool AppliesToAnterior { get; set; }
+        public bool AppliesToPosterior { get; set; }
+        public int? SortOrder { get; set; }
+    }
+}
