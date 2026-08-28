@@ -3,6 +3,8 @@ using Application.Contracts.Services;
 using Serilog;
 using Application;
 using Infrastructure;
+using Infrastructure.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +33,13 @@ builder.Services.AddJwtAuthentication(jwtSettings);
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
+
+// En contenedor la base arranca vacia: aplicar migraciones y seeders al iniciar
+// deja el stack listo con un solo "docker compose up".
+if (IsRunningInContainer())
+{
+    await ApplyMigrationsAsync(app.Services);
+}
 
 app.UseGlobalExceptionMiddleware();
 
@@ -94,6 +103,26 @@ static void LoadEnvFile(string contentRoot)
         dir = dir.Parent;
     }
 
-    throw new FileNotFoundException(
-        "Could not find the .env file from the API root.");
+    // En contenedor la configuracion llega por variables de entorno del compose,
+    // asi que el .env solo es obligatorio fuera de Docker.
+    if (!IsRunningInContainer())
+    {
+        throw new FileNotFoundException(
+            "Could not find the .env file from the API root.");
+    }
+}
+
+static bool IsRunningInContainer() =>
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+
+static async Task ApplyMigrationsAsync(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("Aplicando migraciones pendientes...");
+    await context.Database.MigrateAsync();
+    logger.LogInformation("Migraciones aplicadas.");
 }
