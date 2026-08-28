@@ -11,8 +11,6 @@ public sealed class AuditEventResponseDto
     public string Description { get; set; } = string.Empty;
     public string? PreviousData { get; set; }
     public string? NewData { get; set; }
-    public string? IpAddress { get; set; }
-    public string? UserAgent { get; set; }
     public DateTime EventAt { get; set; }
     public bool Succeeded { get; set; }
     public string? ErrorDetail { get; set; }
@@ -28,8 +26,6 @@ public sealed class CreateAuditEventRequestDto
     public Guid? EntityId { get; set; }
     public string? PreviousData { get; set; }
     public string? NewData { get; set; }
-    public string? IpAddress { get; set; }
-    public string? UserAgent { get; set; }
     public bool Succeeded { get; set; } = true;
     public string? ErrorDetail { get; set; }
 }

@@ -14,8 +14,6 @@ public class AuditEventEntity : Entity
     public string Description { get; set; } = null!;
     public string? PreviousData { get; set; }
     public string? NewData { get; set; }
-    public string? IpAddress { get; set; }
-    public string? UserAgent { get; set; }
     public DateTime EventAt { get; set; } = DateTime.UtcNow;
     public bool Succeeded { get; set; } = true;
     public string? ErrorDetail { get; set; }
@@ -37,8 +35,6 @@ public class AuditEventEntity : Entity
         Guid? entityId = null,
         string? previousData = null,
         string? newData = null,
-        string? ipAddress = null,
-        string? userAgent = null,
         bool succeeded = true,
         string? errorDetail = null)
     {
@@ -50,8 +46,6 @@ public class AuditEventEntity : Entity
         EntityId = entityId;
         PreviousData = previousData;
         NewData = newData;
-        IpAddress = ipAddress;
-        UserAgent = userAgent;
         Succeeded = succeeded;
         ErrorDetail = errorDetail;
     }

@@ -6,8 +6,6 @@ public interface IAuthService
 {
     Task<AuthResponseDto?> LoginAsync(
         LoginRequestDto request,
-        string? ipAddress = null,
-        string? userAgent = null,
         CancellationToken cancellationToken = default);
 
     Task<AuthProfileDto?> GetProfileAsync(

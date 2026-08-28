@@ -23,4 +23,9 @@ public interface IUserRepository : IRepository<UserEntity>
     Task<UserEntity?> GetByIdWithRolesAsync(
         Guid id,
         CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteUserRoleAsync(
+        Guid userId,
+        Guid roleId,
+        CancellationToken cancellationToken = default);
 }

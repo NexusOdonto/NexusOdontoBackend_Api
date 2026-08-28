@@ -43,14 +43,6 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEventEntity
         builder.Property(c => c.NewData)
             .HasColumnName("new_data");
 
-        builder.Property(c => c.IpAddress)
-            .HasColumnName("ip_address")
-            .HasMaxLength(64);
-
-        builder.Property(c => c.UserAgent)
-            .HasColumnName("user_agent")
-            .HasMaxLength(1000);
-
         builder.Property(c => c.EventAt)
             .HasColumnName("event_date")
             .HasDefaultValueSql("CURRENT_TIMESTAMP")

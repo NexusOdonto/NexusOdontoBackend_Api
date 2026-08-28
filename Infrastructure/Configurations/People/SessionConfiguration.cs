@@ -29,18 +29,6 @@ public class SessionConfiguration : IEntityTypeConfiguration<SessionEntity>
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.Property(c => c.Device)
-            .HasColumnName("device")
-            .HasMaxLength(200);
-
-        builder.Property(c => c.IpAddress)
-            .HasColumnName("ip_address")
-            .HasMaxLength(64);
-
-        builder.Property(c => c.UserAgent)
-            .HasColumnName("user_agent")
-            .HasMaxLength(1000);
-
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
