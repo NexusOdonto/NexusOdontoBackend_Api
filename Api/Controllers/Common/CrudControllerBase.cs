@@ -1,6 +1,7 @@
 using Api.Filters;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.Common;
+using Application.Services.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
@@ -102,7 +103,6 @@ public abstract class CrudControllerBase<TService, TResponse, TCreate, TUpdate>(
         var user = await userRepository.GetByIdWithRolesAsync(userId, HttpContext.RequestAborted);
         if (user is null) return false;
 
-        var normalizedModule = PermissionModule.Trim().ToUpperInvariant();
         var requiredActionCode = action switch
         {
             PermissionAction.Create => "CREATE",
@@ -114,13 +114,6 @@ public abstract class CrudControllerBase<TService, TResponse, TCreate, TUpdate>(
 
         if (requiredActionCode is null) return false;
 
-        return user.UserRoles
-            .SelectMany(ur => ur.RoleEntity?.Permissions ?? [])
-            .Any(permission =>
-                string.Equals(permission.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(
-                    permission.ActionPermissionEntity?.Code,
-                    requiredActionCode,
-                    StringComparison.OrdinalIgnoreCase));
+        return PermissionChecker.HasPermission(user, PermissionModule, requiredActionCode);
     }
 }
