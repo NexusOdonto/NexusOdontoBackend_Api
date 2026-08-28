@@ -1,4 +1,4 @@
-using DentalSurfaceEntity = Domain.Entities.Catalogs.DentalSurface;
+using DentalSurfaceEntity = Domain.Entities.Catalogs.DentalSurfaceEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.DentalSurface;

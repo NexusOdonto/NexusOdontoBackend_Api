@@ -1,4 +1,4 @@
-using FindingStatusEntity = Domain.Entities.Catalogs.FindingStatus;
+using FindingStatusEntity = Domain.Entities.Catalogs.FindingStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.FindingStatus;

@@ -1,5 +1,5 @@
 using Infrastructure.Data.Seeder.ActionPermission;
-using PermissionEntity = Domain.Entities.Security.Permission;
+using PermissionEntity = Domain.Entities.Security.PermissionEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.Permission;

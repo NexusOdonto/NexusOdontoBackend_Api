@@ -1,4 +1,4 @@
-using RoleEntity = Domain.Entities.Security.Role;
+using RoleEntity = Domain.Entities.Security.RoleEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.Role;

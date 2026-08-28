@@ -1,4 +1,4 @@
-using ActionPermissionEntity = Domain.Entities.Catalogs.ActionPermission;
+using ActionPermissionEntity = Domain.Entities.Catalogs.ActionPermissionEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.ActionPermission;

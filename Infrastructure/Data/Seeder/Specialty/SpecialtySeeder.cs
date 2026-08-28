@@ -1,4 +1,4 @@
-using SpecialtyEntity = Domain.Entities.Catalogs.Specialty;
+using SpecialtyEntity = Domain.Entities.Catalogs.SpecialtyEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.Specialty;

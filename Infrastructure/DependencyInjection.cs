@@ -6,6 +6,9 @@ using Application.Contracts.Repositories.Odontogram;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Repositories.Security;
+using Application.Contracts.Services;
+using Application.Contracts.Services.Chatbot;
+using Infrastructure.ExternalServices;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories.Catalogs;
 using Infrastructure.Repositories.Chatbot;
@@ -60,6 +63,9 @@ public static class DependencyInjection
 
         services.AddScoped<IToothRepository, ToothRepository>();
 
+        services.AddHttpClient<IChatbotClient, ChatbotHttpClient>();
+
         return services;
     }
 }
+

@@ -1,4 +1,4 @@
-using AuditEventTypeEntity = Domain.Entities.Catalogs.AuditEventType;
+using AuditEventTypeEntity = Domain.Entities.Catalogs.AuditEventTypeEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.AuditEventType;

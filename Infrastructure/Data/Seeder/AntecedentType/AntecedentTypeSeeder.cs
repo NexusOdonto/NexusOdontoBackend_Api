@@ -1,4 +1,4 @@
-using AntecedentTypeEntity = Domain.Entities.Catalogs.AntecedentType;
+using AntecedentTypeEntity = Domain.Entities.Catalogs.AntecedentTypeEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.AntecedentType;

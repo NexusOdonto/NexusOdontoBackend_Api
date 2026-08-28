@@ -1,4 +1,4 @@
-using JobTitleEntity = Domain.Entities.Catalogs.JobTitle;
+using JobTitleEntity = Domain.Entities.Catalogs.JobTitleEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.JobTitle;
