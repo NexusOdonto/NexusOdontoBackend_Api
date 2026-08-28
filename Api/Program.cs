@@ -25,9 +25,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
-    ?? builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
-    ?? throw new InvalidOperationException("JWT configuration is missing.");
+var jwtSettings = ResolveJwtSettings(builder.Configuration);
 builder.Services.AddJwtAuthentication(jwtSettings);
 
 builder.Services.AddResilientHttpClients();
@@ -53,6 +51,31 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static JwtSettings ResolveJwtSettings(IConfiguration configuration)
+{
+    var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()
+        ?? configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+    if (jwtSettings is null)
+    {
+        throw new InvalidOperationException(
+            "JWT configuration is missing. Add a 'Jwt' section to appsettings.json " +
+            "or set Jwt__Issuer, Jwt__Audience, Jwt__SigningKey (min 32 bytes), " +
+            "and Jwt__ExpirationMinutes in .env or environment variables.");
+    }
+
+    if (string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
+        string.IsNullOrWhiteSpace(jwtSettings.Audience) ||
+        string.IsNullOrWhiteSpace(jwtSettings.SigningKey))
+    {
+        throw new InvalidOperationException(
+            "JWT configuration is incomplete. Required: Jwt:Issuer, Jwt:Audience, Jwt:SigningKey " +
+            "(or JwtSettings:* equivalents). SigningKey must be at least 32 bytes.");
+    }
+
+    return jwtSettings;
+}
 
 static void LoadEnvFile(string contentRoot)
 {
