@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Clinical;
 using Application.DTOs.Clinical.PatientAntecedent;
 using Domain.Entities.Clinical;
@@ -6,7 +6,7 @@ using Domain.Entities.Clinical;
 namespace Application.Services.Clinical;
 
 public sealed class PatientAntecedentService(
-    IRepository<PatientAntecedent> repository,
+    IRepository<PatientAntecedentEntity> repository,
     IUnitOfWork unitOfWork) : IPatientAntecedentService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -26,7 +26,7 @@ public sealed class PatientAntecedentService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new PatientAntecedent(
+            var entity = new PatientAntecedentEntity(
                 request.PatientId,
                 request.AntecedentTypeId,
                 request.Description,
@@ -64,7 +64,7 @@ public sealed class PatientAntecedentService(
         return true;
     }
 
-    private static object Map(PatientAntecedent e) => new
+    private static object Map(PatientAntecedentEntity e) => new
     {
         e.Id, e.PatientId, e.AntecedentTypeId, e.Description, e.IsActive, e.RegisteredByUserId, e.RegisteredAt
     };

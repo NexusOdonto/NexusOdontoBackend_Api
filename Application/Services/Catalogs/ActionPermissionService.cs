@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class ActionPermissionService(CatalogServiceCore<ActionPermission> core) : IActionPermissionService
+public sealed class ActionPermissionService(CatalogServiceCore<ActionPermissionEntity> core) : IActionPermissionService
 {
     public Task<IReadOnlyList<AccionPermisoDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToAccionPermisoDto);
@@ -15,7 +15,7 @@ public sealed class ActionPermissionService(CatalogServiceCore<ActionPermission>
     public Task<AccionPermisoDto> CreateAsync(AccionPermisoDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new ActionPermission(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new ActionPermissionEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToAccionPermisoDto);
     }

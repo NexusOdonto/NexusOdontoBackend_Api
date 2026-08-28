@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Odontogram;
 
-public class DentalFindingConfiguration : IEntityTypeConfiguration<DentalFinding>
+public class DentalFindingConfiguration : IEntityTypeConfiguration<DentalFindingEntity>
 {
-    public void Configure(EntityTypeBuilder<DentalFinding> builder)
+    public void Configure(EntityTypeBuilder<DentalFindingEntity> builder)
     {
         builder.ToTable("dental_findings");
 

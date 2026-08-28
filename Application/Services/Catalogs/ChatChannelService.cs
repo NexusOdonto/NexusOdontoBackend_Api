@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.ChatChannel;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class ChatChannelService(CatalogServiceCore<ChatChannel> core) : IChatChannelService
+public sealed class ChatChannelService(CatalogServiceCore<ChatChannelEntity> core) : IChatChannelService
 {
     public Task<IReadOnlyList<ChatChannelDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToChatChannelDto);
@@ -15,7 +15,7 @@ public sealed class ChatChannelService(CatalogServiceCore<ChatChannel> core) : I
     public Task<ChatChannelDto> CreateAsync(CreateChatChannelRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new ChatChannel(request.Code, request.Name, request.Description, request.SortOrder);
+        var entity = new ChatChannelEntity(request.Code, request.Name, request.Description, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToChatChannelDto);
     }
 

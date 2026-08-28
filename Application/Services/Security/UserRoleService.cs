@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.Security;
 using Application.DTOs.UsuarioRoles;
 using Domain.Entities.Security;
@@ -23,25 +24,25 @@ public sealed class UserRoleService(
 
     public async Task<UsuarioRolDto?> GetByIdAsync(Guid id)
     {
-        var user = await userRepository.GetByIdWithRolesAsync(id);
-        var role = user?.UserRoles.FirstOrDefault();
-        return role is null
+        var UserEntity = await userRepository.GetByIdWithRolesAsync(id);
+        var RoleEntity = UserEntity?.UserRoles.FirstOrDefault();
+        return RoleEntity is null
             ? null
-            : new UsuarioRolDto { UsuarioId = role.UserId, RolId = role.RoleId };
+            : new UsuarioRolDto { UsuarioId = RoleEntity.UserId, RolId = RoleEntity.RoleId };
     }
 
     public async Task<UsuarioRolDto> CreateAsync(UsuarioRolDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var user = await userRepository.GetByIdWithRolesAsync(request.UsuarioId)
-            ?? throw new InvalidOperationException($"User {request.UsuarioId} was not found.");
+        var UserEntity = await userRepository.GetByIdWithRolesAsync(request.UsuarioId)
+            ?? throw new InvalidOperationException($"UserEntity {request.UsuarioId} was not found.");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            if (user.UserRoles.All(ur => ur.RoleId != request.RolId))
+            if (UserEntity.UserRoles.All(ur => ur.RoleId != request.RolId))
             {
-                user.UserRoles.Add(new UserRole(request.UsuarioId, request.RolId));
-                userRepository.Update(user);
+                UserEntity.UserRoles.Add(new UserRoleEntity(request.UsuarioId, request.RolId));
+                userRepository.Update(UserEntity);
             }
 
             return new UsuarioRolDto { UsuarioId = request.UsuarioId, RolId = request.RolId };
@@ -50,13 +51,13 @@ public sealed class UserRoleService(
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var user = await userRepository.GetByIdWithRolesAsync(id);
-        if (user is null || user.UserRoles.Count == 0) return false;
+        var UserEntity = await userRepository.GetByIdWithRolesAsync(id);
+        if (UserEntity is null || UserEntity.UserRoles.Count == 0) return false;
 
         await ServiceWrite.InTransactionAsync(unitOfWork, () =>
         {
-            user.UserRoles.Clear();
-            userRepository.Update(user);
+            UserEntity.UserRoles.Clear();
+            userRepository.Update(UserEntity);
             return Task.CompletedTask;
         });
         return true;

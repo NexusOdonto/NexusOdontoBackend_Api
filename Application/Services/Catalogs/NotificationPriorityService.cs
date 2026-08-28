@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class NotificationPriorityService(CatalogServiceCore<NotificationPriority> core) : INotificationPriorityService
+public sealed class NotificationPriorityService(CatalogServiceCore<NotificationPriorityEntity> core) : INotificationPriorityService
 {
     public Task<IReadOnlyList<PrioridadNotificacionDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToPrioridadNotificacionDto);
@@ -15,7 +15,7 @@ public sealed class NotificationPriorityService(CatalogServiceCore<NotificationP
     public Task<PrioridadNotificacionDto> CreateAsync(PrioridadNotificacionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new NotificationPriority(request.Codigo, request.Nombre, request.Descripcion, request.ColorHex, request.Nivel, request.Orden);
+        var entity = new NotificationPriorityEntity(request.Codigo, request.Nombre, request.Descripcion, request.ColorHex, request.Nivel, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToPrioridadNotificacionDto);
     }

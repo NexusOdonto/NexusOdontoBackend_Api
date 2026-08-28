@@ -1,4 +1,4 @@
-using NotificationPriorityEntity = Domain.Entities.Catalogs.NotificationPriority;
+using NotificationPriorityEntity = Domain.Entities.Catalogs.NotificationPriorityEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.NotificationPriority;

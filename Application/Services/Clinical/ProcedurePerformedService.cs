@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Clinical;
 using Application.DTOs.Clinical.ProcedurePerformed;
 using Domain.Entities.Clinical;
@@ -6,7 +6,7 @@ using Domain.Entities.Clinical;
 namespace Application.Services.Clinical;
 
 public sealed class ProcedurePerformedService(
-    IRepository<ProcedurePerformed> repository,
+    IRepository<ProcedurePerformedEntity> repository,
     IUnitOfWork unitOfWork) : IProcedurePerformedService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -26,7 +26,7 @@ public sealed class ProcedurePerformedService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ProcedurePerformed(
+            var entity = new ProcedurePerformedEntity(
                 request.ClinicalAttentionId,
                 request.Description,
                 request.ServiceId,
@@ -44,7 +44,7 @@ public sealed class ProcedurePerformedService(
         return true;
     }
 
-    private static object Map(ProcedurePerformed e) => new
+    private static object Map(ProcedurePerformedEntity e) => new
     {
         e.Id, e.ClinicalAttentionId, e.ServiceId, e.Description, e.PerformedAt, e.AmountCharged
     };

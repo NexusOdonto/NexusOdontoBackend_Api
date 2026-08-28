@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Usuarios;
 using Domain.Entities.People;
@@ -28,7 +29,7 @@ public sealed class UserService(
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-            var entity = new User(request.PersonaId, passwordHash);
+            var entity = new UserEntity(request.PersonaId, passwordHash);
             await userRepository.AddAsync(entity);
             return Map(entity);
         });
@@ -63,7 +64,7 @@ public sealed class UserService(
         return true;
     }
 
-    private static object Map(User e) => new
+    private static object Map(UserEntity e) => new
     {
         e.Id,
         e.PersonId,

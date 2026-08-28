@@ -1,5 +1,20 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Catalogs;
+using Application.Contracts.Repositories.Chatbot;
+using Application.Contracts.Repositories.Clinical;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Odontogram;
+using Application.Contracts.Repositories.People;
+using Application.Contracts.Repositories.Schedule;
+using Application.Contracts.Repositories.Security;
 using Infrastructure.Persistence.Context;
+using Infrastructure.Repositories.Catalogs;
+using Infrastructure.Repositories.Chatbot;
+using Infrastructure.Repositories.Clinical;
+using Infrastructure.Repositories.Common;
+using Infrastructure.Repositories.Odontogram;
+using Infrastructure.Repositories.People;
+using Infrastructure.Repositories.Schedule;
+using Infrastructure.Repositories.Security;
 using Infrastructure.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +33,32 @@ public static class DependencyInjection
             options.UseOracle(connectionString));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped(typeof(ICatalogRepository<>), typeof(CatalogRepository<>));
+
+        services.AddScoped<IPersonRepository, PersonRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPatientRepository, PatientRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IProfessionalRepository, ProfessionalRepository>();
+        services.AddScoped<ISessionRepository, SessionRepository>();
+
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+
+        services.AddScoped<IClinicalHistoryRepository, ClinicalHistoryRepository>();
+        services.AddScoped<IClinicalAttentionRepository, ClinicalAttentionRepository>();
+
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+
+        services.AddScoped<IServiceRepository, ServiceRepository>();
+
+        services.AddScoped<IChatbotConversationRepository, ChatbotConversationRepository>();
+        services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
+
+        services.AddScoped<IToothRepository, ToothRepository>();
 
         return services;
     }

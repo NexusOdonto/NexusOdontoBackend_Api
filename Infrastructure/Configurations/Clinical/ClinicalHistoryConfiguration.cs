@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Clinical;
 
-public class ClinicalHistoryConfiguration : IEntityTypeConfiguration<ClinicalHistory>
+public class ClinicalHistoryConfiguration : IEntityTypeConfiguration<ClinicalHistoryEntity>
 {
-    public void Configure(EntityTypeBuilder<ClinicalHistory> builder)
+    public void Configure(EntityTypeBuilder<ClinicalHistoryEntity> builder)
     {
         builder.ToTable("clinical_histories");
 

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class WhatsAppNotificationTypeConfiguration : IEntityTypeConfiguration<WhatsAppNotificationType>
+public class WhatsAppNotificationTypeConfiguration : IEntityTypeConfiguration<WhatsAppNotificationTypeEntity>
 {
-    public void Configure(EntityTypeBuilder<WhatsAppNotificationType> builder)
+    public void Configure(EntityTypeBuilder<WhatsAppNotificationTypeEntity> builder)
     {
         builder.ToTable("whatsapp_notification_types");
 

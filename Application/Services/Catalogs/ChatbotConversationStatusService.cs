@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.ChatbotConversationStatus;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class ChatbotConversationStatusService(CatalogServiceCore<ChatbotConversationStatus> core) : IChatbotConversationStatusService
+public sealed class ChatbotConversationStatusService(CatalogServiceCore<ChatbotConversationStatusEntity> core) : IChatbotConversationStatusService
 {
     public Task<IReadOnlyList<ChatbotConversationStatusDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToChatbotConversationStatusDto);
@@ -15,7 +15,7 @@ public sealed class ChatbotConversationStatusService(CatalogServiceCore<ChatbotC
     public Task<ChatbotConversationStatusDto> CreateAsync(CreateChatbotConversationStatusRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new ChatbotConversationStatus(request.Code, request.Name, request.Description, request.IsFinal, request.SortOrder);
+        var entity = new ChatbotConversationStatusEntity(request.Code, request.Name, request.Description, request.IsFinal, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToChatbotConversationStatusDto);
     }
 

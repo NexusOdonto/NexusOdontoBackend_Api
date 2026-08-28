@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class JobTitleService(CatalogServiceCore<JobTitle> core) : IJobTitleService
+public sealed class JobTitleService(CatalogServiceCore<JobTitleEntity> core) : IJobTitleService
 {
     public Task<IReadOnlyList<CargoDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToCargoDto);
@@ -15,7 +15,7 @@ public sealed class JobTitleService(CatalogServiceCore<JobTitle> core) : IJobTit
     public Task<CargoDto> CreateAsync(CargoDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new JobTitle(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new JobTitleEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToCargoDto);
     }

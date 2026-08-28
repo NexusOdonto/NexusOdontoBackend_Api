@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.FindingType;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class FindingTypeService(CatalogServiceCore<FindingType> core) : IFindingTypeService
+public sealed class FindingTypeService(CatalogServiceCore<FindingTypeEntity> core) : IFindingTypeService
 {
     public Task<IReadOnlyList<FindingTypeDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToFindingTypeDto);
@@ -15,7 +15,7 @@ public sealed class FindingTypeService(CatalogServiceCore<FindingType> core) : I
     public Task<FindingTypeDto> CreateAsync(CreateFindingTypeRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new FindingType(request.Code, request.Name, request.Description, request.ColorHex, request.VisualSymbol, request.RequiresSurface, request.SortOrder);
+        var entity = new FindingTypeEntity(request.Code, request.Name, request.Description, request.ColorHex, request.VisualSymbol, request.RequiresSurface, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToFindingTypeDto);
     }
 

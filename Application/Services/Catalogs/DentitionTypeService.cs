@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.DentitionType;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class DentitionTypeService(CatalogServiceCore<DentitionType> core) : IDentitionTypeService
+public sealed class DentitionTypeService(CatalogServiceCore<DentitionTypeEntity> core) : IDentitionTypeService
 {
     public Task<IReadOnlyList<DentitionTypeDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToDentitionTypeDto);
@@ -15,7 +15,7 @@ public sealed class DentitionTypeService(CatalogServiceCore<DentitionType> core)
     public Task<DentitionTypeDto> CreateAsync(CreateDentitionTypeRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new DentitionType(request.Code, request.Name, request.Description, request.SortOrder);
+        var entity = new DentitionTypeEntity(request.Code, request.Name, request.Description, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToDentitionTypeDto);
     }
 

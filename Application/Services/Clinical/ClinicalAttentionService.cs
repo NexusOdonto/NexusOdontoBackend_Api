@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Services.Clinical;
 using Application.DTOs.Clinical.ClinicalAttention;
 using Domain.Entities.Clinical;
@@ -26,7 +27,7 @@ public sealed class ClinicalAttentionService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ClinicalAttention(
+            var entity = new ClinicalAttentionEntity(
                 request.AppointmentId,
                 clinicalExam: request.ClinicalExam,
                 progressNotes: request.ProgressNotes,
@@ -58,7 +59,7 @@ public sealed class ClinicalAttentionService(
         return true;
     }
 
-    private static object Map(ClinicalAttention e) => new
+    private static object Map(ClinicalAttentionEntity e) => new
     {
         e.Id, e.AppointmentId, e.AttentionAt, e.ClinicalExam, e.ProgressNotes, e.TreatmentPlan
     };

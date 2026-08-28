@@ -1,4 +1,4 @@
-using SupportTicketReasonEntity = Domain.Entities.Catalogs.SupportTicketReason;
+using SupportTicketReasonEntity = Domain.Entities.Catalogs.SupportTicketReasonEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.SupportTicketReason;

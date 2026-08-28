@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class WhatsAppNotificationStatusService(CatalogServiceCore<WhatsAppNotificationStatus> core) : IWhatsAppNotificationStatusService
+public sealed class WhatsAppNotificationStatusService(CatalogServiceCore<WhatsAppNotificationStatusEntity> core) : IWhatsAppNotificationStatusService
 {
     public Task<IReadOnlyList<EstadoNotificacionWhatsappDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToEstadoNotificacionWhatsappDto);
@@ -15,7 +15,7 @@ public sealed class WhatsAppNotificationStatusService(CatalogServiceCore<WhatsAp
     public Task<EstadoNotificacionWhatsappDto> CreateAsync(EstadoNotificacionWhatsappDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new WhatsAppNotificationStatus(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new WhatsAppNotificationStatusEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToEstadoNotificacionWhatsappDto);
     }

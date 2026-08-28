@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Citas;
 using Domain.Entities.Schedule;
@@ -26,7 +27,7 @@ public sealed class AppointmentService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Appointment(
+            var entity = new AppointmentEntity(
                 request.PacienteId,
                 request.ProfesionalId,
                 request.ServicioId,
@@ -76,7 +77,7 @@ public sealed class AppointmentService(
         return true;
     }
 
-    private static object Map(Appointment e) => new
+    private static object Map(AppointmentEntity e) => new
     {
         e.Id, e.PatientId, e.ProfessionalId, e.ServiceId, e.StartsAt, e.EndsAt,
         e.AppointmentStatusId, e.AppointmentOriginId, e.ReasonForVisit, e.Notes,

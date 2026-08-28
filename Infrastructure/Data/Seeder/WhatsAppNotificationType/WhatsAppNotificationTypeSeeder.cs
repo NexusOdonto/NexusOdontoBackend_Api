@@ -1,4 +1,4 @@
-using WhatsAppNotificationTypeEntity = Domain.Entities.Catalogs.WhatsAppNotificationType;
+using WhatsAppNotificationTypeEntity = Domain.Entities.Catalogs.WhatsAppNotificationTypeEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.WhatsAppNotificationType;

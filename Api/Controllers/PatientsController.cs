@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.People;
 using Application.DTOs;
 using Application.DTOs.Pacientes;
@@ -14,12 +14,12 @@ namespace Api.Controllers;
 [Route("api/v1/[controller]")]
 public sealed class PatientsController : ControllerBase
 {
-    private readonly IRepository<Patient> _patientRepository;
+    private readonly IRepository<PatientEntity> _patientRepository;
     private readonly IPersonService _personService;
     private readonly IPatientService _patientService;
 
     public PatientsController(
-        IRepository<Patient> patientRepository,
+        IRepository<PatientEntity> patientRepository,
         IPersonService personService,
         IPatientService patientService)
     {
@@ -32,7 +32,7 @@ public sealed class PatientsController : ControllerBase
     [Authorize(Policy = "PATIENTS.VIEW")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<IReadOnlyList<Patient>>> List()
+    public async Task<ActionResult<IReadOnlyList<PatientEntity>>> List()
     {
         var patients = await _patientRepository.GetAllAsync();
         return Ok(patients);
@@ -45,7 +45,7 @@ public sealed class PatientsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreatePatientRequestDto request)
     {
-        var person = await _personService.CreateAsync(new CreatePersonaDto
+        var PersonEntity = await _personService.CreateAsync(new CreatePersonaDto
         {
             TipoDocumentoId = request.DocumentTypeId,
             NumeroDocumento = request.DocumentNumber,
@@ -58,16 +58,16 @@ public sealed class PatientsController : ControllerBase
             Direccion = request.Address
         });
 
-        var personId = (Guid)person.GetType().GetProperty("Id")!.GetValue(person)!;
+        var personId = (Guid)PersonEntity.GetType().GetProperty("Id")!.GetValue(PersonEntity)!;
 
-        var patient = await _patientService.CreateAsync(new CreatePacienteDto
+        var PatientEntity = await _patientService.CreateAsync(new CreatePacienteDto
         {
             PersonaId = personId,
             ContactoEmergencia = request.EmergencyContact,
             TelefonoEmergencia = request.EmergencyPhone
         });
 
-        var patientId = (Guid)patient.GetType().GetProperty("Id")!.GetValue(patient)!;
+        var patientId = (Guid)PatientEntity.GetType().GetProperty("Id")!.GetValue(PatientEntity)!;
 
         return Created(
             $"/api/v1/patients/{patientId}",

@@ -1,4 +1,6 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Catalogs;
+using Application.Contracts.Repositories.Chatbot;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Chatbot.ChatbotConversation;
 using Domain.Entities.Catalogs;
@@ -8,7 +10,7 @@ namespace Application.Services.Chatbot;
 
 public sealed class ChatbotConversationService(
     IChatbotConversationRepository repository,
-    ICatalogRepository<ChatbotConversationStatus> statusCatalog,
+    ICatalogRepository<ChatbotConversationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IChatbotConversationService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -30,7 +32,7 @@ public sealed class ChatbotConversationService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ChatbotConversation(
+            var entity = new ChatbotConversationEntity(
                 request.ChatIdentifier,
                 request.ChatChannelId,
                 statusId,
@@ -48,7 +50,7 @@ public sealed class ChatbotConversationService(
         return true;
     }
 
-    private static object Map(ChatbotConversation e) => new
+    private static object Map(ChatbotConversationEntity e) => new
     {
         e.Id, e.PatientId, e.ChatIdentifier, e.ChatChannelId, e.ConversationStatusId,
         e.StartedAt, e.LastInteractionAt, e.ClosedAt

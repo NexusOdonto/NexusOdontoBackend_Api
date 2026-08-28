@@ -1,4 +1,6 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Catalogs;
+using Application.Contracts.Repositories.Chatbot;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Support.SupportTicket;
 using Domain.Entities.Catalogs;
@@ -8,7 +10,7 @@ namespace Application.Services.Chatbot;
 
 public sealed class SupportTicketService(
     ISupportTicketRepository repository,
-    ICatalogRepository<SupportTicketStatus> statusCatalog,
+    ICatalogRepository<SupportTicketStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : ISupportTicketService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -30,7 +32,7 @@ public sealed class SupportTicketService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new SupportTicket(
+            var entity = new SupportTicketEntity(
                 request.ChatbotConversationId,
                 request.TicketReasonId,
                 request.NotificationPriorityId,
@@ -80,7 +82,7 @@ public sealed class SupportTicketService(
         return true;
     }
 
-    private static object Map(SupportTicket e) => new
+    private static object Map(SupportTicketEntity e) => new
     {
         e.Id, e.ChatbotConversationId, e.PatientId, e.TicketReasonId, e.NotificationPriorityId,
         e.TicketStatusId, e.Title, e.Description, e.ChatbotSummary, e.RagConfidence,

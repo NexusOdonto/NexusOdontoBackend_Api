@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class AppointmentOriginService(CatalogServiceCore<AppointmentOrigin> core) : IAppointmentOriginService
+public sealed class AppointmentOriginService(CatalogServiceCore<AppointmentOriginEntity> core) : IAppointmentOriginService
 {
     public Task<IReadOnlyList<OrigenCitaDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToOrigenCitaDto);
@@ -15,7 +15,7 @@ public sealed class AppointmentOriginService(CatalogServiceCore<AppointmentOrigi
     public Task<OrigenCitaDto> CreateAsync(OrigenCitaDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new AppointmentOrigin(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new AppointmentOriginEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToOrigenCitaDto);
     }

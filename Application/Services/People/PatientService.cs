@@ -1,4 +1,6 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
+using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Services.People;
 using Application.DTOs.Pacientes;
 using Domain.Entities.Clinical;
@@ -29,21 +31,21 @@ public sealed class PatientService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var person = await personRepository.GetByIdAsync(request.PersonaId)
-            ?? throw new InvalidOperationException($"Person {request.PersonaId} was not found.");
+        var PersonEntity = await personRepository.GetByIdAsync(request.PersonaId)
+            ?? throw new InvalidOperationException($"PersonEntity {request.PersonaId} was not found.");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var patient = new Patient(
-                person.Id,
+            var PatientEntity = new PatientEntity(
+                PersonEntity.Id,
                 request.ContactoEmergencia,
                 request.TelefonoEmergencia);
-            await patientRepository.AddAsync(patient);
+            await patientRepository.AddAsync(PatientEntity);
 
-            var history = new ClinicalHistory(patient.Id);
+            var history = new ClinicalHistoryEntity(PatientEntity.Id);
             await clinicalHistoryRepository.AddAsync(history);
 
-            return Map(patient);
+            return Map(PatientEntity);
         });
     }
 
@@ -76,7 +78,7 @@ public sealed class PatientService(
         return true;
     }
 
-    private static object Map(Patient e) => new
+    private static object Map(PatientEntity e) => new
     {
         e.Id,
         e.PersonId,

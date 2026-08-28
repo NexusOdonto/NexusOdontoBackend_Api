@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.AntecedentType;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class AntecedentTypeService(CatalogServiceCore<AntecedentType> core) : IAntecedentTypeService
+public sealed class AntecedentTypeService(CatalogServiceCore<AntecedentTypeEntity> core) : IAntecedentTypeService
 {
     public Task<IReadOnlyList<AntecedentTypeDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToAntecedentTypeDto);
@@ -15,7 +15,7 @@ public sealed class AntecedentTypeService(CatalogServiceCore<AntecedentType> cor
     public Task<AntecedentTypeDto> CreateAsync(CreateAntecedentTypeRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new AntecedentType(request.Code, request.Name, request.Description, request.SortOrder);
+        var entity = new AntecedentTypeEntity(request.Code, request.Name, request.Description, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToAntecedentTypeDto);
     }
 

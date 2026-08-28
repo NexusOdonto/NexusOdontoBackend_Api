@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.SupportTicketStatus;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class SupportTicketStatusService(CatalogServiceCore<SupportTicketStatus> core) : ISupportTicketStatusService
+public sealed class SupportTicketStatusService(CatalogServiceCore<SupportTicketStatusEntity> core) : ISupportTicketStatusService
 {
     public Task<IReadOnlyList<SupportTicketStatusDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToSupportTicketStatusDto);
@@ -15,7 +15,7 @@ public sealed class SupportTicketStatusService(CatalogServiceCore<SupportTicketS
     public Task<SupportTicketStatusDto> CreateAsync(CreateSupportTicketStatusRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new SupportTicketStatus(request.Code, request.Name, request.Description, request.IsFinal, request.AllowsAssignment, request.SortOrder);
+        var entity = new SupportTicketStatusEntity(request.Code, request.Name, request.Description, request.IsFinal, request.AllowsAssignment, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToSupportTicketStatusDto);
     }
 

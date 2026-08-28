@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.ToothStatus;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class ToothStatusService(CatalogServiceCore<ToothStatus> core) : IToothStatusService
+public sealed class ToothStatusService(CatalogServiceCore<ToothStatusEntity> core) : IToothStatusService
 {
     public Task<IReadOnlyList<ToothStatusDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToToothStatusDto);
@@ -15,7 +15,7 @@ public sealed class ToothStatusService(CatalogServiceCore<ToothStatus> core) : I
     public Task<ToothStatusDto> CreateAsync(CreateToothStatusRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new ToothStatus(request.Code, request.Name, request.Description, request.ColorHex, request.VisualCode, request.SortOrder);
+        var entity = new ToothStatusEntity(request.Code, request.Name, request.Description, request.ColorHex, request.VisualCode, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToToothStatusDto);
     }
 

@@ -1,4 +1,4 @@
-using ChatChannelEntity = Domain.Entities.Catalogs.ChatChannel;
+using ChatChannelEntity = Domain.Entities.Catalogs.ChatChannelEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.ChatChannel;

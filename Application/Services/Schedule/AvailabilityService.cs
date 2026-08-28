@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Disponibilidades;
 using Domain.Entities.Schedule;
@@ -26,7 +27,7 @@ public sealed class AvailabilityService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Availability(
+            var entity = new AvailabilityEntity(
                 request.ProfesionalId,
                 request.DiaInicio,
                 request.DiaFin,
@@ -73,7 +74,7 @@ public sealed class AvailabilityService(
         return true;
     }
 
-    private static object Map(Availability e) => new
+    private static object Map(AvailabilityEntity e) => new
     {
         e.Id, e.ProfessionalId, e.StartDay, e.EndDay, e.StartTime, e.LunchStartTime, e.LunchEndTime, e.EndTime, e.IsActive
     };

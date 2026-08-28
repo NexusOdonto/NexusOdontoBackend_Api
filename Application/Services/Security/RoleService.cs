@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Security;
 using Application.Contracts.Services.Security;
 using Application.DTOs.Roles;
 using Domain.Entities.Security;
@@ -27,7 +28,7 @@ public sealed class RoleService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Role(request.Codigo, request.Nombre, request.Descripcion);
+            var entity = new RoleEntity(request.Codigo, request.Nombre, request.Descripcion);
             await roleRepository.AddAsync(entity);
             return Map(entity);
         });
@@ -63,7 +64,7 @@ public sealed class RoleService(
         return true;
     }
 
-    private static object Map(Role e) => new
+    private static object Map(RoleEntity e) => new
     {
         e.Id,
         e.Code,

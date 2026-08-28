@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class DocumentTypeConfiguration : IEntityTypeConfiguration<DocumentType>
+public class DocumentTypeConfiguration : IEntityTypeConfiguration<DocumentTypeEntity>
 {
-    public void Configure(EntityTypeBuilder<DocumentType> builder)
+    public void Configure(EntityTypeBuilder<DocumentTypeEntity> builder)
     {
         builder.ToTable("document_types");
 

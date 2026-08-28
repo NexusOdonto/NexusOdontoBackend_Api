@@ -1,7 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services;
 using Application.DTOs.Auth;
 using Domain.Entities.People;
@@ -38,21 +39,21 @@ public sealed class AuthService(
             }
         }
 
-        var user = await userRepository.GetByEmailWithRolesAsync(
+        var UserEntity = await userRepository.GetByEmailWithRolesAsync(
             email,
             cancellationToken);
 
-        if (user is null ||
-            !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (UserEntity is null ||
+            !BCrypt.Net.BCrypt.Verify(request.Password, UserEntity.PasswordHash))
         {
             return null;
         }
 
-        user.RegisterAccess(DateTime.UtcNow);
-        userRepository.Update(user);
+        UserEntity.RegisterAccess(DateTime.UtcNow);
+        userRepository.Update(UserEntity);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return GenerateToken(user);
+        return GenerateToken(UserEntity);
     }
 
     public async Task<UserResponseDto> RegisterAsync(
@@ -62,28 +63,28 @@ public sealed class AuthService(
         ArgumentNullException.ThrowIfNull(request);
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var user = new User(request.PersonId, passwordHash);
-        user.UserRoles.Add(new UserRole(user.Id, request.RoleId));
+        var UserEntity = new UserEntity(request.PersonId, passwordHash);
+        UserEntity.UserRoles.Add(new UserRoleEntity(UserEntity.Id, request.RoleId));
 
-        await userRepository.AddAsync(user);
+        await userRepository.AddAsync(UserEntity);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var loaded = await userRepository.GetByIdWithRolesAsync(user.Id, cancellationToken)
-            ?? user;
+        var loaded = await userRepository.GetByIdWithRolesAsync(UserEntity.Id, cancellationToken)
+            ?? UserEntity;
 
         return MapToResponse(loaded);
     }
 
-    private AuthResponseDto GenerateToken(User user)
+    private AuthResponseDto GenerateToken(UserEntity UserEntity)
     {
         ValidateJwtSettings();
 
         var expiresAtUtc = DateTime.UtcNow.AddMinutes(jwtSettings.ExpirationMinutes);
-        var primaryRole = user.UserRoles.FirstOrDefault()?.Role;
+        var primaryRole = UserEntity.UserRoles.FirstOrDefault()?.RoleEntity;
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString())
+            new(JwtRegisteredClaimNames.Sub, UserEntity.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, UserEntity.Id.ToString())
         };
 
         if (primaryRole is not null)
@@ -92,9 +93,9 @@ public sealed class AuthService(
             claims.Add(new Claim(ClaimTypes.Role, primaryRole.Name));
         }
 
-        foreach (var userRole in user.UserRoles)
+        foreach (var UserRoleEntity in UserEntity.UserRoles)
         {
-            claims.Add(new Claim("roleId", userRole.RoleId.ToString()));
+            claims.Add(new Claim("roleId", UserRoleEntity.RoleId.ToString()));
         }
 
         var signingKey = new SymmetricSecurityKey(
@@ -117,18 +118,18 @@ public sealed class AuthService(
         };
     }
 
-    public static UserResponseDto MapToResponse(User user)
+    public static UserResponseDto MapToResponse(UserEntity UserEntity)
     {
-        var person = user.Person;
+        var PersonEntity = UserEntity.PersonEntity;
         return new UserResponseDto
         {
-            Id = user.Id,
-            PersonId = user.PersonId,
-            Name = person is null
+            Id = UserEntity.Id,
+            PersonId = UserEntity.PersonId,
+            Name = PersonEntity is null
                 ? string.Empty
-                : $"{person.FirstName} {person.LastName}".Trim(),
-            Email = person?.Email ?? string.Empty,
-            RoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList()
+                : $"{PersonEntity.FirstName} {PersonEntity.LastName}".Trim(),
+            Email = PersonEntity?.Email ?? string.Empty,
+            RoleIds = UserEntity.UserRoles.Select(ur => ur.RoleId).ToList()
         };
     }
 

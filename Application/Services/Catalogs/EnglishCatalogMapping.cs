@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Catalogs.AntecedentType;
+using Application.DTOs.Catalogs.AntecedentType;
 using Application.DTOs.Catalogs.AuditEventType;
 using Application.DTOs.Catalogs.ChatbotConversationStatus;
 using Application.DTOs.Catalogs.ChatbotMessageRole;
@@ -17,76 +17,76 @@ namespace Application.Services.Catalogs;
 
 internal static class EnglishCatalogMapping
 {
-    public static AntecedentTypeDto ToAntecedentTypeDto(AntecedentType e) => new()
+    public static AntecedentTypeDto ToAntecedentTypeDto(AntecedentTypeEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static AuditEventTypeDto ToAuditEventTypeDto(AuditEventType e) => new()
+    public static AuditEventTypeDto ToAuditEventTypeDto(AuditEventTypeEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         Category = e.Category, RiskLevel = e.RiskLevel, IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static ChatbotConversationStatusDto ToChatbotConversationStatusDto(ChatbotConversationStatus e) => new()
+    public static ChatbotConversationStatusDto ToChatbotConversationStatusDto(ChatbotConversationStatusEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsFinal = e.IsFinal, IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static ChatbotMessageRoleDto ToChatbotMessageRoleDto(ChatbotMessageRole e) => new()
+    public static ChatbotMessageRoleDto ToChatbotMessageRoleDto(ChatbotMessageRoleEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static ChatChannelDto ToChatChannelDto(ChatChannel e) => new()
+    public static ChatChannelDto ToChatChannelDto(ChatChannelEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static DentalSurfaceDto ToDentalSurfaceDto(DentalSurface e) => new()
+    public static DentalSurfaceDto ToDentalSurfaceDto(DentalSurfaceEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         AppliesToAnterior = e.AppliesToAnterior, AppliesToPosterior = e.AppliesToPosterior,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static DentitionTypeDto ToDentitionTypeDto(DentitionType e) => new()
+    public static DentitionTypeDto ToDentitionTypeDto(DentitionTypeEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static FindingStatusDto ToFindingStatusDto(FindingStatus e) => new()
+    public static FindingStatusDto ToFindingStatusDto(FindingStatusEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         ColorHex = e.ColorHex, IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static FindingTypeDto ToFindingTypeDto(FindingType e) => new()
+    public static FindingTypeDto ToFindingTypeDto(FindingTypeEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         ColorHex = e.ColorHex, VisualSymbol = e.VisualSymbol, RequiresSurface = e.RequiresSurface,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static SupportTicketReasonDto ToSupportTicketReasonDto(SupportTicketReason e) => new()
+    public static SupportTicketReasonDto ToSupportTicketReasonDto(SupportTicketReasonEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static SupportTicketStatusDto ToSupportTicketStatusDto(SupportTicketStatus e) => new()
+    public static SupportTicketStatusDto ToSupportTicketStatusDto(SupportTicketStatusEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         IsFinal = e.IsFinal, AllowsAssignment = e.AllowsAssignment,
         IsActive = e.IsActive, SortOrder = e.SortOrder
     };
 
-    public static ToothStatusDto ToToothStatusDto(ToothStatus e) => new()
+    public static ToothStatusDto ToToothStatusDto(ToothStatusEntity e) => new()
     {
         Id = e.Id, Code = e.Code, Name = e.Name, Description = e.Description,
         ColorHex = e.ColorHex, VisualCode = e.VisualCode, IsActive = e.IsActive, SortOrder = e.SortOrder

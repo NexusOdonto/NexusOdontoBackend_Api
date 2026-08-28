@@ -1,4 +1,4 @@
-using ChatbotConversationStatusEntity = Domain.Entities.Catalogs.ChatbotConversationStatus;
+using ChatbotConversationStatusEntity = Domain.Entities.Catalogs.ChatbotConversationStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.ChatbotConversationStatus;

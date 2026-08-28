@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.People;
 
-public class PatientConfiguration : IEntityTypeConfiguration<Patient>
+public class PatientConfiguration : IEntityTypeConfiguration<PatientEntity>
 {
-    public void Configure(EntityTypeBuilder<Patient> builder)
+    public void Configure(EntityTypeBuilder<PatientEntity> builder)
     {
         builder.ToTable("patients");
 
@@ -42,8 +42,8 @@ public class PatientConfiguration : IEntityTypeConfiguration<Patient>
 
         builder.HasIndex(c => c.PersonId).IsUnique();
 
-        builder.HasOne(c => c.Person)
-            .WithOne(p => p.Patient)
-            .HasForeignKey<Patient>(c => c.PersonId);
+        builder.HasOne(c => c.PersonEntity)
+            .WithOne(p => p.PatientEntity)
+            .HasForeignKey<PatientEntity>(c => c.PersonId);
     }
 }

@@ -1,6 +1,7 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Sesiones;
 using Domain.Entities.People;
@@ -32,7 +33,7 @@ public sealed class SessionService(
             var refreshHash = Convert.ToHexString(
                 SHA256.HashData(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"))));
 
-            var entity = new Session(
+            var entity = new SessionEntity(
                 request.UsuarioId,
                 refreshHash,
                 tokenFamily,
@@ -61,7 +62,7 @@ public sealed class SessionService(
         return true;
     }
 
-    private static SesionDto Map(Session e) => new()
+    private static SesionDto Map(SessionEntity e) => new()
     {
         Id = e.Id,
         UsuarioId = e.UserId,

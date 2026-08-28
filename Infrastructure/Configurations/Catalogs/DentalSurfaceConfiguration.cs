@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class DentalSurfaceConfiguration : IEntityTypeConfiguration<DentalSurface>
+public class DentalSurfaceConfiguration : IEntityTypeConfiguration<DentalSurfaceEntity>
 {
-    public void Configure(EntityTypeBuilder<DentalSurface> builder)
+    public void Configure(EntityTypeBuilder<DentalSurfaceEntity> builder)
     {
         builder.ToTable("tooth_surfaces");
 

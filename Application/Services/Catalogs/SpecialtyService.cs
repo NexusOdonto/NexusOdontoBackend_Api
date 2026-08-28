@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class SpecialtyService(CatalogServiceCore<Specialty> core) : ISpecialtyService
+public sealed class SpecialtyService(CatalogServiceCore<SpecialtyEntity> core) : ISpecialtyService
 {
     public Task<IReadOnlyList<EspecialidadDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToEspecialidadDto);
@@ -15,7 +15,7 @@ public sealed class SpecialtyService(CatalogServiceCore<Specialty> core) : ISpec
     public Task<EspecialidadDto> CreateAsync(EspecialidadDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new Specialty(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new SpecialtyEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToEspecialidadDto);
     }

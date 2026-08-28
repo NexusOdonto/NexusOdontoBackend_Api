@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Services;
+using Application.Contracts.Services;
 using Application.Contracts.Services.Audit;
 using Application.Contracts.Services.Catalogs;
 using Application.Contracts.Services.Chatbot;
@@ -91,7 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IAvailabilityService, AvailabilityService>();
 
-        // Odontogram
+        // OdontogramEntity
         services.AddScoped<IOdontogramService, OdontogramService>();
         services.AddScoped<IOdontogramToothService, OdontogramToothService>();
         services.AddScoped<IDentalFindingService, DentalFindingService>();

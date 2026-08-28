@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.FindingStatus;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class FindingStatusService(CatalogServiceCore<FindingStatus> core) : IFindingStatusService
+public sealed class FindingStatusService(CatalogServiceCore<FindingStatusEntity> core) : IFindingStatusService
 {
     public Task<IReadOnlyList<FindingStatusDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToFindingStatusDto);
@@ -15,7 +15,7 @@ public sealed class FindingStatusService(CatalogServiceCore<FindingStatus> core)
     public Task<FindingStatusDto> CreateAsync(CreateFindingStatusRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new FindingStatus(request.Code, request.Name, request.Description, request.ColorHex, request.SortOrder);
+        var entity = new FindingStatusEntity(request.Code, request.Name, request.Description, request.ColorHex, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToFindingStatusDto);
     }
 

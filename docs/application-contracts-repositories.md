@@ -5,9 +5,49 @@
 
 ## Qué se hizo
 
-Se definieron los contratos de acceso a datos en `Application/Contracts/Repositories`: un CRUD genérico (`IRepository<T>`), unidad de trabajo (`IUnitOfWork`) y repositorios específicos por entidad solo cuando existe una consulta, include o clave de negocio que el genérico no cubre.
+Se definieron los contratos de acceso a datos en `Application/Contracts/Repositories`, organizados por módulo (alineado con `Application/Contracts/Services`): un CRUD genérico (`IRepository<T>`), unidad de trabajo (`IUnitOfWork`) y repositorios específicos por entidad solo cuando existe una consulta, include o clave de negocio que el genérico no cubre.
 
-En este momento hay **interfaces en Application**; **no hay implementaciones EF Core ni registro DI en Infrastructure**.
+Las interfaces viven en Application; las implementaciones EF Core están en `Infrastructure/Repositories` y se registran en `Infrastructure/DependencyInjection.cs`.
+
+### Estructura de carpetas y namespaces
+
+```
+Application/Contracts/Repositories/
+  Common/       → Application.Contracts.Repositories.Common
+    IRepository.cs
+    IUnitOfWork.cs
+  People/       → Application.Contracts.Repositories.People
+    IUserRepository.cs
+    IPersonRepository.cs
+    IPatientRepository.cs
+    IEmployeeRepository.cs
+    IProfessionalRepository.cs
+    ISessionRepository.cs
+  Security/     → Application.Contracts.Repositories.Security
+    IRoleRepository.cs
+    IPermissionRepository.cs
+  Clinical/     → Application.Contracts.Repositories.Clinical
+    IClinicalHistoryRepository.cs
+    IClinicalAttentionRepository.cs
+  Schedule/     → Application.Contracts.Repositories.Schedule
+    IAppointmentRepository.cs
+    IAvailabilityRepository.cs
+  Odontogram/   → Application.Contracts.Repositories.Odontogram
+    IToothRepository.cs
+  Catalogs/     → Application.Contracts.Repositories.Catalogs
+    ICatalogRepository.cs
+    IServiceRepository.cs
+  Chatbot/      → Application.Contracts.Repositories.Chatbot
+    IChatbotConversationRepository.cs
+    ISupportTicketRepository.cs
+```
+
+Las interfaces que heredan `IRepository<T>` importan `Application.Contracts.Repositories.Common`. En consumidores (servicios, controllers), el patrón recomendado es:
+
+```csharp
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People; // solo si usa IPatientRepository, etc.
+```
 
 ## Por qué
 
@@ -58,14 +98,14 @@ Métodos de `IUserRepository` involucrados: `GetEmailByDocumentNumberAsync`, `Ge
 
 ## Inventario de interfaces
 
-### Base
+### Common (`Application.Contracts.Repositories.Common`)
 
 | Interfaz | Métodos | Justificación |
 |----------|---------|---------------|
 | `IRepository<TEntity>` | `GetByIdAsync`, `GetAllAsync`, `AddAsync`, `Update`, `Remove` | CRUD genérico para entidades con `Guid Id`. |
 | `IUnitOfWork` | `SaveChangesAsync`, `BeginTransactionAsync`, `CommitTransactionAsync`, `RollbackTransactionAsync` | Persistencia atómica y transacciones explícitas. |
 
-### People / Security
+### People (`Application.Contracts.Repositories.People`) / Security (`Application.Contracts.Repositories.Security`)
 
 | Interfaz | Métodos específicos | Justificación |
 |----------|---------------------|---------------|
@@ -88,20 +128,21 @@ Métodos de `IUserRepository` involucrados: `GetEmailByDocumentNumberAsync`, `Ge
 | | `GetByIdWithPermissionsAsync` | Rol con permisos (include). |
 | `IPermissionRepository` | `GetByModuleAndActionAsync` | Lookup módulo + acción (autorización). |
 
-### Clinical / Schedule / Catalogs / Chatbot / Odontogram
+### Clinical, Schedule, Catalogs, Chatbot, Odontogram
 
-| Interfaz | Métodos específicos | Justificación |
+| Interfaz | Carpeta / namespace | Métodos específicos | Justificación |
+|----------|---------------------|---------------------|---------------|
 |----------|---------------------|---------------|
-| `IClinicalHistoryRepository` | `GetByPatientIdAsync` | Historia clínica 1:1 por paciente. |
-| `IClinicalAttentionRepository` | `GetByAppointmentIdAsync` | Atención clínica ligada a una cita. |
-| `IAppointmentRepository` | `GetByProfessionalInRangeAsync` | Agenda / detección de solapes en rango. |
-| | `GetByPatientAsync` | Citas de un paciente. |
-| `IAvailabilityRepository` | `GetByProfessionalAsync` | Horarios de disponibilidad del profesional. |
-| `IServiceRepository` | `GetByCodeAsync` | Servicio por código único. |
-| `ICatalogRepository<T>` | `GetByCodeAsync` | Catálogos (`CatalogEntity`) por `Code` único. |
-| `IChatbotConversationRepository` | `GetByChannelAndChatIdAsync` | Unicidad `(canal, chat_id)`. |
-| `ISupportTicketRepository` | `GetOpenByConversationIdAsync` | Ticket abierto de handoff por conversación. |
-| `IToothRepository` | `GetByCodeAsync`, `GetAllAsync`, `AddAsync`, `Update`, `Remove` | CRUD con PK string FDI; no hereda `IRepository<Tooth>`. |
+| `IClinicalHistoryRepository` | `Clinical/` | `GetByPatientIdAsync` | Historia clínica 1:1 por paciente. |
+| `IClinicalAttentionRepository` | `Clinical/` | `GetByAppointmentIdAsync` | Atención clínica ligada a una cita. |
+| `IAppointmentRepository` | `Schedule/` | `GetByProfessionalInRangeAsync` | Agenda / detección de solapes en rango. |
+| | | `GetByPatientAsync` | Citas de un paciente. |
+| `IAvailabilityRepository` | `Schedule/` | `GetByProfessionalAsync` | Horarios de disponibilidad del profesional. |
+| `IServiceRepository` | `Catalogs/` | `GetByCodeAsync` | Servicio por código único. |
+| `ICatalogRepository<T>` | `Catalogs/` | `GetByCodeAsync` | Catálogos (`CatalogEntity`) por `Code` único. |
+| `IChatbotConversationRepository` | `Chatbot/` | `GetByChannelAndChatIdAsync` | Unicidad `(canal, chat_id)`. |
+| `ISupportTicketRepository` | `Chatbot/` | `GetOpenByConversationIdAsync` | Ticket abierto de handoff por conversación. |
+| `IToothRepository` | `Odontogram/` | `GetByCodeAsync`, `GetAllAsync`, `AddAsync`, `Update`, `Remove` | CRUD con PK string FDI; no hereda `IRepository<Tooth>`. |
 
 ## Qué no se creó
 
@@ -116,13 +157,17 @@ No hay `I{Entity}Repository` para entidades que solo necesitarían el CRUD gené
 
 Si en el futuro aparece una consulta distinta del genérico, se agrega entonces el contrato específico.
 
-## Pendiente (Infrastructure)
+## Implementado (Infrastructure)
 
-1. Implementaciones EF Core de cada interfaz (y de `IRepository<T>` / `IUnitOfWork`).
-2. Registro en el contenedor DI.
-3. Traducir índices únicos, includes y joins documentados arriba a consultas reales (p. ej. `GetEmailByDocumentNumberAsync` vía `Person.DocumentNumber` → email).
+| Componente | Ubicación |
+|------------|-----------|
+| `AppDbContext` | `Infrastructure/Persistence/Context/AppDbContext.cs` — `ApplyConfigurationsFromAssembly` |
+| `Repository<T>` / `CatalogRepository<T>` | `Infrastructure/Repositories/Common/`, `Infrastructure/Repositories/Catalogs/` |
+| 17 repos específicos | `Infrastructure/Repositories/{People,Security,Clinical,Schedule,Catalogs,Chatbot,Odontogram}/` |
+| `UnitOfWork` | `Infrastructure/UnitOfWorks/UnitOfWork.cs` |
+| Registro DI | `Infrastructure/DependencyInjection.cs` — genéricos + 17 interfaces |
 
-Hasta entonces, los servicios de Application que ya dependen de estos contratos (p. ej. `AuthService`) no pueden ejecutarse contra una base real sin stubs o implementaciones.
+Consultas críticas implementadas: `GetEmailByDocumentNumberAsync` (join `Person` → email), `GetByEmailWithRolesAsync` / `GetByIdWithRolesAsync` (includes roles → permisos → acción), `GetOpenByConversationIdAsync` (`ClosedAt == null`).
 
 ---
 

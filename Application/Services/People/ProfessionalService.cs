@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Profesionales;
 using Domain.Entities.People;
@@ -27,7 +28,7 @@ public sealed class ProfessionalService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Professional(request.EmpleadoId, request.RegistroProfesional);
+            var entity = new ProfessionalEntity(request.EmpleadoId, request.RegistroProfesional);
             await professionalRepository.AddAsync(entity);
             return Map(entity);
         });
@@ -62,7 +63,7 @@ public sealed class ProfessionalService(
         return true;
     }
 
-    private static object Map(Professional e) => new
+    private static object Map(ProfessionalEntity e) => new
     {
         e.Id,
         e.EmployeeId,

@@ -1,4 +1,4 @@
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.DTOs;
 using Domain.Entities.Catalogs;
 using Microsoft.AspNetCore.Authorization;
@@ -11,11 +11,11 @@ namespace Api.Controllers;
 [Route("api/v1/[controller]")]
 public sealed class ServicesController : ControllerBase
 {
-    private readonly IRepository<Service> _serviceRepository;
+    private readonly IRepository<ServiceEntity> _serviceRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ServicesController(
-        IRepository<Service> serviceRepository,
+        IRepository<ServiceEntity> serviceRepository,
         IUnitOfWork unitOfWork)
     {
         _serviceRepository = serviceRepository;
@@ -26,7 +26,7 @@ public sealed class ServicesController : ControllerBase
     [Authorize(Policy = "CATALOGS.VIEW")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<IReadOnlyList<Service>>> List()
+    public async Task<ActionResult<IReadOnlyList<ServiceEntity>>> List()
     {
         var services = await _serviceRepository.GetAllAsync();
 
@@ -41,7 +41,7 @@ public sealed class ServicesController : ControllerBase
         [FromBody] CreateServiceRequestDto request,
         CancellationToken cancellationToken)
     {
-        var service = new Service(
+        var ServiceEntity = new ServiceEntity(
             request.Code,
             request.Name,
             request.Description,
@@ -49,11 +49,11 @@ public sealed class ServicesController : ControllerBase
             request.Price,
             request.SortOrder);
 
-        await _serviceRepository.AddAsync(service);
+        await _serviceRepository.AddAsync(ServiceEntity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Created(
-            $"/api/v1/services/{service.Id}",
-            new { serviceId = service.Id });
+            $"/api/v1/services/{ServiceEntity.Id}",
+            new { serviceId = ServiceEntity.Id });
     }
 }

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Schedule;
 
-public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
+public class AppointmentConfiguration : IEntityTypeConfiguration<AppointmentEntity>
 {
-    public void Configure(EntityTypeBuilder<Appointment> builder)
+    public void Configure(EntityTypeBuilder<AppointmentEntity> builder)
     {
         builder.ToTable("appointments");
 

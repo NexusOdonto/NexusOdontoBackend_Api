@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Personas;
 using Domain.Entities.People;
@@ -26,7 +27,7 @@ public sealed class PersonService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Person(
+            var entity = new PersonEntity(
                 request.TipoDocumentoId,
                 request.NumeroDocumento,
                 request.Nombres,
@@ -79,7 +80,7 @@ public sealed class PersonService(
         return true;
     }
 
-    private static object Map(Person e) => new
+    private static object Map(PersonEntity e) => new
     {
         e.Id,
         e.DocumentTypeId,

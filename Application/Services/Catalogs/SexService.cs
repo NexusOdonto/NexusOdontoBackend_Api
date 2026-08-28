@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class SexService(CatalogServiceCore<Sex> core) : ISexService
+public sealed class SexService(CatalogServiceCore<SexEntity> core) : ISexService
 {
     public Task<IReadOnlyList<SexoDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToSexoDto);
@@ -15,7 +15,7 @@ public sealed class SexService(CatalogServiceCore<Sex> core) : ISexService
     public Task<SexoDto> CreateAsync(SexoDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new Sex(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new SexEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToSexoDto);
     }

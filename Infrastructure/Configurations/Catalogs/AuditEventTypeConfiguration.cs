@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class AuditEventTypeConfiguration : IEntityTypeConfiguration<AuditEventType>
+public class AuditEventTypeConfiguration : IEntityTypeConfiguration<AuditEventTypeEntity>
 {
-    public void Configure(EntityTypeBuilder<AuditEventType> builder)
+    public void Configure(EntityTypeBuilder<AuditEventTypeEntity> builder)
     {
         builder.ToTable("audit_event_types");
 

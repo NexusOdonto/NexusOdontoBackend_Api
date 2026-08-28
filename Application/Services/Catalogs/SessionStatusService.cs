@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class SessionStatusService(CatalogServiceCore<SessionStatus> core) : ISessionStatusService
+public sealed class SessionStatusService(CatalogServiceCore<SessionStatusEntity> core) : ISessionStatusService
 {
     public Task<IReadOnlyList<EstadoSesionDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToEstadoSesionDto);
@@ -15,7 +15,7 @@ public sealed class SessionStatusService(CatalogServiceCore<SessionStatus> core)
     public Task<EstadoSesionDto> CreateAsync(EstadoSesionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new SessionStatus(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new SessionStatusEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToEstadoSesionDto);
     }

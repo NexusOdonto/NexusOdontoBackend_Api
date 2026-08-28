@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class ChatbotMessageRoleConfiguration : IEntityTypeConfiguration<ChatbotMessageRole>
+public class ChatbotMessageRoleConfiguration : IEntityTypeConfiguration<ChatbotMessageRoleEntity>
 {
-    public void Configure(EntityTypeBuilder<ChatbotMessageRole> builder)
+    public void Configure(EntityTypeBuilder<ChatbotMessageRoleEntity> builder)
     {
         builder.ToTable("chatbot_message_roles");
 

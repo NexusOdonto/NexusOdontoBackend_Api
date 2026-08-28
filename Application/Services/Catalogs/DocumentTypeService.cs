@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class DocumentTypeService(CatalogServiceCore<DocumentType> core) : IDocumentTypeService
+public sealed class DocumentTypeService(CatalogServiceCore<DocumentTypeEntity> core) : IDocumentTypeService
 {
     public Task<IReadOnlyList<TipoDocumentoDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToTipoDocumentoDto);
@@ -15,7 +15,7 @@ public sealed class DocumentTypeService(CatalogServiceCore<DocumentType> core) :
     public Task<TipoDocumentoDto> CreateAsync(TipoDocumentoDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new DocumentType(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new DocumentTypeEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToTipoDocumentoDto);
     }

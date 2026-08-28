@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Security;
 using Application.Contracts.Services.Security;
 using Application.DTOs.Permisos;
 using Domain.Entities.Security;
@@ -26,7 +27,7 @@ public sealed class PermissionService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Permission(request.Modulo, request.AccionPermisoId, request.Descripcion);
+            var entity = new PermissionEntity(request.Modulo, request.AccionPermisoId, request.Descripcion);
             await permissionRepository.AddAsync(entity);
             return Map(entity);
         });
@@ -59,7 +60,7 @@ public sealed class PermissionService(
         return true;
     }
 
-    private static object Map(Permission e) => new
+    private static object Map(PermissionEntity e) => new
     {
         e.Id,
         e.Module,

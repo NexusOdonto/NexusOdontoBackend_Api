@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class AppointmentStatusService(CatalogServiceCore<AppointmentStatus> core) : IAppointmentStatusService
+public sealed class AppointmentStatusService(CatalogServiceCore<AppointmentStatusEntity> core) : IAppointmentStatusService
 {
     public Task<IReadOnlyList<EstadoCitaDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToEstadoCitaDto);
@@ -15,7 +15,7 @@ public sealed class AppointmentStatusService(CatalogServiceCore<AppointmentStatu
     public Task<EstadoCitaDto> CreateAsync(EstadoCitaDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new AppointmentStatus(request.Codigo, request.Nombre, request.Descripcion, request.ColorHex, request.Orden, request.EsFinal);
+        var entity = new AppointmentStatusEntity(request.Codigo, request.Nombre, request.Descripcion, request.ColorHex, request.Orden, request.EsFinal);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToEstadoCitaDto);
     }

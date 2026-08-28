@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Clinical;
 using Application.DTOs.Clinical.Diagnosis;
 using Domain.Entities.Clinical;
@@ -6,7 +6,7 @@ using Domain.Entities.Clinical;
 namespace Application.Services.Clinical;
 
 public sealed class DiagnosisService(
-    IRepository<Diagnosis> repository,
+    IRepository<DiagnosisEntity> repository,
     IUnitOfWork unitOfWork) : IDiagnosisService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -26,7 +26,7 @@ public sealed class DiagnosisService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Diagnosis(
+            var entity = new DiagnosisEntity(
                 request.ClinicalAttentionId,
                 request.Description,
                 request.Code,
@@ -44,7 +44,7 @@ public sealed class DiagnosisService(
         return true;
     }
 
-    private static object Map(Diagnosis e) => new
+    private static object Map(DiagnosisEntity e) => new
     {
         e.Id, e.ClinicalAttentionId, e.Code, e.Description, e.Type
     };

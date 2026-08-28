@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class ActionPermissionConfiguration : IEntityTypeConfiguration<ActionPermission>
+public class ActionPermissionConfiguration : IEntityTypeConfiguration<ActionPermissionEntity>
 {
-    public void Configure(EntityTypeBuilder<ActionPermission> builder)
+    public void Configure(EntityTypeBuilder<ActionPermissionEntity> builder)
     {
         builder.ToTable("permission_actions");
 

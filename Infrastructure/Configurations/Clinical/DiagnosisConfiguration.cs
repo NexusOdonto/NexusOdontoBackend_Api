@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Clinical;
 
-public class DiagnosisConfiguration : IEntityTypeConfiguration<Diagnosis>
+public class DiagnosisConfiguration : IEntityTypeConfiguration<DiagnosisEntity>
 {
-    public void Configure(EntityTypeBuilder<Diagnosis> builder)
+    public void Configure(EntityTypeBuilder<DiagnosisEntity> builder)
     {
         builder.ToTable("diagnoses");
 

@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Services.Notifications;
 using Application.DTOs.Notifications.WhatsAppNotification;
 using Domain.Entities.Catalogs;
@@ -7,8 +8,8 @@ using Domain.Entities.Notifications;
 namespace Application.Services.Notifications;
 
 public sealed class WhatsAppNotificationService(
-    IRepository<WhatsAppNotification> repository,
-    ICatalogRepository<WhatsAppNotificationStatus> statusCatalog,
+    IRepository<WhatsAppNotificationEntity> repository,
+    ICatalogRepository<WhatsAppNotificationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IWhatsAppNotificationService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -30,7 +31,7 @@ public sealed class WhatsAppNotificationService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new WhatsAppNotification(
+            var entity = new WhatsAppNotificationEntity(
                 request.WhatsAppNotificationTypeId,
                 statusId,
                 request.DestinationPhone,
@@ -53,7 +54,7 @@ public sealed class WhatsAppNotificationService(
         return true;
     }
 
-    private static object Map(WhatsAppNotification e) => new
+    private static object Map(WhatsAppNotificationEntity e) => new
     {
         e.Id, e.AppointmentId, e.PatientId, e.WhatsAppNotificationTypeId, e.WhatsAppNotificationStatusId,
         e.DestinationPhone, e.Content, e.TemplateName, e.TemplateParameters, e.ScheduledFor,

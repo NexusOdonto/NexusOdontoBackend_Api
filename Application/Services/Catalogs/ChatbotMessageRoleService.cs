@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.ChatbotMessageRole;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class ChatbotMessageRoleService(CatalogServiceCore<ChatbotMessageRole> core) : IChatbotMessageRoleService
+public sealed class ChatbotMessageRoleService(CatalogServiceCore<ChatbotMessageRoleEntity> core) : IChatbotMessageRoleService
 {
     public Task<IReadOnlyList<ChatbotMessageRoleDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToChatbotMessageRoleDto);
@@ -15,7 +15,7 @@ public sealed class ChatbotMessageRoleService(CatalogServiceCore<ChatbotMessageR
     public Task<ChatbotMessageRoleDto> CreateAsync(CreateChatbotMessageRoleRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new ChatbotMessageRole(request.Code, request.Name, request.Description, request.SortOrder);
+        var entity = new ChatbotMessageRoleEntity(request.Code, request.Name, request.Description, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToChatbotMessageRoleDto);
     }
 

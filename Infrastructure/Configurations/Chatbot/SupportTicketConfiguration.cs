@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Chatbot;
 
-public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicket>
+public class SupportTicketConfiguration : IEntityTypeConfiguration<SupportTicketEntity>
 {
-    public void Configure(EntityTypeBuilder<SupportTicket> builder)
+    public void Configure(EntityTypeBuilder<SupportTicketEntity> builder)
     {
         builder.ToTable("support_tickets");
 

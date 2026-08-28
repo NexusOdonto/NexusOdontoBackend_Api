@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.AuditEventType;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class AuditEventTypeService(CatalogServiceCore<AuditEventType> core) : IAuditEventTypeService
+public sealed class AuditEventTypeService(CatalogServiceCore<AuditEventTypeEntity> core) : IAuditEventTypeService
 {
     public Task<IReadOnlyList<AuditEventTypeDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToAuditEventTypeDto);
@@ -15,7 +15,7 @@ public sealed class AuditEventTypeService(CatalogServiceCore<AuditEventType> cor
     public Task<AuditEventTypeDto> CreateAsync(CreateAuditEventTypeRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new AuditEventType(request.Code, request.Name, request.Description, request.Category, request.RiskLevel, request.SortOrder);
+        var entity = new AuditEventTypeEntity(request.Code, request.Name, request.Description, request.Category, request.RiskLevel, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToAuditEventTypeDto);
     }
 

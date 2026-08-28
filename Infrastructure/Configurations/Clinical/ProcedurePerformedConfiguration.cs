@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Clinical;
 
-public class ProcedurePerformedConfiguration : IEntityTypeConfiguration<ProcedurePerformed>
+public class ProcedurePerformedConfiguration : IEntityTypeConfiguration<ProcedurePerformedEntity>
 {
-    public void Configure(EntityTypeBuilder<ProcedurePerformed> builder)
+    public void Configure(EntityTypeBuilder<ProcedurePerformedEntity> builder)
     {
         builder.ToTable("performed_procedures");
 

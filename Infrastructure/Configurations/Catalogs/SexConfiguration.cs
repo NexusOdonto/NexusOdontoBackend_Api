@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class SexConfiguration : IEntityTypeConfiguration<Sex>
+public class SexConfiguration : IEntityTypeConfiguration<SexEntity>
 {
-    public void Configure(EntityTypeBuilder<Sex> builder)
+    public void Configure(EntityTypeBuilder<SexEntity> builder)
     {
         builder.ToTable("genders");
 

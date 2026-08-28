@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogs.DentalSurface;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class DentalSurfaceService(CatalogServiceCore<DentalSurface> core) : IDentalSurfaceService
+public sealed class DentalSurfaceService(CatalogServiceCore<DentalSurfaceEntity> core) : IDentalSurfaceService
 {
     public Task<IReadOnlyList<DentalSurfaceDto>> GetAllAsync() =>
         core.GetAllAsync(EnglishCatalogMapping.ToDentalSurfaceDto);
@@ -15,7 +15,7 @@ public sealed class DentalSurfaceService(CatalogServiceCore<DentalSurface> core)
     public Task<DentalSurfaceDto> CreateAsync(CreateDentalSurfaceRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new DentalSurface(request.Code, request.Name, request.Description, request.AppliesToAnterior, request.AppliesToPosterior, request.SortOrder);
+        var entity = new DentalSurfaceEntity(request.Code, request.Name, request.Description, request.AppliesToAnterior, request.AppliesToPosterior, request.SortOrder);
         return core.CreateAsync(entity, EnglishCatalogMapping.ToDentalSurfaceDto);
     }
 

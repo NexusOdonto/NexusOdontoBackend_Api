@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Security;
 
-public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
+public class PermissionConfiguration : IEntityTypeConfiguration<PermissionEntity>
 {
-    public void Configure(EntityTypeBuilder<Permission> builder)
+    public void Configure(EntityTypeBuilder<PermissionEntity> builder)
     {
         builder.ToTable("permissions");
 

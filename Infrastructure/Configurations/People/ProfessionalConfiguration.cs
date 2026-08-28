@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.People;
 
-public class ProfessionalConfiguration : IEntityTypeConfiguration<Professional>
+public class ProfessionalConfiguration : IEntityTypeConfiguration<ProfessionalEntity>
 {
-    public void Configure(EntityTypeBuilder<Professional> builder)
+    public void Configure(EntityTypeBuilder<ProfessionalEntity> builder)
     {
         builder.ToTable("professionals");
 

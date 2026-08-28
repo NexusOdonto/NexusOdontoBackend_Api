@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class HubNotificationStatusService(CatalogServiceCore<HubNotificationStatus> core) : IHubNotificationStatusService
+public sealed class HubNotificationStatusService(CatalogServiceCore<HubNotificationStatusEntity> core) : IHubNotificationStatusService
 {
     public Task<IReadOnlyList<EstadoNotificacionHubDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToEstadoNotificacionHubDto);
@@ -15,7 +15,7 @@ public sealed class HubNotificationStatusService(CatalogServiceCore<HubNotificat
     public Task<EstadoNotificacionHubDto> CreateAsync(EstadoNotificacionHubDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new HubNotificationStatus(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
+        var entity = new HubNotificationStatusEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToEstadoNotificacionHubDto);
     }

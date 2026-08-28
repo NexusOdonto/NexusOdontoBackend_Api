@@ -1,12 +1,12 @@
-﻿using System.Text.Json;
-using Application.Contracts.Repositories;
+using System.Text.Json;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Audit;
 using Domain.Entities.Audit;
 
 namespace Application.Services.Audit;
 
 public sealed class AuditEventService(
-    IRepository<AuditEvent> repository,
+    IRepository<AuditEventEntity> repository,
     IUnitOfWork unitOfWork) : IAuditEventService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -28,7 +28,7 @@ public sealed class AuditEventService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new AuditEvent(
+            var entity = new AuditEventEntity(
                 dto.EventTypeId,
                 dto.Description,
                 dto.UserId,
@@ -62,7 +62,7 @@ public sealed class AuditEventService(
             ?? throw new InvalidOperationException("Invalid audit event request payload.");
     }
 
-    private static object Map(AuditEvent e) => new
+    private static object Map(AuditEventEntity e) => new
     {
         e.Id, e.UserId, e.SessionId, e.EventTypeId, e.EntityType, e.EntityId,
         e.Description, e.PreviousData, e.NewData, e.IpAddress, e.UserAgent,

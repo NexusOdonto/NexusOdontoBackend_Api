@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Services.Catalogs;
 using Application.DTOs;
 using Domain.Entities.Catalogs;
@@ -27,7 +28,7 @@ public sealed class ServiceService(
         await unitOfWork.BeginTransactionAsync();
         try
         {
-            var entity = new Service(
+            var entity = new ServiceEntity(
                 request.Code,
                 request.Name,
                 request.Description,
@@ -90,7 +91,7 @@ public sealed class ServiceService(
         }
     }
 
-    private static object Map(Service e) => new
+    private static object Map(ServiceEntity e) => new
     {
         e.Id,
         e.Code,

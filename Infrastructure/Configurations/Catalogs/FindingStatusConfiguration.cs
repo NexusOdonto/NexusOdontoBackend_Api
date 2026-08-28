@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class FindingStatusConfiguration : IEntityTypeConfiguration<FindingStatus>
+public class FindingStatusConfiguration : IEntityTypeConfiguration<FindingStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<FindingStatus> builder)
+    public void Configure(EntityTypeBuilder<FindingStatusEntity> builder)
     {
         builder.ToTable("finding_statuses");
 

@@ -1,10 +1,10 @@
-﻿using Application.Contracts.Services.Catalogs;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Catalogos;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class WhatsAppNotificationTypeService(CatalogServiceCore<WhatsAppNotificationType> core) : IWhatsAppNotificationTypeService
+public sealed class WhatsAppNotificationTypeService(CatalogServiceCore<WhatsAppNotificationTypeEntity> core) : IWhatsAppNotificationTypeService
 {
     public Task<IReadOnlyList<TipoNotificacionWhatsappDto>> GetAllAsync() =>
         core.GetAllAsync(SpanishCatalogMapping.ToTipoNotificacionWhatsappDto);
@@ -15,7 +15,7 @@ public sealed class WhatsAppNotificationTypeService(CatalogServiceCore<WhatsAppN
     public Task<TipoNotificacionWhatsappDto> CreateAsync(TipoNotificacionWhatsappDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new WhatsAppNotificationType(request.Codigo, request.Nombre, request.Descripcion, request.PlantillaPredeterminada, request.Orden);
+        var entity = new WhatsAppNotificationTypeEntity(request.Codigo, request.Nombre, request.Descripcion, request.PlantillaPredeterminada, request.Orden);
         entity.IsActive = request.Activo;
         return core.CreateAsync(entity, SpanishCatalogMapping.ToTipoNotificacionWhatsappDto);
     }

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -49,11 +50,11 @@ public sealed class RequirePermissionFilter(
             return;
         }
 
-        var user = await userRepository.GetByIdWithRolesAsync(
+        var UserEntity = await userRepository.GetByIdWithRolesAsync(
             userId,
             context.HttpContext.RequestAborted);
 
-        if (user is null)
+        if (UserEntity is null)
         {
             context.Result = new ForbidResult();
             return;
@@ -75,12 +76,12 @@ public sealed class RequirePermissionFilter(
             return;
         }
 
-        var isAllowed = user.UserRoles
-            .SelectMany(ur => ur.Role?.Permissions ?? [])
-            .Any(permission =>
-                string.Equals(permission.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
+        var isAllowed = UserEntity.UserRoles
+            .SelectMany(ur => ur.RoleEntity?.Permissions ?? [])
+            .Any(PermissionEntity =>
+                string.Equals(PermissionEntity.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(
-                    permission.ActionPermission?.Code,
+                    PermissionEntity.ActionPermissionEntity?.Code,
                     requiredActionCode,
                     StringComparison.OrdinalIgnoreCase));
 

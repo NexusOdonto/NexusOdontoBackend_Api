@@ -1,4 +1,4 @@
-using HubNotificationStatusEntity = Domain.Entities.Catalogs.HubNotificationStatus;
+using HubNotificationStatusEntity = Domain.Entities.Catalogs.HubNotificationStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.HubNotificationStatus;

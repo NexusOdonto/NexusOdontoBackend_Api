@@ -1,4 +1,5 @@
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services;
 using Application.DTOs.Auth;
 using Application.DTOs.Users;
@@ -33,9 +34,9 @@ public sealed class UsersController : ControllerBase
         [FromBody] RegisterRequestDto request,
         CancellationToken cancellationToken)
     {
-        var user = await _authService.RegisterAsync(request, cancellationToken);
+        var UserEntity = await _authService.RegisterAsync(request, cancellationToken);
 
-        return StatusCode(StatusCodes.Status201Created, user);
+        return StatusCode(StatusCodes.Status201Created, UserEntity);
     }
 
     [HttpGet]
@@ -56,22 +57,22 @@ public sealed class UsersController : ControllerBase
         [FromBody] UpdateUserRequestDto request,
         CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdWithRolesAsync(id, cancellationToken);
+        var UserEntity = await _userRepository.GetByIdWithRolesAsync(id, cancellationToken);
 
-        if (user is null)
+        if (UserEntity is null)
         {
             return NotFound();
         }
 
-        user.UserRoles.Clear();
-        user.UserRoles.Add(new UserRole(user.Id, request.RoleId));
-        user.IsActive = request.IsActive;
-        user.UpdatedAt = DateTime.UtcNow;
+        UserEntity.UserRoles.Clear();
+        UserEntity.UserRoles.Add(new UserRoleEntity(UserEntity.Id, request.RoleId));
+        UserEntity.IsActive = request.IsActive;
+        UserEntity.UpdatedAt = DateTime.UtcNow;
 
-        _userRepository.Update(user);
+        _userRepository.Update(UserEntity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Ok(AuthService.MapToResponse(user));
+        return Ok(AuthService.MapToResponse(UserEntity));
     }
 
     [HttpPatch("{id:guid}/deactivate")]
@@ -79,16 +80,16 @@ public sealed class UsersController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdWithRolesAsync(id, cancellationToken);
+        var UserEntity = await _userRepository.GetByIdWithRolesAsync(id, cancellationToken);
 
-        if (user is null)
+        if (UserEntity is null)
         {
             return NotFound();
         }
 
-        user.Deactivate();
+        UserEntity.Deactivate();
 
-        _userRepository.Update(user);
+        _userRepository.Update(UserEntity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return NoContent();

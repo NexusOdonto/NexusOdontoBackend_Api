@@ -1,4 +1,4 @@
-using ServiceEntity = Domain.Entities.Catalogs.Service;
+using ServiceEntity = Domain.Entities.Catalogs.ServiceEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.Service;
