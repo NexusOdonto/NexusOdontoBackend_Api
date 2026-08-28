@@ -8,6 +8,8 @@ public static class SwaggerExtensions
     {
         services.AddSwaggerGen(options =>
         {
+            options.AddServer(new OpenApiServer { Url = "/" });
+
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
@@ -27,5 +29,22 @@ public static class SwaggerExtensions
         });
 
         return services;
+    }
+
+    public static WebApplication UseSwaggerWithJwtBearerUi(this WebApplication app)
+    {
+        if (!app.Environment.IsDevelopment())
+        {
+            return app;
+        }
+
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "NexusOdonto API v1");
+            options.RoutePrefix = "swagger";
+        });
+
+        return app;
     }
 }

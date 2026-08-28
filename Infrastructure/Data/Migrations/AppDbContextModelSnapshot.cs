@@ -4550,9 +4550,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("ActionPermissionEntityId")
-                        .HasColumnType("RAW(16)");
-
                     b.Property<Guid>("ActionPermissionId")
                         .HasColumnType("RAW(16)")
                         .HasColumnName("permission_action_id");
@@ -4570,7 +4567,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActionPermissionEntityId");
+                    b.HasIndex("ActionPermissionId");
 
                     b.ToTable("permissions", (string)null);
 
@@ -5027,17 +5024,9 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("assigned_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("RoleEntityId")
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<Guid?>("UserEntityId")
-                        .HasColumnType("RAW(16)");
-
                     b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("RoleEntityId");
-
-                    b.HasIndex("UserEntityId");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("user_roles", (string)null);
 
@@ -5779,7 +5768,9 @@ namespace Infrastructure.Data.Migrations
                 {
                     b.HasOne("Domain.Entities.Catalogs.ActionPermissionEntity", "ActionPermissionEntity")
                         .WithMany()
-                        .HasForeignKey("ActionPermissionEntityId");
+                        .HasForeignKey("ActionPermissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("ActionPermissionEntity");
                 });
@@ -5788,11 +5779,15 @@ namespace Infrastructure.Data.Migrations
                 {
                     b.HasOne("Domain.Entities.Security.RoleEntity", "RoleEntity")
                         .WithMany("UserRoles")
-                        .HasForeignKey("RoleEntityId");
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Domain.Entities.People.UserEntity", "UserEntity")
                         .WithMany("UserRoles")
-                        .HasForeignKey("UserEntityId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("RoleEntity");
 
