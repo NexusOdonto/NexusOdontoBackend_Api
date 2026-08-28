@@ -5,7 +5,7 @@ namespace Infrastructure.Data.Seeder.RolePermission;
 
 public static class RolePermissionSeeder
 {
-    private const int ModuleCount = 8;
+    private const int ModuleCount = 12;
     private const int ActionCount = 4;
 
     public static void Seed(ModelBuilder modelBuilder)

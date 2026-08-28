@@ -19,7 +19,7 @@ public static class ActionPermissionSeeder
             new
             {
                 Id = View,
-                Code = "VER",
+                Code = "VIEW",
                 Name = "View",
                 Description = "Allows reading records of a module.",
                 IsActive = true,
@@ -30,7 +30,7 @@ public static class ActionPermissionSeeder
             new
             {
                 Id = Create,
-                Code = "CREAR",
+                Code = "CREATE",
                 Name = "Create",
                 Description = "Allows creating records in a module.",
                 IsActive = true,
@@ -41,7 +41,7 @@ public static class ActionPermissionSeeder
             new
             {
                 Id = Edit,
-                Code = "EDITAR",
+                Code = "EDIT",
                 Name = "Edit",
                 Description = "Allows modifying records of a module.",
                 IsActive = true,
@@ -52,7 +52,7 @@ public static class ActionPermissionSeeder
             new
             {
                 Id = Delete,
-                Code = "ELIMINAR",
+                Code = "DELETE",
                 Name = "Delete",
                 Description = "Allows deleting or deactivating records of a module.",
                 IsActive = true,
