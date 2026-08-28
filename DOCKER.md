@@ -20,6 +20,33 @@ el SDK ni Oracle en tu máquina.
 
 ---
 
+## Antes de empezar: el archivo `.env`
+
+El repositorio **no incluye credenciales**. Antes del primer arranque tienes que
+crear un `.env` en la raíz del proyecto con estas variables:
+
+| Variable | Qué es |
+|---|---|
+| `ORACLE_PASSWORD` | Contraseña de `SYS` / `SYSTEM` |
+| `ORACLE_APP_USER` | Usuario de la aplicación |
+| `ORACLE_APP_PASSWORD` | Su contraseña |
+| `ORACLE_PDB` | Nombre del PDB (`FREEPDB1` con la imagen actual) |
+| `ORACLE_PORT` | Puerto de Oracle en tu máquina |
+| `API_PORT` | Puerto de la API en tu máquina |
+| `ASPNETCORE_ENVIRONMENT` | `Development` o `Production` |
+| `JWT_ISSUER` | Emisor del token |
+| `JWT_AUDIENCE` | Audiencia del token |
+| `JWT_SIGNING_KEY` | Clave de firma, **mínimo 32 bytes** |
+| `JWT_EXPIRATION_MINUTES` | Vigencia del token |
+| `ConnectionStrings__OracleConnection` | Solo para `dotnet run` fuera de Docker |
+
+Los valores concretos los pide al equipo; no están en el repositorio a
+propósito. El `.gitignore` excluye `*.env`, así que no hay riesgo de subirlo.
+
+Si falta alguna, `docker compose up` avisa con `variable is not set`.
+
+---
+
 ## Opción A — Desde el repositorio (recomendada)
 
 Construye la imagen en tu propia máquina, así que funciona igual en Intel, AMD
@@ -28,8 +55,6 @@ y Apple Silicon.
 ```bash
 git clone https://github.com/NexusOdonto/NexusOdontoBackend_Api.git
 cd NexusOdontoBackend_Api
-
-cp .env.example .env
 
 docker compose up -d --build
 ```
@@ -41,8 +66,6 @@ Para quien recibe el archivo ya construido. **La imagen es `linux/amd64`**
 
 ```bash
 docker load -i nexusodonto-backend-api-amd64.tar
-
-cp .env.example .env
 
 docker compose -f docker-compose.image.yml up -d
 ```
@@ -96,8 +119,10 @@ no encontró ese usuario. Un **500** indicaría que no llegó a la base.
 **Los catálogos cargados:**
 
 ```bash
+source .env   # carga ORACLE_APP_USER y ORACLE_APP_PASSWORD
+
 docker compose exec oracle-db sqlplus -s \
-  odontologia_user/Odontologia123!@localhost:1521/FREEPDB1 <<'SQL'
+  "$ORACLE_APP_USER/$ORACLE_APP_PASSWORD@localhost:1521/$ORACLE_PDB" <<'SQL'
 select (select count(*) from "teeth")          as dientes,
        (select count(*) from "roles")          as roles,
        (select count(*) from "permissions")    as permisos
@@ -116,14 +141,16 @@ Desde DBeaver, SQL Developer o similar, en tu máquina:
 | Campo | Valor |
 |---|---|
 | Host | `localhost` |
-| Puerto | `1521` |
-| Service name | `FREEPDB1` |
-| Usuario | `odontologia_user` |
-| Contraseña | `Odontologia123!` |
+| Puerto | valor de `ORACLE_PORT` |
+| Service name | valor de `ORACLE_PDB` |
+| Usuario | valor de `ORACLE_APP_USER` |
+| Contraseña | valor de `ORACLE_APP_PASSWORD` |
 
-Para tareas de administración: usuario `system`, contraseña `Admin123Password!`.
+Para tareas de administración el usuario es `system`, con la contraseña de
+`ORACLE_PASSWORD`.
 
-> Estos valores salen de tu `.env`. Si los cambias ahí, cámbialos aquí también.
+> Todos estos valores están en tu `.env`. Consúltalos ahí; no se documentan en
+> el repositorio a propósito.
 
 ---
 
@@ -148,11 +175,8 @@ docker compose up -d --build           # reconstruir tras cambiar codigo
 
 ### `variable is not set` al hacer `up`
 
-No copiaste el `.env`:
-
-```bash
-cp .env.example .env
-```
+Falta el `.env` o le falta alguna variable. Revisa la tabla de la sección
+*Antes de empezar*.
 
 ### `port is already allocated`
 
@@ -239,11 +263,8 @@ corres `dotnet run` fuera de Docker. Las claves no se pisan entre sí.
 
 Necesitas .NET 10 SDK y una instancia de Oracle accesible.
 
-```bash
-cp .env.example .env
-```
-
-Ajusta `ConnectionStrings__OracleConnection` a tu Oracle local y:
+Ajusta `ConnectionStrings__OracleConnection` en tu `.env` para que apunte a tu
+Oracle local y:
 
 ```bash
 dotnet run --project Api
