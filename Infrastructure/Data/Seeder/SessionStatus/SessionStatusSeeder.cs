@@ -1,4 +1,4 @@
-using SessionStatusEntity = Domain.Entities.Catalogs.SessionStatus;
+using SessionStatusEntity = Domain.Entities.Catalogs.SessionStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.SessionStatus;

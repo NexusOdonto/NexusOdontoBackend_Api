@@ -1,4 +1,4 @@
-using DentitionTypeEntity = Domain.Entities.Catalogs.DentitionType;
+using DentitionTypeEntity = Domain.Entities.Catalogs.DentitionTypeEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.DentitionType;

@@ -1,4 +1,4 @@
-using ToothStatusEntity = Domain.Entities.Catalogs.ToothStatus;
+using ToothStatusEntity = Domain.Entities.Catalogs.ToothStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.ToothStatus;

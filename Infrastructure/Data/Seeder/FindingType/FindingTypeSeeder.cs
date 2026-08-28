@@ -1,4 +1,4 @@
-using FindingTypeEntity = Domain.Entities.Catalogs.FindingType;
+using FindingTypeEntity = Domain.Entities.Catalogs.FindingTypeEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.FindingType;

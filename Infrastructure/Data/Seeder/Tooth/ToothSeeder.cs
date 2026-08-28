@@ -1,5 +1,5 @@
 using Infrastructure.Data.Seeder.DentitionType;
-using ToothEntity = Domain.Entities.Odontogram.Tooth;
+using ToothEntity = Domain.Entities.Odontogram.ToothEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.Tooth;

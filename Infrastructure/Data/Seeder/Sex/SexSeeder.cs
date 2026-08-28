@@ -1,4 +1,4 @@
-using SexEntity = Domain.Entities.Catalogs.Sex;
+using SexEntity = Domain.Entities.Catalogs.SexEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.Sex;
