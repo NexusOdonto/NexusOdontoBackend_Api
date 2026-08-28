@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Clinical;
 
-public class PatientAntecedentConfiguration : IEntityTypeConfiguration<PatientAntecedent>
+public class PatientAntecedentConfiguration : IEntityTypeConfiguration<PatientAntecedentEntity>
 {
-    public void Configure(EntityTypeBuilder<PatientAntecedent> builder)
+    public void Configure(EntityTypeBuilder<PatientAntecedentEntity> builder)
     {
         builder.ToTable("patient_backgrounds");
 

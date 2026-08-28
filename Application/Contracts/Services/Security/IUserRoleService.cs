@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.UsuarioRoles;
+using Application.DTOs.UserRoles;
 
 namespace Application.Contracts.Services.Security
 {
     public interface IUserRoleService
     {
-        Task<IReadOnlyList<UsuarioRolDto>> GetAllAsync();
-        Task<UsuarioRolDto?> GetByIdAsync(Guid id);
-        Task<UsuarioRolDto> CreateAsync(UsuarioRolDto request);
+        Task<IReadOnlyList<UserRoleDto>> GetAllAsync();
+        Task<UserRoleDto?> GetByIdAsync(Guid id);
+        Task<UserRoleDto> CreateAsync(UserRoleDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

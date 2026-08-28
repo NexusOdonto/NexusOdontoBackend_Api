@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class ToothStatusConfiguration : IEntityTypeConfiguration<ToothStatus>
+public class ToothStatusConfiguration : IEntityTypeConfiguration<ToothStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<ToothStatus> builder)
+    public void Configure(EntityTypeBuilder<ToothStatusEntity> builder)
     {
         builder.ToTable("tooth_statuses");
 

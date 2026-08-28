@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class AppointmentStatusConfiguration : IEntityTypeConfiguration<AppointmentStatus>
+public class AppointmentStatusConfiguration : IEntityTypeConfiguration<AppointmentStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<AppointmentStatus> builder)
+    public void Configure(EntityTypeBuilder<AppointmentStatusEntity> builder)
     {
         builder.ToTable("appointment_statuses");
 

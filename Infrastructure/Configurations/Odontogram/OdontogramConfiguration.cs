@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Odontogram;
 
-public class OdontogramConfiguration : IEntityTypeConfiguration<Domain.Entities.Odontogram.Odontogram>
+public class OdontogramConfiguration : IEntityTypeConfiguration<Domain.Entities.Odontogram.OdontogramEntity>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Odontogram.Odontogram> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Odontogram.OdontogramEntity> builder)
     {
         builder.ToTable("odontograms");
 

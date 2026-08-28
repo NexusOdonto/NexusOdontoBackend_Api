@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class SupportTicketReasonConfiguration : IEntityTypeConfiguration<SupportTicketReason>
+public class SupportTicketReasonConfiguration : IEntityTypeConfiguration<SupportTicketReasonEntity>
 {
-    public void Configure(EntityTypeBuilder<SupportTicketReason> builder)
+    public void Configure(EntityTypeBuilder<SupportTicketReasonEntity> builder)
     {
         builder.ToTable("support_ticket_reasons");
 

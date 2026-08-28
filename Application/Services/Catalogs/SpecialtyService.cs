@@ -1,32 +1,33 @@
-﻿using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.Contracts.Services.Catalogs;
+using Application.DTOs.Catalogs.Specialty;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class SpecialtyService(CatalogServiceCore<Specialty> core) : ISpecialtyService
+public sealed class SpecialtyService(CatalogServiceCore<SpecialtyEntity> core) : ISpecialtyService
 {
-    public Task<IReadOnlyList<EspecialidadDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToEspecialidadDto);
+    public Task<IReadOnlyList<SpecialtyDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToSpecialtyDto);
 
-    public Task<EspecialidadDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToEspecialidadDto);
+    public Task<SpecialtyDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToSpecialtyDto);
 
-    public Task<EspecialidadDto> CreateAsync(EspecialidadDto request)
+    public Task<SpecialtyDto> CreateAsync(SpecialtyDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new Specialty(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToEspecialidadDto);
+        var entity = new SpecialtyEntity(request.Code, request.Name, request.Description, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToSpecialtyDto);
     }
 
-    public Task<EspecialidadDto?> UpdateAsync(Guid id, EspecialidadDto request)
+    public Task<SpecialtyDto?> UpdateAsync(Guid id, SpecialtyDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToEspecialidadDto);
+            entity.Update(request.Name, request.Description, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToSpecialtyDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

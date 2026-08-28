@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.JobTitle;
 
 namespace Application.Contracts.Services.Catalogs
 {
     public interface IJobTitleService
     {
-        Task<IReadOnlyList<CargoDto>> GetAllAsync();
-        Task<CargoDto?> GetByIdAsync(Guid id);
-        Task<CargoDto> CreateAsync(CargoDto request);
-        Task<CargoDto?> UpdateAsync(Guid id, CargoDto request);
+        Task<IReadOnlyList<JobTitleDto>> GetAllAsync();
+        Task<JobTitleDto?> GetByIdAsync(Guid id);
+        Task<JobTitleDto> CreateAsync(JobTitleDto request);
+        Task<JobTitleDto?> UpdateAsync(Guid id, JobTitleDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

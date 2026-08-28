@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.WhatsAppNotificationType;
 
 namespace Application.Contracts.Services.Catalogs
 {
     public interface IWhatsAppNotificationTypeService
     {
-        Task<IReadOnlyList<TipoNotificacionWhatsappDto>> GetAllAsync();
-        Task<TipoNotificacionWhatsappDto?> GetByIdAsync(Guid id);
-        Task<TipoNotificacionWhatsappDto> CreateAsync(TipoNotificacionWhatsappDto request);
-        Task<TipoNotificacionWhatsappDto?> UpdateAsync(Guid id, TipoNotificacionWhatsappDto request);
+        Task<IReadOnlyList<WhatsAppNotificationTypeDto>> GetAllAsync();
+        Task<WhatsAppNotificationTypeDto?> GetByIdAsync(Guid id);
+        Task<WhatsAppNotificationTypeDto> CreateAsync(WhatsAppNotificationTypeDto request);
+        Task<WhatsAppNotificationTypeDto?> UpdateAsync(Guid id, WhatsAppNotificationTypeDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Audit;
 
-public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
+public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEventEntity>
 {
-    public void Configure(EntityTypeBuilder<AuditEvent> builder)
+    public void Configure(EntityTypeBuilder<AuditEventEntity> builder)
     {
         builder.ToTable("audit_events");
 

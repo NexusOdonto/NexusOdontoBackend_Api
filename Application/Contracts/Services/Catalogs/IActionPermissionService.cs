@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.ActionPermission;
 
 namespace Application.Contracts.Services.Catalogs
 {
     public interface IActionPermissionService
     {
-        Task<IReadOnlyList<AccionPermisoDto>> GetAllAsync();
-        Task<AccionPermisoDto?> GetByIdAsync(Guid id);
-        Task<AccionPermisoDto> CreateAsync(AccionPermisoDto request);
-        Task<AccionPermisoDto?> UpdateAsync(Guid id, AccionPermisoDto request);
+        Task<IReadOnlyList<ActionPermissionDto>> GetAllAsync();
+        Task<ActionPermissionDto?> GetByIdAsync(Guid id);
+        Task<ActionPermissionDto> CreateAsync(ActionPermissionDto request);
+        Task<ActionPermissionDto?> UpdateAsync(Guid id, ActionPermissionDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

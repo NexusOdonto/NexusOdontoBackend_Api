@@ -1,6 +1,7 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
-using Application.DTOs.Citas;
+using Application.DTOs.Appointments;
 using Domain.Entities.Schedule;
 
 namespace Application.Services.Schedule;
@@ -21,27 +22,27 @@ public sealed class AppointmentService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateCitaDto request)
+    public async Task<object> CreateAsync(CreateAppointmentDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Appointment(
-                request.PacienteId,
-                request.ProfesionalId,
-                request.ServicioId,
-                request.FechaHoraInicio,
-                request.FechaHoraFin,
-                request.EstadoCitaId,
-                request.OrigenCitaId,
-                request.MotivoConsulta,
-                request.Observaciones);
+            var entity = new AppointmentEntity(
+                request.PatientId,
+                request.ProfessionalId,
+                request.ServiceId,
+                request.StartsAt,
+                request.EndsAt,
+                request.AppointmentStatusId,
+                request.AppointmentOriginId,
+                request.ReasonForVisit,
+                request.Notes);
             await repository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateCitaDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdateAppointmentDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -49,20 +50,20 @@ public sealed class AppointmentService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.ProfessionalId = request.ProfesionalId;
-            entity.ServiceId = request.ServicioId;
-            entity.AppointmentOriginId = request.OrigenCitaId;
-            var cancelledAt = string.IsNullOrWhiteSpace(request.MotivoCancelacion)
+            entity.ProfessionalId = request.ProfessionalId;
+            entity.ServiceId = request.ServiceId;
+            entity.AppointmentOriginId = request.AppointmentOriginId;
+            var cancelledAt = string.IsNullOrWhiteSpace(request.CancellationReason)
                 ? entity.CancelledAt
                 : DateTime.UtcNow;
             entity.Update(
-                request.FechaHoraInicio,
-                request.FechaHoraFin,
-                request.EstadoCitaId,
-                request.MotivoConsulta,
-                request.Observaciones,
+                request.StartsAt,
+                request.EndsAt,
+                request.AppointmentStatusId,
+                request.ReasonForVisit,
+                request.Notes,
                 cancelledAt,
-                request.MotivoCancelacion);
+                request.CancellationReason);
             repository.Update(entity);
             return Map(entity);
         });
@@ -76,7 +77,7 @@ public sealed class AppointmentService(
         return true;
     }
 
-    private static object Map(Appointment e) => new
+    private static object Map(AppointmentEntity e) => new
     {
         e.Id, e.PatientId, e.ProfessionalId, e.ServiceId, e.StartsAt, e.EndsAt,
         e.AppointmentStatusId, e.AppointmentOriginId, e.ReasonForVisit, e.Notes,

@@ -1,4 +1,4 @@
-using WhatsAppNotificationStatusEntity = Domain.Entities.Catalogs.WhatsAppNotificationStatus;
+using WhatsAppNotificationStatusEntity = Domain.Entities.Catalogs.WhatsAppNotificationStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.WhatsAppNotificationStatus;

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class ChatbotConversationStatusConfiguration : IEntityTypeConfiguration<ChatbotConversationStatus>
+public class ChatbotConversationStatusConfiguration : IEntityTypeConfiguration<ChatbotConversationStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<ChatbotConversationStatus> builder)
+    public void Configure(EntityTypeBuilder<ChatbotConversationStatusEntity> builder)
     {
         builder.ToTable("chatbot_conversation_statuses");
 

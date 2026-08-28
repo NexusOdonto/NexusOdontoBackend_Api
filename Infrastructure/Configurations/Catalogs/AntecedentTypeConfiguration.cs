@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class AntecedentTypeConfiguration : IEntityTypeConfiguration<AntecedentType>
+public class AntecedentTypeConfiguration : IEntityTypeConfiguration<AntecedentTypeEntity>
 {
-    public void Configure(EntityTypeBuilder<AntecedentType> builder)
+    public void Configure(EntityTypeBuilder<AntecedentTypeEntity> builder)
     {
         builder.ToTable("background_types");
 

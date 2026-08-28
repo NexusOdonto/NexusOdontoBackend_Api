@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Services.Clinical;
 using Application.DTOs.Clinical.ClinicalHistory;
 using Domain.Entities.Clinical;
@@ -48,7 +49,7 @@ public sealed class ClinicalHistoryService(
         return true;
     }
 
-    private static object Map(ClinicalHistory e) => new
+    private static object Map(ClinicalHistoryEntity e) => new
     {
         e.Id, e.PatientId, e.OpenedAt, e.IsActive, e.GeneralNotes
     };

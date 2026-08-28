@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class AppointmentOriginConfiguration : IEntityTypeConfiguration<AppointmentOrigin>
+public class AppointmentOriginConfiguration : IEntityTypeConfiguration<AppointmentOriginEntity>
 {
-    public void Configure(EntityTypeBuilder<AppointmentOrigin> builder)
+    public void Configure(EntityTypeBuilder<AppointmentOriginEntity> builder)
     {
         builder.ToTable("appointment_origins");
 

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class NotificationPriorityConfiguration : IEntityTypeConfiguration<NotificationPriority>
+public class NotificationPriorityConfiguration : IEntityTypeConfiguration<NotificationPriorityEntity>
 {
-    public void Configure(EntityTypeBuilder<NotificationPriority> builder)
+    public void Configure(EntityTypeBuilder<NotificationPriorityEntity> builder)
     {
         builder.ToTable("notification_priorities");
 

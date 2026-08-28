@@ -1,32 +1,33 @@
-﻿using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.Contracts.Services.Catalogs;
+using Application.DTOs.Catalogs.WhatsAppNotificationStatus;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class WhatsAppNotificationStatusService(CatalogServiceCore<WhatsAppNotificationStatus> core) : IWhatsAppNotificationStatusService
+public sealed class WhatsAppNotificationStatusService(CatalogServiceCore<WhatsAppNotificationStatusEntity> core) : IWhatsAppNotificationStatusService
 {
-    public Task<IReadOnlyList<EstadoNotificacionWhatsappDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToEstadoNotificacionWhatsappDto);
+    public Task<IReadOnlyList<WhatsAppNotificationStatusDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToWhatsAppNotificationStatusDto);
 
-    public Task<EstadoNotificacionWhatsappDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToEstadoNotificacionWhatsappDto);
+    public Task<WhatsAppNotificationStatusDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToWhatsAppNotificationStatusDto);
 
-    public Task<EstadoNotificacionWhatsappDto> CreateAsync(EstadoNotificacionWhatsappDto request)
+    public Task<WhatsAppNotificationStatusDto> CreateAsync(WhatsAppNotificationStatusDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new WhatsAppNotificationStatus(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToEstadoNotificacionWhatsappDto);
+        var entity = new WhatsAppNotificationStatusEntity(request.Code, request.Name, request.Description, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToWhatsAppNotificationStatusDto);
     }
 
-    public Task<EstadoNotificacionWhatsappDto?> UpdateAsync(Guid id, EstadoNotificacionWhatsappDto request)
+    public Task<WhatsAppNotificationStatusDto?> UpdateAsync(Guid id, WhatsAppNotificationStatusDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToEstadoNotificacionWhatsappDto);
+            entity.Update(request.Name, request.Description, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToWhatsAppNotificationStatusDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

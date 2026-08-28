@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -76,11 +77,11 @@ public sealed class RequirePermissionFilter(
         }
 
         var isAllowed = user.UserRoles
-            .SelectMany(ur => ur.Role?.Permissions ?? [])
+            .SelectMany(ur => ur.RoleEntity?.Permissions ?? [])
             .Any(permission =>
                 string.Equals(permission.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(
-                    permission.ActionPermission?.Code,
+                    permission.ActionPermissionEntity?.Code,
                     requiredActionCode,
                     StringComparison.OrdinalIgnoreCase));
 

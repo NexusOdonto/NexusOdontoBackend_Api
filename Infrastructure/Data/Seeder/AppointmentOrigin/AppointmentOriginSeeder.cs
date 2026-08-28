@@ -1,4 +1,4 @@
-using AppointmentOriginEntity = Domain.Entities.Catalogs.AppointmentOrigin;
+using AppointmentOriginEntity = Domain.Entities.Catalogs.AppointmentOriginEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.AppointmentOrigin;

@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Sesiones;
+using Application.DTOs.Sessions;
 
 namespace Application.Contracts.Services.People
 {
     public interface ISessionService
     {
-        Task<IReadOnlyList<SesionDto>> GetAllAsync();
-        Task<SesionDto?> GetByIdAsync(Guid id);
-        Task<SesionDto> CreateAsync(SesionDto request);
+        Task<IReadOnlyList<SessionDto>> GetAllAsync();
+        Task<SessionDto?> GetByIdAsync(Guid id);
+        Task<SessionDto> CreateAsync(SessionDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

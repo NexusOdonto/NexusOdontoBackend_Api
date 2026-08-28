@@ -1,6 +1,7 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
-using Application.DTOs.Disponibilidades;
+using Application.DTOs.Availabilities;
 using Domain.Entities.Schedule;
 
 namespace Application.Services.Schedule;
@@ -21,25 +22,25 @@ public sealed class AvailabilityService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateDisponibilidadDto request)
+    public async Task<object> CreateAsync(CreateAvailabilityDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Availability(
-                request.ProfesionalId,
-                request.DiaInicio,
-                request.DiaFin,
-                request.HoraInicio,
-                request.HoraAlmuerzo,
-                request.HoraRetorno,
-                request.HoraFin);
+            var entity = new AvailabilityEntity(
+                request.ProfessionalId,
+                request.StartDay,
+                request.EndDay,
+                request.StartTime,
+                request.LunchStartTime,
+                request.LunchEndTime,
+                request.EndTime);
             await repository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateDisponibilidadDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdateAvailabilityDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -48,13 +49,13 @@ public sealed class AvailabilityService(
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.Update(
-                request.DiaInicio,
-                request.DiaFin,
-                request.HoraInicio,
-                request.HoraAlmuerzo,
-                request.HoraRetorno,
-                request.HoraFin,
-                request.Activo);
+                request.StartDay,
+                request.EndDay,
+                request.StartTime,
+                request.LunchStartTime,
+                request.LunchEndTime,
+                request.EndTime,
+                request.IsActive);
             repository.Update(entity);
             return Map(entity);
         });
@@ -73,7 +74,7 @@ public sealed class AvailabilityService(
         return true;
     }
 
-    private static object Map(Availability e) => new
+    private static object Map(AvailabilityEntity e) => new
     {
         e.Id, e.ProfessionalId, e.StartDay, e.EndDay, e.StartTime, e.LunchStartTime, e.LunchEndTime, e.EndTime, e.IsActive
     };

@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Services.Notifications;
 using Application.DTOs.Notifications.HubNotification;
 using Domain.Entities.Catalogs;
@@ -7,8 +8,8 @@ using Domain.Entities.Notifications;
 namespace Application.Services.Notifications;
 
 public sealed class HubNotificationService(
-    IRepository<HubNotification> repository,
-    ICatalogRepository<HubNotificationStatus> statusCatalog,
+    IRepository<HubNotificationEntity> repository,
+    ICatalogRepository<HubNotificationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IHubNotificationService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -30,7 +31,7 @@ public sealed class HubNotificationService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new HubNotification(
+            var entity = new HubNotificationEntity(
                 request.HubNotificationTypeId,
                 request.NotificationPriorityId,
                 request.Title,
@@ -53,7 +54,7 @@ public sealed class HubNotificationService(
         return true;
     }
 
-    private static object Map(HubNotification e) => new
+    private static object Map(HubNotificationEntity e) => new
     {
         e.Id, e.SenderUserId, e.RecipientUserId, e.RecipientRoleId, e.HubNotificationTypeId,
         e.NotificationPriorityId, e.Title, e.Content, e.EntityType, e.EntityId,

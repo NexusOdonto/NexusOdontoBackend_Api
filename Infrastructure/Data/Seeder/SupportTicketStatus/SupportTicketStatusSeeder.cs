@@ -1,4 +1,4 @@
-using SupportTicketStatusEntity = Domain.Entities.Catalogs.SupportTicketStatus;
+using SupportTicketStatusEntity = Domain.Entities.Catalogs.SupportTicketStatusEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.SupportTicketStatus;

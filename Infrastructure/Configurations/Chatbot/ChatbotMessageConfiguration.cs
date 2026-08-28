@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Chatbot;
 
-public class ChatbotMessageConfiguration : IEntityTypeConfiguration<ChatbotMessage>
+public class ChatbotMessageConfiguration : IEntityTypeConfiguration<ChatbotMessageEntity>
 {
-    public void Configure(EntityTypeBuilder<ChatbotMessage> builder)
+    public void Configure(EntityTypeBuilder<ChatbotMessageEntity> builder)
     {
         builder.ToTable("chatbot_messages");
 

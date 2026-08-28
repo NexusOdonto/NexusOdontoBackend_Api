@@ -1,6 +1,7 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
-using Application.DTOs.Empleados;
+using Application.DTOs.Employees;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -21,18 +22,18 @@ public sealed class EmployeeService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateEmpleadoDto request)
+    public async Task<object> CreateAsync(CreateEmployeeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Employee(request.PersonaId, request.CargoId, request.FechaVinculacion);
+            var entity = new EmployeeEntity(request.PersonId, request.JobTitleId, request.HireDate);
             await employeeRepository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateEmpleadoDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdateEmployeeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await employeeRepository.GetByIdAsync(id);
@@ -40,8 +41,8 @@ public sealed class EmployeeService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.Update(request.CargoId, request.FechaVinculacion);
-            entity.IsActive = request.Activo;
+            entity.Update(request.JobTitleId, request.HireDate);
+            entity.IsActive = request.IsActive;
             employeeRepository.Update(entity);
             return Map(entity);
         });
@@ -61,7 +62,7 @@ public sealed class EmployeeService(
         return true;
     }
 
-    private static object Map(Employee e) => new
+    private static object Map(EmployeeEntity e) => new
     {
         e.Id,
         e.PersonId,

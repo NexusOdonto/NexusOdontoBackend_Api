@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Odontogram;
 using Application.DTOs.Odontogram.Odontogram;
 using Domain.Entities.Odontogram;
@@ -6,7 +6,7 @@ using Domain.Entities.Odontogram;
 namespace Application.Services.Odontogram;
 
 public sealed class OdontogramService(
-    IRepository<Domain.Entities.Odontogram.Odontogram> repository,
+    IRepository<Domain.Entities.Odontogram.OdontogramEntity> repository,
     IUnitOfWork unitOfWork) : IOdontogramService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -26,7 +26,7 @@ public sealed class OdontogramService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Domain.Entities.Odontogram.Odontogram(
+            var entity = new Domain.Entities.Odontogram.OdontogramEntity(
                 request.ClinicalHistoryId,
                 request.ProfessionalId,
                 request.ClinicalAttentionId,
@@ -58,7 +58,7 @@ public sealed class OdontogramService(
         return true;
     }
 
-    private static object Map(Domain.Entities.Odontogram.Odontogram e) => new
+    private static object Map(Domain.Entities.Odontogram.OdontogramEntity e) => new
     {
         e.Id, e.ClinicalHistoryId, e.ClinicalAttentionId, e.ProfessionalId, e.RecordedAt, e.Notes
     };

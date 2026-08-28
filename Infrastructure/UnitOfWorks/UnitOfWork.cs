@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -35,7 +35,7 @@ namespace Infrastructure.UnitOfWorks
             if(_transaction is null)
             {
                 throw new InvalidOperationException(
-                    "No hay ninguna transacción activa por confirmar");
+                    "No hay ninguna transacci�n activa por confirmar");
             }
 
             await _transaction.CommitAsync();

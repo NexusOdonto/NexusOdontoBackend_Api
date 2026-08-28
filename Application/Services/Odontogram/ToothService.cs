@@ -1,5 +1,6 @@
-﻿using System.Text.Json;
-using Application.Contracts.Repositories;
+using System.Text.Json;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Odontogram;
 using Application.Contracts.Services.Odontogram;
 using Domain.Entities.Odontogram;
 
@@ -28,7 +29,7 @@ public sealed class ToothService(
         var dto = Deserialize(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Tooth(dto.Code, dto.Name, dto.DentitionTypeId, dto.Quadrant, dto.Position);
+            var entity = new ToothEntity(dto.Code, dto.Name, dto.DentitionTypeId, dto.Quadrant, dto.Position);
             await repository.AddAsync(entity);
             return Map(entity);
         });
@@ -64,10 +65,10 @@ public sealed class ToothService(
         if (request is ToothPayload typed) return typed;
         var json = JsonSerializer.Serialize(request);
         return JsonSerializer.Deserialize<ToothPayload>(json)
-            ?? throw new InvalidOperationException("Invalid tooth request payload.");
+            ?? throw new InvalidOperationException("Invalid ToothEntity request payload.");
     }
 
-    private static object Map(Tooth e) => new
+    private static object Map(ToothEntity e) => new
     {
         e.Code, e.Name, e.DentitionTypeId, e.Quadrant, e.Position
     };

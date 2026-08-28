@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Schedule;
 
-public class AvailabilityConfiguration : IEntityTypeConfiguration<Availability>
+public class AvailabilityConfiguration : IEntityTypeConfiguration<AvailabilityEntity>
 {
-    public void Configure(EntityTypeBuilder<Availability> builder)
+    public void Configure(EntityTypeBuilder<AvailabilityEntity> builder)
     {
         builder.ToTable("availabilities");
 

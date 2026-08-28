@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class HubNotificationStatusConfiguration : IEntityTypeConfiguration<HubNotificationStatus>
+public class HubNotificationStatusConfiguration : IEntityTypeConfiguration<HubNotificationStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<HubNotificationStatus> builder)
+    public void Configure(EntityTypeBuilder<HubNotificationStatusEntity> builder)
     {
         builder.ToTable("hub_notification_statuses");
 

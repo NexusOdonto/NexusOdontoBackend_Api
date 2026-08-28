@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class SupportTicketStatusConfiguration : IEntityTypeConfiguration<SupportTicketStatus>
+public class SupportTicketStatusConfiguration : IEntityTypeConfiguration<SupportTicketStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<SupportTicketStatus> builder)
+    public void Configure(EntityTypeBuilder<SupportTicketStatusEntity> builder)
     {
         builder.ToTable("support_ticket_statuses");
 

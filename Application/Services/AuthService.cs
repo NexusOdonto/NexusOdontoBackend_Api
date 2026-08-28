@@ -1,7 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services;
 using Application.DTOs.Auth;
 using Domain.Entities.People;
@@ -62,8 +63,8 @@ public sealed class AuthService(
         ArgumentNullException.ThrowIfNull(request);
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var user = new User(request.PersonId, passwordHash);
-        user.UserRoles.Add(new UserRole(user.Id, request.RoleId));
+        var user = new UserEntity(request.PersonId, passwordHash);
+        user.UserRoles.Add(new UserRoleEntity(user.Id, request.RoleId));
 
         await userRepository.AddAsync(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -74,12 +75,12 @@ public sealed class AuthService(
         return MapToResponse(loaded);
     }
 
-    private AuthResponseDto GenerateToken(User user)
+    private AuthResponseDto GenerateToken(UserEntity user)
     {
         ValidateJwtSettings();
 
         var expiresAtUtc = DateTime.UtcNow.AddMinutes(jwtSettings.ExpirationMinutes);
-        var primaryRole = user.UserRoles.FirstOrDefault()?.Role;
+        var primaryRole = user.UserRoles.FirstOrDefault()?.RoleEntity;
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -117,9 +118,9 @@ public sealed class AuthService(
         };
     }
 
-    public static UserResponseDto MapToResponse(User user)
+    public static UserResponseDto MapToResponse(UserEntity user)
     {
-        var person = user.Person;
+        var person = user.PersonEntity;
         return new UserResponseDto
         {
             Id = user.Id,

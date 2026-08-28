@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class ChatChannelConfiguration : IEntityTypeConfiguration<ChatChannel>
+public class ChatChannelConfiguration : IEntityTypeConfiguration<ChatChannelEntity>
 {
-    public void Configure(EntityTypeBuilder<ChatChannel> builder)
+    public void Configure(EntityTypeBuilder<ChatChannelEntity> builder)
     {
         builder.ToTable("chat_channels");
 

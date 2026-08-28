@@ -1,4 +1,5 @@
-using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services;
 using Application.DTOs.Auth;
 using Application.DTOs.Users;
@@ -64,7 +65,7 @@ public sealed class UsersController : ControllerBase
         }
 
         user.UserRoles.Clear();
-        user.UserRoles.Add(new UserRole(user.Id, request.RoleId));
+        user.UserRoles.Add(new UserRoleEntity(user.Id, request.RoleId));
         user.IsActive = request.IsActive;
         user.UpdatedAt = DateTime.UtcNow;
 

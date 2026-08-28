@@ -1,4 +1,4 @@
-using HubNotificationTypeEntity = Domain.Entities.Catalogs.HubNotificationType;
+using HubNotificationTypeEntity = Domain.Entities.Catalogs.HubNotificationTypeEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.HubNotificationType;

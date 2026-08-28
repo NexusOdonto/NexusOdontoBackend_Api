@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Chatbot.ChatbotMessage;
 using Domain.Entities.Chatbot;
@@ -6,7 +6,7 @@ using Domain.Entities.Chatbot;
 namespace Application.Services.Chatbot;
 
 public sealed class ChatbotMessageService(
-    IRepository<ChatbotMessage> repository,
+    IRepository<ChatbotMessageEntity> repository,
     IUnitOfWork unitOfWork) : IChatbotMessageService
 {
     public async Task<IReadOnlyList<object>> GetAllAsync()
@@ -26,7 +26,7 @@ public sealed class ChatbotMessageService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ChatbotMessage(
+            var entity = new ChatbotMessageEntity(
                 request.ChatbotConversationId,
                 request.MessageRoleId,
                 request.Content,
@@ -44,7 +44,7 @@ public sealed class ChatbotMessageService(
         return true;
     }
 
-    private static object Map(ChatbotMessage e) => new
+    private static object Map(ChatbotMessageEntity e) => new
     {
         e.Id, e.ChatbotConversationId, e.MessageRoleId, e.Content, e.RagConfidence, e.CreatedAt
     };

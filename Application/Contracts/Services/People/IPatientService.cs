@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Pacientes;
+using Application.DTOs.Patients;
 
 namespace Application.Contracts.Services.People
 {
@@ -9,8 +6,8 @@ namespace Application.Contracts.Services.People
     {
         Task<IReadOnlyList<object>> GetAllAsync();
         Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreatePacienteDto request);
-        Task<object?> UpdateAsync(Guid id, UpdatePacienteDto request);
+        Task<object> CreateAsync(CreatePatientDto request);
+        Task<object?> UpdateAsync(Guid id, UpdatePatientDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -1,4 +1,4 @@
-using ChatbotMessageRoleEntity = Domain.Entities.Catalogs.ChatbotMessageRole;
+using ChatbotMessageRoleEntity = Domain.Entities.Catalogs.ChatbotMessageRoleEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Seeder.ChatbotMessageRole;

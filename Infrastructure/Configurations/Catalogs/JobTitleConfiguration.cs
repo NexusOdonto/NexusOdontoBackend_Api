@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class JobTitleConfiguration : IEntityTypeConfiguration<JobTitle>
+public class JobTitleConfiguration : IEntityTypeConfiguration<JobTitleEntity>
 {
-    public void Configure(EntityTypeBuilder<JobTitle> builder)
+    public void Configure(EntityTypeBuilder<JobTitleEntity> builder)
     {
         builder.ToTable("job_positions");
 

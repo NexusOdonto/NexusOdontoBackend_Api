@@ -1,6 +1,7 @@
-﻿using Application.Contracts.Repositories;
+using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
-using Application.DTOs.Usuarios;
+using Application.DTOs.Users;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -22,19 +23,19 @@ public sealed class UserService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateUsuarioDto request)
+    public async Task<object> CreateAsync(CreateUserDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-            var entity = new User(request.PersonaId, passwordHash);
+            var entity = new UserEntity(request.PersonId, passwordHash);
             await userRepository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateUsuarioDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdateUserDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await userRepository.GetByIdAsync(id);
@@ -42,7 +43,7 @@ public sealed class UserService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.IsActive = request.Activo;
+            entity.IsActive = request.IsActive;
             entity.UpdatedAt = DateTime.UtcNow;
             userRepository.Update(entity);
             return Map(entity);
@@ -63,7 +64,7 @@ public sealed class UserService(
         return true;
     }
 
-    private static object Map(User e) => new
+    private static object Map(UserEntity e) => new
     {
         e.Id,
         e.PersonId,

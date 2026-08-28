@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class SessionStatusConfiguration : IEntityTypeConfiguration<SessionStatus>
+public class SessionStatusConfiguration : IEntityTypeConfiguration<SessionStatusEntity>
 {
-    public void Configure(EntityTypeBuilder<SessionStatus> builder)
+    public void Configure(EntityTypeBuilder<SessionStatusEntity> builder)
     {
         builder.ToTable("session_statuses");
 

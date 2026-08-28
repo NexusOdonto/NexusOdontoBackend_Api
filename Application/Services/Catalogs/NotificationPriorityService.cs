@@ -1,32 +1,33 @@
-﻿using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.Contracts.Services.Catalogs;
+using Application.DTOs.Catalogs.NotificationPriority;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class NotificationPriorityService(CatalogServiceCore<NotificationPriority> core) : INotificationPriorityService
+public sealed class NotificationPriorityService(CatalogServiceCore<NotificationPriorityEntity> core) : INotificationPriorityService
 {
-    public Task<IReadOnlyList<PrioridadNotificacionDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToPrioridadNotificacionDto);
+    public Task<IReadOnlyList<NotificationPriorityDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToNotificationPriorityDto);
 
-    public Task<PrioridadNotificacionDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToPrioridadNotificacionDto);
+    public Task<NotificationPriorityDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToNotificationPriorityDto);
 
-    public Task<PrioridadNotificacionDto> CreateAsync(PrioridadNotificacionDto request)
+    public Task<NotificationPriorityDto> CreateAsync(NotificationPriorityDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new NotificationPriority(request.Codigo, request.Nombre, request.Descripcion, request.ColorHex, request.Nivel, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToPrioridadNotificacionDto);
+        var entity = new NotificationPriorityEntity(request.Code, request.Name, request.Description, request.ColorHex, request.Level, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToNotificationPriorityDto);
     }
 
-    public Task<PrioridadNotificacionDto?> UpdateAsync(Guid id, PrioridadNotificacionDto request)
+    public Task<NotificationPriorityDto?> UpdateAsync(Guid id, NotificationPriorityDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.ColorHex, request.Nivel, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToPrioridadNotificacionDto);
+            entity.Update(request.Name, request.Description, request.ColorHex, request.Level, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToNotificationPriorityDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

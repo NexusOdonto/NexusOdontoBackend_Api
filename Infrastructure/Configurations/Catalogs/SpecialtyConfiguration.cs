@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations.Catalogs;
 
-public class SpecialtyConfiguration : IEntityTypeConfiguration<Specialty>
+public class SpecialtyConfiguration : IEntityTypeConfiguration<SpecialtyEntity>
 {
-    public void Configure(EntityTypeBuilder<Specialty> builder)
+    public void Configure(EntityTypeBuilder<SpecialtyEntity> builder)
     {
         builder.ToTable("specialties");
 

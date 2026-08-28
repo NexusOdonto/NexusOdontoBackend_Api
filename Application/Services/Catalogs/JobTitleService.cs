@@ -1,32 +1,33 @@
-﻿using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.Contracts.Services.Catalogs;
+using Application.DTOs.Catalogs.JobTitle;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
-public sealed class JobTitleService(CatalogServiceCore<JobTitle> core) : IJobTitleService
+public sealed class JobTitleService(CatalogServiceCore<JobTitleEntity> core) : IJobTitleService
 {
-    public Task<IReadOnlyList<CargoDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToCargoDto);
+    public Task<IReadOnlyList<JobTitleDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToJobTitleDto);
 
-    public Task<CargoDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToCargoDto);
+    public Task<JobTitleDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToJobTitleDto);
 
-    public Task<CargoDto> CreateAsync(CargoDto request)
+    public Task<JobTitleDto> CreateAsync(JobTitleDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new JobTitle(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToCargoDto);
+        var entity = new JobTitleEntity(request.Code, request.Name, request.Description, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToJobTitleDto);
     }
 
-    public Task<CargoDto?> UpdateAsync(Guid id, CargoDto request)
+    public Task<JobTitleDto?> UpdateAsync(Guid id, JobTitleDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToCargoDto);
+            entity.Update(request.Name, request.Description, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToJobTitleDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);
