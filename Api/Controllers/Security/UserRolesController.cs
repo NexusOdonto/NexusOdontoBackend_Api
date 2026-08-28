@@ -44,12 +44,6 @@ public sealed class UserRolesController(IUserRoleService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Remove(Guid userId, Guid roleId)
     {
-        var assignments = await service.GetAllAsync();
-        if (assignments.All(a => a.UserId != userId || a.RoleId != roleId))
-        {
-            return NotFound();
-        }
-
-        return await service.DeleteAsync(userId) ? NoContent() : NotFound();
+        return await service.DeleteAsync(userId, roleId) ? NoContent() : NotFound();
     }
 }

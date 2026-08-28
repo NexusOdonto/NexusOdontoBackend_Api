@@ -60,10 +60,6 @@ public sealed class AuthService(
 
         LoginRequestDto request,
 
-        string? ipAddress = null,
-
-        string? userAgent = null,
-
         CancellationToken cancellationToken = default)
 
     {
@@ -162,11 +158,7 @@ public sealed class AuthService(
 
             "User signed in.",
 
-            user.Id,
-
-            ipAddress: ipAddress,
-
-            userAgent: userAgent);
+            user.Id);
 
         await auditEventRepository.AddAsync(auditEvent);
 
@@ -179,10 +171,6 @@ public sealed class AuthService(
             user.Id,
 
             response,
-
-            ipAddress,
-
-            userAgent,
 
             cancellationToken);
 
@@ -438,10 +426,6 @@ public sealed class AuthService(
 
         AuthResponseDto response,
 
-        string? ipAddress,
-
-        string? userAgent,
-
         CancellationToken cancellationToken)
 
     {
@@ -466,11 +450,7 @@ public sealed class AuthService(
 
             refreshExpiresAtUtc,
 
-            SessionStatusIds.Active,
-
-            ipAddress: ipAddress,
-
-            userAgent: userAgent);
+            SessionStatusIds.Active);
 
 
 

@@ -59,11 +59,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("audit_event_type_id");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("NVARCHAR2(64)")
-                        .HasColumnName("ip_address");
-
                     b.Property<string>("NewData")
                         .HasColumnType("NVARCHAR2(2000)")
                         .HasColumnName("new_data");
@@ -84,11 +79,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("is_success")
                         .HasDefaultValueSql("1");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(1000)
-                        .HasColumnType("NVARCHAR2(1000)")
-                        .HasColumnName("user_agent");
 
                     b.Property<Guid?>("UserEntityId")
                         .HasColumnType("RAW(16)");
@@ -4285,19 +4275,9 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Device")
-                        .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("device");
-
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("expiration_date");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("NVARCHAR2(64)")
-                        .HasColumnName("ip_address");
 
                     b.Property<DateTime?>("LastUsedAt")
                         .HasColumnType("TIMESTAMP(7)")
@@ -4325,11 +4305,6 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("token_family");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(1000)
-                        .HasColumnType("NVARCHAR2(1000)")
-                        .HasColumnName("user_agent");
 
                     b.Property<Guid?>("UserEntityId")
                         .HasColumnType("RAW(16)");

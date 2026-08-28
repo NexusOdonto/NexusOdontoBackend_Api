@@ -8,9 +8,6 @@ public class SessionEntity : Entity
     public Guid UserId { get; set; }
     public string RefreshTokenHash { get; set; } = null!;
     public string TokenFamily { get; set; } = null!;
-    public string? Device { get; set; }
-    public string? IpAddress { get; set; }
-    public string? UserAgent { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt { get; set; }
     public DateTime? LastUsedAt { get; set; }
@@ -29,19 +26,13 @@ public class SessionEntity : Entity
         string refreshTokenHash,
         string tokenFamily,
         DateTime expiresAt,
-        Guid sessionStatusId,
-        string? device = null,
-        string? ipAddress = null,
-        string? userAgent = null)
+        Guid sessionStatusId)
     {
         UserId = userId;
         RefreshTokenHash = refreshTokenHash;
         TokenFamily = tokenFamily;
         ExpiresAt = expiresAt;
         SessionStatusId = sessionStatusId;
-        Device = device;
-        IpAddress = ipAddress;
-        UserAgent = userAgent;
     }
 
     public void Update(

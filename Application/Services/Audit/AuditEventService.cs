@@ -36,8 +36,6 @@ public sealed class AuditEventService(
                 request.EntityId,
                 request.PreviousData,
                 request.NewData,
-                request.IpAddress,
-                request.UserAgent,
                 request.Succeeded,
                 request.ErrorDetail);
             await repository.AddAsync(entity);
@@ -64,8 +62,6 @@ public sealed class AuditEventService(
         Description = e.Description,
         PreviousData = e.PreviousData,
         NewData = e.NewData,
-        IpAddress = e.IpAddress,
-        UserAgent = e.UserAgent,
         EventAt = e.EventAt,
         Succeeded = e.Succeeded,
         ErrorDetail = e.ErrorDetail
