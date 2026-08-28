@@ -30,7 +30,7 @@ crear un `.env` en la raíz del proyecto con estas variables:
 | `ORACLE_PASSWORD` | Contraseña de `SYS` / `SYSTEM` |
 | `ORACLE_APP_USER` | Usuario de la aplicación |
 | `ORACLE_APP_PASSWORD` | Su contraseña |
-| `ORACLE_PDB` | Nombre del PDB (`FREEPDB1` con la imagen actual) |
+| `ORACLE_PDB` | Nombre del PDB (`XEPDB1` con la imagen actual) |
 | `ORACLE_PORT` | Puerto de Oracle en tu máquina |
 | `API_PORT` | Puerto de la API en tu máquina |
 | `ASPNETCORE_ENVIRONMENT` | `Development` o `Production` |
