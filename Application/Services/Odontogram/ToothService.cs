@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Odontogram;
 using Application.Contracts.Services.Odontogram;
+using Application.DTOs.Odontogram.Tooth;
 using Domain.Entities.Odontogram;
 
 namespace Application.Services.Odontogram;
@@ -10,75 +10,57 @@ public sealed class ToothService(
     IToothRepository repository,
     IUnitOfWork unitOfWork) : IToothService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ToothResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ToothResponseDto?> GetByCodeAsync(string code)
     {
-        var entity = await repository.GetByCodeAsync(id.ToString("D"));
-        entity ??= await repository.GetByCodeAsync(id.ToString("N"));
+        var entity = await repository.GetByCodeAsync(code);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(object request)
+    public async Task<ToothResponseDto> CreateAsync(CreateToothRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var dto = Deserialize(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ToothEntity(dto.Code, dto.Name, dto.DentitionTypeId, dto.Quadrant, dto.Position);
+            var entity = new ToothEntity(request.Code, request.Name, request.DentitionTypeId, request.Quadrant, request.Position);
             await repository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, object request)
+    public async Task<ToothResponseDto?> UpdateAsync(string code, UpdateToothRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var dto = Deserialize(request);
-        var code = string.IsNullOrWhiteSpace(dto.Code) ? id.ToString("D") : dto.Code;
         var entity = await repository.GetByCodeAsync(code);
         if (entity is null) return null;
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.Update(dto.Name, dto.DentitionTypeId, dto.Quadrant, dto.Position);
+            entity.Update(request.Name, request.DentitionTypeId, request.Quadrant, request.Position);
             repository.Update(entity);
             return Map(entity);
         });
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(string code)
     {
-        var entity = await repository.GetByCodeAsync(id.ToString("D"))
-            ?? await repository.GetByCodeAsync(id.ToString("N"));
+        var entity = await repository.GetByCodeAsync(code);
         if (entity is null) return false;
         await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
         return true;
     }
 
-    private static ToothPayload Deserialize(object request)
+    private static ToothResponseDto Map(ToothEntity e) => new()
     {
-        if (request is ToothPayload typed) return typed;
-        var json = JsonSerializer.Serialize(request);
-        return JsonSerializer.Deserialize<ToothPayload>(json)
-            ?? throw new InvalidOperationException("Invalid ToothEntity request payload.");
-    }
-
-    private static object Map(ToothEntity e) => new
-    {
-        e.Code, e.Name, e.DentitionTypeId, e.Quadrant, e.Position
+        Code = e.Code,
+        Name = e.Name,
+        DentitionTypeId = e.DentitionTypeId,
+        Quadrant = e.Quadrant,
+        Position = e.Position
     };
-
-    private sealed class ToothPayload
-    {
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public Guid DentitionTypeId { get; set; }
-        public int Quadrant { get; set; }
-        public int Position { get; set; }
-    }
 }

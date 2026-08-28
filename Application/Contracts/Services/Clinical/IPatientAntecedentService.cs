@@ -1,16 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Application.Contracts.Services.Common;
 using Application.DTOs.Clinical.PatientAntecedent;
 
 namespace Application.Contracts.Services.Clinical
 {
-    public interface IPatientAntecedentService
+    public interface IPatientAntecedentService : ICrudService<PatientAntecedentResponseDto, CreatePatientAntecedentRequestDto, UpdatePatientAntecedentRequestDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreatePatientAntecedentRequestDto request);
-        Task<object?> UpdateAsync(Guid id, UpdatePatientAntecedentRequestDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

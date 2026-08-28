@@ -10,19 +10,19 @@ public sealed class AvailabilityService(
     IAvailabilityRepository repository,
     IUnitOfWork unitOfWork) : IAvailabilityService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<AvailabilityResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<AvailabilityResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateAvailabilityDto request)
+    public async Task<AvailabilityResponseDto> CreateAsync(CreateAvailabilityDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -40,7 +40,7 @@ public sealed class AvailabilityService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateAvailabilityDto request)
+    public async Task<AvailabilityResponseDto?> UpdateAsync(Guid id, UpdateAvailabilityDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -74,8 +74,16 @@ public sealed class AvailabilityService(
         return true;
     }
 
-    private static object Map(AvailabilityEntity e) => new
+    private static AvailabilityResponseDto Map(AvailabilityEntity e) => new()
     {
-        e.Id, e.ProfessionalId, e.StartDay, e.EndDay, e.StartTime, e.LunchStartTime, e.LunchEndTime, e.EndTime, e.IsActive
+        Id = e.Id,
+        ProfessionalId = e.ProfessionalId,
+        StartDay = e.StartDay,
+        EndDay = e.EndDay,
+        StartTime = e.StartTime,
+        LunchStartTime = e.LunchStartTime,
+        LunchEndTime = e.LunchEndTime,
+        EndTime = e.EndTime,
+        IsActive = e.IsActive
     };
 }

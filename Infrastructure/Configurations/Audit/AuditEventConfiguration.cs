@@ -58,7 +58,7 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEventEntity
 
         builder.Property(c => c.Succeeded)
             .HasColumnName("is_success")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.ErrorDetail)

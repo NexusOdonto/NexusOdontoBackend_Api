@@ -2,6 +2,7 @@ using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Services.Catalogs;
 using Application.DTOs;
+using Application.DTOs.Service;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
@@ -10,19 +11,19 @@ public sealed class ServiceService(
     IServiceRepository repository,
     IUnitOfWork unitOfWork) : IServiceService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ServiceResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ServiceResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateServiceRequestDto request)
+    public async Task<ServiceResponseDto> CreateAsync(CreateServiceRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         await unitOfWork.BeginTransactionAsync();
@@ -47,7 +48,7 @@ public sealed class ServiceService(
         }
     }
 
-    public async Task<object?> UpdateAsync(Guid id, CreateServiceRequestDto request)
+    public async Task<ServiceResponseDto?> UpdateAsync(Guid id, CreateServiceRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -91,16 +92,16 @@ public sealed class ServiceService(
         }
     }
 
-    private static object Map(ServiceEntity e) => new
+    private static ServiceResponseDto Map(ServiceEntity e) => new()
     {
-        e.Id,
-        e.Code,
-        e.Name,
-        e.Description,
-        e.DurationMinutes,
-        e.Price,
-        e.IsActive,
-        e.SortOrder,
-        e.CreatedAt
+        Id = e.Id,
+        Code = e.Code,
+        Name = e.Name,
+        Description = e.Description,
+        DurationMinutes = e.DurationMinutes,
+        Price = e.Price,
+        IsActive = e.IsActive,
+        SortOrder = e.SortOrder,
+        CreatedAt = e.CreatedAt
     };
 }

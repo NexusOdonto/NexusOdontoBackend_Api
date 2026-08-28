@@ -9,19 +9,19 @@ public sealed class ProcedurePerformedService(
     IRepository<ProcedurePerformedEntity> repository,
     IUnitOfWork unitOfWork) : IProcedurePerformedService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ProcedurePerformedResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ProcedurePerformedResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateProcedurePerformedRequestDto request)
+    public async Task<ProcedurePerformedResponseDto> CreateAsync(CreateProcedurePerformedRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -44,8 +44,13 @@ public sealed class ProcedurePerformedService(
         return true;
     }
 
-    private static object Map(ProcedurePerformedEntity e) => new
+    private static ProcedurePerformedResponseDto Map(ProcedurePerformedEntity e) => new()
     {
-        e.Id, e.ClinicalAttentionId, e.ServiceId, e.Description, e.PerformedAt, e.AmountCharged
+        Id = e.Id,
+        ClinicalAttentionId = e.ClinicalAttentionId,
+        ServiceId = e.ServiceId,
+        Description = e.Description,
+        PerformedAt = e.PerformedAt,
+        AmountCharged = e.AmountCharged
     };
 }

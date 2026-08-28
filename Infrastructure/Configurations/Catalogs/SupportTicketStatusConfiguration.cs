@@ -31,17 +31,17 @@ public class SupportTicketStatusConfiguration : IEntityTypeConfiguration<Support
 
         builder.Property(c => c.IsFinal)
             .HasColumnName("is_final")
-            .HasDefaultValue(false)
+            .HasDefaultValueSql("0")
             .IsRequired();
 
         builder.Property(c => c.AllowsAssignment)
             .HasColumnName("allows_assignment")
-            .HasDefaultValue(false)
+            .HasDefaultValueSql("0")
             .IsRequired();
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.SortOrder)

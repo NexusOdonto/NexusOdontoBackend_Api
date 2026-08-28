@@ -12,19 +12,19 @@ public sealed class HubNotificationService(
     ICatalogRepository<HubNotificationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IHubNotificationService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<HubNotificationResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<HubNotificationResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateHubNotificationRequestDto request)
+    public async Task<HubNotificationResponseDto> CreateAsync(CreateHubNotificationRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var statusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "PENDING", "NEW", "UNREAD", "CREATED");
@@ -54,10 +54,21 @@ public sealed class HubNotificationService(
         return true;
     }
 
-    private static object Map(HubNotificationEntity e) => new
+    private static HubNotificationResponseDto Map(HubNotificationEntity e) => new()
     {
-        e.Id, e.SenderUserId, e.RecipientUserId, e.RecipientRoleId, e.HubNotificationTypeId,
-        e.NotificationPriorityId, e.Title, e.Content, e.EntityType, e.EntityId,
-        e.HubNotificationStatusId, e.CreatedAt, e.DeliveredAt, e.ReadAt
+        Id = e.Id,
+        SenderUserId = e.SenderUserId,
+        RecipientUserId = e.RecipientUserId,
+        RecipientRoleId = e.RecipientRoleId,
+        HubNotificationTypeId = e.HubNotificationTypeId,
+        NotificationPriorityId = e.NotificationPriorityId,
+        Title = e.Title,
+        Content = e.Content,
+        EntityType = e.EntityType,
+        EntityId = e.EntityId,
+        HubNotificationStatusId = e.HubNotificationStatusId,
+        CreatedAt = e.CreatedAt,
+        DeliveredAt = e.DeliveredAt,
+        ReadAt = e.ReadAt
     };
 }

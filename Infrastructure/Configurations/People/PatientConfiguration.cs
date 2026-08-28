@@ -29,7 +29,7 @@ public class PatientConfiguration : IEntityTypeConfiguration<PatientEntity>
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.CreatedAt)

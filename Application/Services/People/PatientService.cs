@@ -3,6 +3,7 @@ using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Services.People;
 using Application.DTOs.Patients;
+using Application.Exceptions;
 using Domain.Entities.Clinical;
 using Domain.Entities.People;
 
@@ -14,25 +15,25 @@ public sealed class PatientService(
     IClinicalHistoryRepository clinicalHistoryRepository,
     IUnitOfWork unitOfWork) : IPatientService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<PatientResponseDto>> GetAllAsync()
     {
         var items = await patientRepository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await patientRepository.GetByIdWithPersonAsync(id)
             ?? await patientRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePatientDto request)
+    public async Task<PatientResponseDto> CreateAsync(CreatePatientDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var person = await personRepository.GetByIdAsync(request.PersonId)
-            ?? throw new InvalidOperationException($"Person {request.PersonId} was not found.");
+            ?? throw new BusinessRuleException($"Person {request.PersonId} was not found.");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
@@ -49,7 +50,7 @@ public sealed class PatientService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePatientDto request)
+    public async Task<PatientResponseDto?> UpdateAsync(Guid id, UpdatePatientDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await patientRepository.GetByIdAsync(id);
@@ -78,13 +79,13 @@ public sealed class PatientService(
         return true;
     }
 
-    private static object Map(PatientEntity e) => new
+    private static PatientResponseDto Map(PatientEntity e) => new()
     {
-        e.Id,
-        e.PersonId,
-        e.EmergencyContact,
-        e.EmergencyPhone,
-        e.IsActive,
-        e.CreatedAt
+        Id = e.Id,
+        PersonId = e.PersonId,
+        EmergencyContact = e.EmergencyContact,
+        EmergencyPhone = e.EmergencyPhone,
+        IsActive = e.IsActive,
+        CreatedAt = e.CreatedAt
     };
 }

@@ -1,13 +1,9 @@
+using Application.Contracts.Services.Common;
 using Application.DTOs.Patients;
 
 namespace Application.Contracts.Services.People
 {
-    public interface IPatientService
+    public interface IPatientService : ICrudService<PatientResponseDto, CreatePatientDto, UpdatePatientDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreatePatientDto request);
-        Task<object?> UpdateAsync(Guid id, UpdatePatientDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

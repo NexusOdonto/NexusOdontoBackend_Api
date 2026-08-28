@@ -10,19 +10,19 @@ public sealed class PersonService(
     IPersonRepository personRepository,
     IUnitOfWork unitOfWork) : IPersonService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<PersonResponseDto>> GetAllAsync()
     {
         var items = await personRepository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<PersonResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await personRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePersonDto request)
+    public async Task<PersonResponseDto> CreateAsync(CreatePersonDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -42,7 +42,7 @@ public sealed class PersonService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePersonDto request)
+    public async Task<PersonResponseDto?> UpdateAsync(Guid id, UpdatePersonDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await personRepository.GetByIdAsync(id);
@@ -80,19 +80,19 @@ public sealed class PersonService(
         return true;
     }
 
-    private static object Map(PersonEntity e) => new
+    private static PersonResponseDto Map(PersonEntity e) => new()
     {
-        e.Id,
-        e.DocumentTypeId,
-        e.DocumentNumber,
-        e.FirstName,
-        e.LastName,
-        e.DateOfBirth,
-        e.SexId,
-        e.Phone,
-        e.Email,
-        e.Address,
-        e.IsActive,
-        e.CreatedAt
+        Id = e.Id,
+        DocumentTypeId = e.DocumentTypeId,
+        DocumentNumber = e.DocumentNumber,
+        FirstName = e.FirstName,
+        LastName = e.LastName,
+        DateOfBirth = e.DateOfBirth,
+        SexId = e.SexId,
+        Phone = e.Phone,
+        Email = e.Email,
+        Address = e.Address,
+        IsActive = e.IsActive,
+        CreatedAt = e.CreatedAt
     };
 }

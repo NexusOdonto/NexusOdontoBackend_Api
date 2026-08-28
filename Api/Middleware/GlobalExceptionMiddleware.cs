@@ -65,6 +65,24 @@ public class GlobalExceptionMiddleware
                 _logger.LogWarning(exception, "Acceso no autorizado capturado: {Message}", message);
                 break;
 
+            case ConflictException conflictException:
+                statusCode = (int)HttpStatusCode.Conflict;
+                message = conflictException.Message;
+                _logger.LogWarning(exception, "Conflicto de negocio capturado: {Message}", message);
+                break;
+
+            case BusinessRuleException businessRuleException:
+                statusCode = (int)HttpStatusCode.BadRequest;
+                message = businessRuleException.Message;
+                _logger.LogWarning(exception, "Regla de negocio capturada: {Message}", message);
+                break;
+
+            case InvalidOperationException invalidOperationException:
+                statusCode = (int)HttpStatusCode.BadRequest;
+                message = invalidOperationException.Message;
+                _logger.LogWarning(exception, "Operación inválida capturada: {Message}", message);
+                break;
+
             default:
                 statusCode = (int)HttpStatusCode.InternalServerError;
                 message = "Ha ocurrido un error interno en el servidor.";

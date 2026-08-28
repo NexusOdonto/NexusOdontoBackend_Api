@@ -31,7 +31,7 @@ public class ActionPermissionConfiguration : IEntityTypeConfiguration<ActionPerm
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.SortOrder)

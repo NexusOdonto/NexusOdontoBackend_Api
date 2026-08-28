@@ -12,19 +12,19 @@ public sealed class WhatsAppNotificationService(
     ICatalogRepository<WhatsAppNotificationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IWhatsAppNotificationService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<WhatsAppNotificationResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<WhatsAppNotificationResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateWhatsAppNotificationRequestDto request)
+    public async Task<WhatsAppNotificationResponseDto> CreateAsync(CreateWhatsAppNotificationRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var statusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "PENDING", "SCHEDULED", "QUEUED", "NEW");
@@ -54,10 +54,21 @@ public sealed class WhatsAppNotificationService(
         return true;
     }
 
-    private static object Map(WhatsAppNotificationEntity e) => new
+    private static WhatsAppNotificationResponseDto Map(WhatsAppNotificationEntity e) => new()
     {
-        e.Id, e.AppointmentId, e.PatientId, e.WhatsAppNotificationTypeId, e.WhatsAppNotificationStatusId,
-        e.DestinationPhone, e.Content, e.TemplateName, e.TemplateParameters, e.ScheduledFor,
-        e.SentAt, e.DeliveredAt, e.ReadAt, e.FailedAt
+        Id = e.Id,
+        AppointmentId = e.AppointmentId,
+        PatientId = e.PatientId,
+        WhatsAppNotificationTypeId = e.WhatsAppNotificationTypeId,
+        WhatsAppNotificationStatusId = e.WhatsAppNotificationStatusId,
+        DestinationPhone = e.DestinationPhone,
+        Content = e.Content,
+        TemplateName = e.TemplateName,
+        TemplateParameters = e.TemplateParameters,
+        ScheduledFor = e.ScheduledFor,
+        SentAt = e.SentAt,
+        DeliveredAt = e.DeliveredAt,
+        ReadAt = e.ReadAt,
+        FailedAt = e.FailedAt
     };
 }

@@ -1,16 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Application.Contracts.Services.Common;
 using Application.DTOs.Odontogram.OdontogramTooth;
 
 namespace Application.Contracts.Services.Odontogram
 {
-    public interface IOdontogramToothService
+    public interface IOdontogramToothService : ICrudService<OdontogramToothResponseDto, CreateOdontogramToothRequestDto, UpdateOdontogramToothRequestDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreateOdontogramToothRequestDto request);
-        Task<object?> UpdateAsync(Guid id, UpdateOdontogramToothRequestDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

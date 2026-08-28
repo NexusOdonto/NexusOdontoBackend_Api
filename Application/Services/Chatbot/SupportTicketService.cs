@@ -13,19 +13,19 @@ public sealed class SupportTicketService(
     ICatalogRepository<SupportTicketStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : ISupportTicketService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<SupportTicketResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<SupportTicketResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateSupportTicketRequestDto request)
+    public async Task<SupportTicketResponseDto> CreateAsync(CreateSupportTicketRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var statusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "OPEN", "NEW", "PENDING");
@@ -47,7 +47,7 @@ public sealed class SupportTicketService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateSupportTicketRequestDto request)
+    public async Task<SupportTicketResponseDto?> UpdateAsync(Guid id, UpdateSupportTicketRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -82,10 +82,22 @@ public sealed class SupportTicketService(
         return true;
     }
 
-    private static object Map(SupportTicketEntity e) => new
+    private static SupportTicketResponseDto Map(SupportTicketEntity e) => new()
     {
-        e.Id, e.ChatbotConversationId, e.PatientId, e.TicketReasonId, e.NotificationPriorityId,
-        e.TicketStatusId, e.Title, e.Description, e.ChatbotSummary, e.RagConfidence,
-        e.CreatedAt, e.AssignedToUserId, e.AssignedAt, e.Resolution, e.ClosedAt
+        Id = e.Id,
+        ChatbotConversationId = e.ChatbotConversationId,
+        PatientId = e.PatientId,
+        TicketReasonId = e.TicketReasonId,
+        NotificationPriorityId = e.NotificationPriorityId,
+        TicketStatusId = e.TicketStatusId,
+        Title = e.Title,
+        Description = e.Description,
+        ChatbotSummary = e.ChatbotSummary,
+        RagConfidence = e.RagConfidence,
+        CreatedAt = e.CreatedAt,
+        AssignedToUserId = e.AssignedToUserId,
+        AssignedAt = e.AssignedAt,
+        Resolution = e.Resolution,
+        ClosedAt = e.ClosedAt
     };
 }

@@ -1,13 +1,9 @@
+using Application.Contracts.Services.Common;
 using Application.DTOs.Permissions;
 
 namespace Application.Contracts.Services.Security
 {
-    public interface IPermissionService
+    public interface IPermissionService : ICrudService<PermissionResponseDto, CreatePermissionDto, UpdatePermissionDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreatePermissionDto request);
-        Task<object?> UpdateAsync(Guid id, UpdatePermissionDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -30,7 +30,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEntity>
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.CreatedAt)
@@ -42,5 +42,9 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEntity>
             .HasColumnName("updated_at");
 
         builder.HasIndex(c => c.PersonId).IsUnique();
+
+        builder.HasOne(e => e.PersonEntity)
+            .WithOne(p => p.EmployeeEntity)
+            .HasForeignKey<EmployeeEntity>(e => e.PersonId);
     }
 }

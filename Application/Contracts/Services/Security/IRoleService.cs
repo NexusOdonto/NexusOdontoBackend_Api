@@ -1,13 +1,9 @@
+using Application.Contracts.Services.Common;
 using Application.DTOs.Roles;
 
 namespace Application.Contracts.Services.Security
 {
-    public interface IRoleService
+    public interface IRoleService : ICrudService<RoleResponseDto, CreateRoleDto, UpdateRoleDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreateRoleDto request);
-        Task<object?> UpdateAsync(Guid id, UpdateRoleDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

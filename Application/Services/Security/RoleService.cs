@@ -10,20 +10,20 @@ public sealed class RoleService(
     IRoleRepository roleRepository,
     IUnitOfWork unitOfWork) : IRoleService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<RoleResponseDto>> GetAllAsync()
     {
         var items = await roleRepository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<RoleResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await roleRepository.GetByIdWithPermissionsAsync(id)
             ?? await roleRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateRoleDto request)
+    public async Task<RoleResponseDto> CreateAsync(CreateRoleDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -34,7 +34,7 @@ public sealed class RoleService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateRoleDto request)
+    public async Task<RoleResponseDto?> UpdateAsync(Guid id, UpdateRoleDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await roleRepository.GetByIdAsync(id);
@@ -64,14 +64,14 @@ public sealed class RoleService(
         return true;
     }
 
-    private static object Map(RoleEntity e) => new
+    private static RoleResponseDto Map(RoleEntity e) => new()
     {
-        e.Id,
-        e.Code,
-        e.Name,
-        e.Description,
+        Id = e.Id,
+        Code = e.Code,
+        Name = e.Name,
+        Description = e.Description,
         PermissionIds = e.Permissions.Select(p => p.Id).ToList(),
-        e.IsActive,
-        e.CreatedAt
+        IsActive = e.IsActive,
+        CreatedAt = e.CreatedAt
     };
 }

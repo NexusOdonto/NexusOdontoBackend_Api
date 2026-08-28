@@ -10,20 +10,20 @@ public sealed class UserService(
     IUserRepository userRepository,
     IUnitOfWork unitOfWork) : IUserService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<UserDetailResponseDto>> GetAllAsync()
     {
         var items = await userRepository.GetAllWithRolesAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<UserDetailResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await userRepository.GetByIdWithRolesAsync(id)
             ?? await userRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateUserDto request)
+    public async Task<UserDetailResponseDto> CreateAsync(CreateUserDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -35,7 +35,7 @@ public sealed class UserService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateUserDto request)
+    public async Task<UserDetailResponseDto?> UpdateAsync(Guid id, UpdateUserDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await userRepository.GetByIdAsync(id);
@@ -64,13 +64,13 @@ public sealed class UserService(
         return true;
     }
 
-    private static object Map(UserEntity e) => new
+    private static UserDetailResponseDto Map(UserEntity e) => new()
     {
-        e.Id,
-        e.PersonId,
-        e.LastAccessAt,
+        Id = e.Id,
+        PersonId = e.PersonId,
+        LastAccessAt = e.LastAccessAt,
         RoleIds = e.UserRoles.Select(ur => ur.RoleId).ToList(),
-        e.IsActive,
-        e.CreatedAt
+        IsActive = e.IsActive,
+        CreatedAt = e.CreatedAt
     };
 }

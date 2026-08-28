@@ -1,3 +1,4 @@
+using Domain.Entities.Catalogs;
 using Domain.Entities.People;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -26,7 +27,7 @@ public class ProfessionalConfiguration : IEntityTypeConfiguration<ProfessionalEn
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.CreatedAt)
@@ -39,5 +40,23 @@ public class ProfessionalConfiguration : IEntityTypeConfiguration<ProfessionalEn
 
         builder.HasIndex(c => c.EmployeeId).IsUnique();
         builder.HasIndex(c => c.ProfessionalLicense).IsUnique();
+
+        builder.HasOne(p => p.EmployeeEntity)
+            .WithOne(e => e.ProfessionalEntity)
+            .HasForeignKey<ProfessionalEntity>(p => p.EmployeeId);
+
+        builder.HasMany(p => p.Specialties)
+            .WithMany(s => s.Professionals)
+            .UsingEntity(
+                "professional_specialties",
+                l => l.HasOne(typeof(SpecialtyEntity)).WithMany().HasForeignKey("specialty_id"),
+                r => r.HasOne(typeof(ProfessionalEntity)).WithMany().HasForeignKey("professional_id"),
+                j =>
+                {
+                    j.HasKey("professional_id", "specialty_id");
+                    j.ToTable("professional_specialties");
+                    j.Property<Guid>("professional_id").HasColumnName("professional_id");
+                    j.Property<Guid>("specialty_id").HasColumnName("specialty_id");
+                });
     }
 }

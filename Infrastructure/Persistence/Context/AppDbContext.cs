@@ -1,3 +1,4 @@
+using Infrastructure.Data.Seeder;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Context;
@@ -12,5 +13,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        DatabaseSeeder.Seed(modelBuilder);
     }
 }

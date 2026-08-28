@@ -1,16 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Application.Contracts.Services.Common;
 using Application.DTOs.Support.SupportTicket;
 
 namespace Application.Contracts.Services.Chatbot
 {
-    public interface ISupportTicketService
+    public interface ISupportTicketService : ICrudService<SupportTicketResponseDto, CreateSupportTicketRequestDto, UpdateSupportTicketRequestDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreateSupportTicketRequestDto request);
-        Task<object?> UpdateAsync(Guid id, UpdateSupportTicketRequestDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }
