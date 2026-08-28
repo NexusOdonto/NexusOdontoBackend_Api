@@ -1,7 +1,7 @@
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Security;
 using Application.Contracts.Services.Security;
-using Application.DTOs.Permisos;
+using Application.DTOs.Permissions;
 using Domain.Entities.Security;
 
 namespace Application.Services.Security;
@@ -22,18 +22,18 @@ public sealed class PermissionService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePermisoDto request)
+    public async Task<object> CreateAsync(CreatePermissionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new PermissionEntity(request.Modulo, request.AccionPermisoId, request.Descripcion);
+            var entity = new PermissionEntity(request.Module, request.ActionPermissionId, request.Description);
             await permissionRepository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePermisoDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdatePermissionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await permissionRepository.GetByIdAsync(id);
@@ -41,7 +41,7 @@ public sealed class PermissionService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.Update(request.Modulo, request.AccionPermisoId, request.Descripcion);
+            entity.Update(request.Module, request.ActionPermissionId, request.Description);
             permissionRepository.Update(entity);
             return Map(entity);
         });

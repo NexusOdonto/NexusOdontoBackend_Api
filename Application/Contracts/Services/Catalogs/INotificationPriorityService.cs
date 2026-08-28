@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.NotificationPriority;
 
 namespace Application.Contracts.Services.Catalogs
 {
     public interface INotificationPriorityService
     {
-        Task<IReadOnlyList<PrioridadNotificacionDto>> GetAllAsync();
-        Task<PrioridadNotificacionDto?> GetByIdAsync(Guid id);
-        Task<PrioridadNotificacionDto> CreateAsync(PrioridadNotificacionDto request);
-        Task<PrioridadNotificacionDto?> UpdateAsync(Guid id, PrioridadNotificacionDto request);
+        Task<IReadOnlyList<NotificationPriorityDto>> GetAllAsync();
+        Task<NotificationPriorityDto?> GetByIdAsync(Guid id);
+        Task<NotificationPriorityDto> CreateAsync(NotificationPriorityDto request);
+        Task<NotificationPriorityDto?> UpdateAsync(Guid id, NotificationPriorityDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

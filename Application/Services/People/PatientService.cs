@@ -2,7 +2,7 @@ using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Services.People;
-using Application.DTOs.Pacientes;
+using Application.DTOs.Patients;
 using Domain.Entities.Clinical;
 using Domain.Entities.People;
 
@@ -27,29 +27,29 @@ public sealed class PatientService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePacienteDto request)
+    public async Task<object> CreateAsync(CreatePatientDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var PersonEntity = await personRepository.GetByIdAsync(request.PersonaId)
-            ?? throw new InvalidOperationException($"PersonEntity {request.PersonaId} was not found.");
+        var person = await personRepository.GetByIdAsync(request.PersonId)
+            ?? throw new InvalidOperationException($"Person {request.PersonId} was not found.");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var PatientEntity = new PatientEntity(
-                PersonEntity.Id,
-                request.ContactoEmergencia,
-                request.TelefonoEmergencia);
-            await patientRepository.AddAsync(PatientEntity);
+            var patient = new PatientEntity(
+                person.Id,
+                request.EmergencyContact,
+                request.EmergencyPhone);
+            await patientRepository.AddAsync(patient);
 
-            var history = new ClinicalHistoryEntity(PatientEntity.Id);
+            var history = new ClinicalHistoryEntity(patient.Id);
             await clinicalHistoryRepository.AddAsync(history);
 
-            return Map(PatientEntity);
+            return Map(patient);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePacienteDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdatePatientDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await patientRepository.GetByIdAsync(id);
@@ -57,8 +57,8 @@ public sealed class PatientService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.Update(request.ContactoEmergencia, request.TelefonoEmergencia);
-            entity.IsActive = request.Activo;
+            entity.Update(request.EmergencyContact, request.EmergencyPhone);
+            entity.IsActive = request.IsActive;
             patientRepository.Update(entity);
             return Map(entity);
         });

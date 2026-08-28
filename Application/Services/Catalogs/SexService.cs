@@ -1,32 +1,33 @@
 using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.Sex;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
 public sealed class SexService(CatalogServiceCore<SexEntity> core) : ISexService
 {
-    public Task<IReadOnlyList<SexoDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToSexoDto);
+    public Task<IReadOnlyList<SexDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToSexDto);
 
-    public Task<SexoDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToSexoDto);
+    public Task<SexDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToSexDto);
 
-    public Task<SexoDto> CreateAsync(SexoDto request)
+    public Task<SexDto> CreateAsync(SexDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new SexEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToSexoDto);
+        var entity = new SexEntity(request.Code, request.Name, request.Description, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToSexDto);
     }
 
-    public Task<SexoDto?> UpdateAsync(Guid id, SexoDto request)
+    public Task<SexDto?> UpdateAsync(Guid id, SexDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToSexoDto);
+            entity.Update(request.Name, request.Description, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToSexDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

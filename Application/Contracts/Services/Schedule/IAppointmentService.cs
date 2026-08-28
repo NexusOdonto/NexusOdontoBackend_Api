@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Citas;
+using Application.DTOs.Appointments;
 
 namespace Application.Contracts.Services.Schedule
 {
@@ -9,8 +6,8 @@ namespace Application.Contracts.Services.Schedule
     {
         Task<IReadOnlyList<object>> GetAllAsync();
         Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreateCitaDto request);
-        Task<object?> UpdateAsync(Guid id, UpdateCitaDto request);
+        Task<object> CreateAsync(CreateAppointmentDto request);
+        Task<object?> UpdateAsync(Guid id, UpdateAppointmentDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

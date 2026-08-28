@@ -23,18 +23,18 @@ public sealed class RoleService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateRolDto request)
+    public async Task<object> CreateAsync(CreateRoleDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new RoleEntity(request.Codigo, request.Nombre, request.Descripcion);
+            var entity = new RoleEntity(request.Code, request.Name, request.Description);
             await roleRepository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateRolDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdateRoleDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await roleRepository.GetByIdAsync(id);
@@ -42,9 +42,9 @@ public sealed class RoleService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.Code = request.Codigo;
-            entity.Update(request.Nombre, request.Descripcion);
-            entity.IsActive = request.Activo;
+            entity.Code = request.Code;
+            entity.Update(request.Name, request.Description);
+            entity.IsActive = request.IsActive;
             roleRepository.Update(entity);
             return Map(entity);
         });

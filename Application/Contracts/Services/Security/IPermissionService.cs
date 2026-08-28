@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Permisos;
+using Application.DTOs.Permissions;
 
 namespace Application.Contracts.Services.Security
 {
@@ -9,8 +6,8 @@ namespace Application.Contracts.Services.Security
     {
         Task<IReadOnlyList<object>> GetAllAsync();
         Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreatePermisoDto request);
-        Task<object?> UpdateAsync(Guid id, UpdatePermisoDto request);
+        Task<object> CreateAsync(CreatePermissionDto request);
+        Task<object?> UpdateAsync(Guid id, UpdatePermissionDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

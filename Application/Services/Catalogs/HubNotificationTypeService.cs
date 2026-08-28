@@ -1,32 +1,33 @@
 using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.HubNotificationType;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
 public sealed class HubNotificationTypeService(CatalogServiceCore<HubNotificationTypeEntity> core) : IHubNotificationTypeService
 {
-    public Task<IReadOnlyList<TipoNotificacionHubDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToTipoNotificacionHubDto);
+    public Task<IReadOnlyList<HubNotificationTypeDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToHubNotificationTypeDto);
 
-    public Task<TipoNotificacionHubDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToTipoNotificacionHubDto);
+    public Task<HubNotificationTypeDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToHubNotificationTypeDto);
 
-    public Task<TipoNotificacionHubDto> CreateAsync(TipoNotificacionHubDto request)
+    public Task<HubNotificationTypeDto> CreateAsync(HubNotificationTypeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new HubNotificationTypeEntity(request.Codigo, request.Nombre, request.Descripcion, request.Icono, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToTipoNotificacionHubDto);
+        var entity = new HubNotificationTypeEntity(request.Code, request.Name, request.Description, request.Icon, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToHubNotificationTypeDto);
     }
 
-    public Task<TipoNotificacionHubDto?> UpdateAsync(Guid id, TipoNotificacionHubDto request)
+    public Task<HubNotificationTypeDto?> UpdateAsync(Guid id, HubNotificationTypeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.Icono, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToTipoNotificacionHubDto);
+            entity.Update(request.Name, request.Description, request.Icon, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToHubNotificationTypeDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

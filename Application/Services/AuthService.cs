@@ -39,21 +39,21 @@ public sealed class AuthService(
             }
         }
 
-        var UserEntity = await userRepository.GetByEmailWithRolesAsync(
+        var user = await userRepository.GetByEmailWithRolesAsync(
             email,
             cancellationToken);
 
-        if (UserEntity is null ||
-            !BCrypt.Net.BCrypt.Verify(request.Password, UserEntity.PasswordHash))
+        if (user is null ||
+            !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             return null;
         }
 
-        UserEntity.RegisterAccess(DateTime.UtcNow);
-        userRepository.Update(UserEntity);
+        user.RegisterAccess(DateTime.UtcNow);
+        userRepository.Update(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return GenerateToken(UserEntity);
+        return GenerateToken(user);
     }
 
     public async Task<UserResponseDto> RegisterAsync(
@@ -63,28 +63,28 @@ public sealed class AuthService(
         ArgumentNullException.ThrowIfNull(request);
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var UserEntity = new UserEntity(request.PersonId, passwordHash);
-        UserEntity.UserRoles.Add(new UserRoleEntity(UserEntity.Id, request.RoleId));
+        var user = new UserEntity(request.PersonId, passwordHash);
+        user.UserRoles.Add(new UserRoleEntity(user.Id, request.RoleId));
 
-        await userRepository.AddAsync(UserEntity);
+        await userRepository.AddAsync(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var loaded = await userRepository.GetByIdWithRolesAsync(UserEntity.Id, cancellationToken)
-            ?? UserEntity;
+        var loaded = await userRepository.GetByIdWithRolesAsync(user.Id, cancellationToken)
+            ?? user;
 
         return MapToResponse(loaded);
     }
 
-    private AuthResponseDto GenerateToken(UserEntity UserEntity)
+    private AuthResponseDto GenerateToken(UserEntity user)
     {
         ValidateJwtSettings();
 
         var expiresAtUtc = DateTime.UtcNow.AddMinutes(jwtSettings.ExpirationMinutes);
-        var primaryRole = UserEntity.UserRoles.FirstOrDefault()?.RoleEntity;
+        var primaryRole = user.UserRoles.FirstOrDefault()?.RoleEntity;
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, UserEntity.Id.ToString()),
-            new(ClaimTypes.NameIdentifier, UserEntity.Id.ToString())
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
 
         if (primaryRole is not null)
@@ -93,9 +93,9 @@ public sealed class AuthService(
             claims.Add(new Claim(ClaimTypes.Role, primaryRole.Name));
         }
 
-        foreach (var UserRoleEntity in UserEntity.UserRoles)
+        foreach (var userRole in user.UserRoles)
         {
-            claims.Add(new Claim("roleId", UserRoleEntity.RoleId.ToString()));
+            claims.Add(new Claim("roleId", userRole.RoleId.ToString()));
         }
 
         var signingKey = new SymmetricSecurityKey(
@@ -118,18 +118,18 @@ public sealed class AuthService(
         };
     }
 
-    public static UserResponseDto MapToResponse(UserEntity UserEntity)
+    public static UserResponseDto MapToResponse(UserEntity user)
     {
-        var PersonEntity = UserEntity.PersonEntity;
+        var person = user.PersonEntity;
         return new UserResponseDto
         {
-            Id = UserEntity.Id,
-            PersonId = UserEntity.PersonId,
-            Name = PersonEntity is null
+            Id = user.Id,
+            PersonId = user.PersonId,
+            Name = person is null
                 ? string.Empty
-                : $"{PersonEntity.FirstName} {PersonEntity.LastName}".Trim(),
-            Email = PersonEntity?.Email ?? string.Empty,
-            RoleIds = UserEntity.UserRoles.Select(ur => ur.RoleId).ToList()
+                : $"{person.FirstName} {person.LastName}".Trim(),
+            Email = person?.Email ?? string.Empty,
+            RoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList()
         };
     }
 

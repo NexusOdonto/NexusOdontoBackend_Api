@@ -41,7 +41,7 @@ public sealed class ServicesController : ControllerBase
         [FromBody] CreateServiceRequestDto request,
         CancellationToken cancellationToken)
     {
-        var ServiceEntity = new ServiceEntity(
+        var service = new ServiceEntity(
             request.Code,
             request.Name,
             request.Description,
@@ -49,11 +49,11 @@ public sealed class ServicesController : ControllerBase
             request.Price,
             request.SortOrder);
 
-        await _serviceRepository.AddAsync(ServiceEntity);
+        await _serviceRepository.AddAsync(service);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Created(
-            $"/api/v1/services/{ServiceEntity.Id}",
-            new { serviceId = ServiceEntity.Id });
+            $"/api/v1/services/{service.Id}",
+            new { serviceId = service.Id });
     }
 }

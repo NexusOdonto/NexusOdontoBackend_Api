@@ -1,7 +1,7 @@
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
-using Application.DTOs.Personas;
+using Application.DTOs.People;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -22,27 +22,27 @@ public sealed class PersonService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePersonaDto request)
+    public async Task<object> CreateAsync(CreatePersonDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new PersonEntity(
-                request.TipoDocumentoId,
-                request.NumeroDocumento,
-                request.Nombres,
-                request.Apellidos,
-                request.FechaNacimiento,
-                request.SexoId,
-                request.Telefono,
+            var person = new PersonEntity(
+                request.DocumentTypeId,
+                request.DocumentNumber,
+                request.FirstName,
+                request.LastName,
+                request.DateOfBirth,
+                request.SexId,
+                request.Phone,
                 request.Email,
-                request.Direccion);
-            await personRepository.AddAsync(entity);
-            return Map(entity);
+                request.Address);
+            await personRepository.AddAsync(person);
+            return Map(person);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePersonaDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdatePersonDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await personRepository.GetByIdAsync(id);
@@ -50,17 +50,17 @@ public sealed class PersonService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.DocumentTypeId = request.TipoDocumentoId;
-            entity.DocumentNumber = request.NumeroDocumento;
+            entity.DocumentTypeId = request.DocumentTypeId;
+            entity.DocumentNumber = request.DocumentNumber;
             entity.Update(
-                request.Nombres,
-                request.Apellidos,
-                request.FechaNacimiento,
-                request.SexoId,
-                request.Telefono,
+                request.FirstName,
+                request.LastName,
+                request.DateOfBirth,
+                request.SexId,
+                request.Phone,
                 request.Email,
-                request.Direccion);
-            entity.IsActive = request.Activo;
+                request.Address);
+            entity.IsActive = request.IsActive;
             personRepository.Update(entity);
             return Map(entity);
         });
@@ -96,4 +96,3 @@ public sealed class PersonService(
         e.CreatedAt
     };
 }
-

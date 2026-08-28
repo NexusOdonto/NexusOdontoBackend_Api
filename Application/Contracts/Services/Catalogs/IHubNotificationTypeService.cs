@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.HubNotificationType;
 
 namespace Application.Contracts.Services.Catalogs
 {
     public interface IHubNotificationTypeService
     {
-        Task<IReadOnlyList<TipoNotificacionHubDto>> GetAllAsync();
-        Task<TipoNotificacionHubDto?> GetByIdAsync(Guid id);
-        Task<TipoNotificacionHubDto> CreateAsync(TipoNotificacionHubDto request);
-        Task<TipoNotificacionHubDto?> UpdateAsync(Guid id, TipoNotificacionHubDto request);
+        Task<IReadOnlyList<HubNotificationTypeDto>> GetAllAsync();
+        Task<HubNotificationTypeDto?> GetByIdAsync(Guid id);
+        Task<HubNotificationTypeDto> CreateAsync(HubNotificationTypeDto request);
+        Task<HubNotificationTypeDto?> UpdateAsync(Guid id, HubNotificationTypeDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -3,7 +3,7 @@ using System.Text;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
-using Application.DTOs.Sesiones;
+using Application.DTOs.Sessions;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -12,19 +12,19 @@ public sealed class SessionService(
     ISessionRepository sessionRepository,
     IUnitOfWork unitOfWork) : ISessionService
 {
-    public async Task<IReadOnlyList<SesionDto>> GetAllAsync()
+    public async Task<IReadOnlyList<SessionDto>> GetAllAsync()
     {
         var items = await sessionRepository.GetAllAsync();
         return items.Select(Map).ToList();
     }
 
-    public async Task<SesionDto?> GetByIdAsync(Guid id)
+    public async Task<SessionDto?> GetByIdAsync(Guid id)
     {
         var entity = await sessionRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<SesionDto> CreateAsync(SesionDto request)
+    public async Task<SessionDto> CreateAsync(SessionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -34,14 +34,14 @@ public sealed class SessionService(
                 SHA256.HashData(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"))));
 
             var entity = new SessionEntity(
-                request.UsuarioId,
+                request.UserId,
                 refreshHash,
                 tokenFamily,
-                request.FechaExpiracion == default ? DateTime.UtcNow.AddDays(7) : request.FechaExpiracion,
-                request.EstadoSesionId,
-                request.Dispositivo,
-                request.DireccionIp,
-                request.AgenteUsuario);
+                request.ExpiresAt == default ? DateTime.UtcNow.AddDays(7) : request.ExpiresAt,
+                request.SessionStatusId,
+                request.Device,
+                request.IpAddress,
+                request.UserAgent);
 
             await sessionRepository.AddAsync(entity);
             return Map(entity);
@@ -62,17 +62,17 @@ public sealed class SessionService(
         return true;
     }
 
-    private static SesionDto Map(SessionEntity e) => new()
+    private static SessionDto Map(SessionEntity e) => new()
     {
         Id = e.Id,
-        UsuarioId = e.UserId,
-        Dispositivo = e.Device,
-        DireccionIp = e.IpAddress,
-        AgenteUsuario = e.UserAgent,
-        FechaCreacion = e.CreatedAt,
-        FechaExpiracion = e.ExpiresAt,
-        FechaUltimoUso = e.LastUsedAt,
-        RevocadaEn = e.RevokedAt,
-        EstadoSesionId = e.SessionStatusId
+        UserId = e.UserId,
+        Device = e.Device,
+        IpAddress = e.IpAddress,
+        UserAgent = e.UserAgent,
+        CreatedAt = e.CreatedAt,
+        ExpiresAt = e.ExpiresAt,
+        LastUsedAt = e.LastUsedAt,
+        RevokedAt = e.RevokedAt,
+        SessionStatusId = e.SessionStatusId
     };
 }

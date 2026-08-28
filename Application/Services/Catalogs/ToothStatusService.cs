@@ -7,16 +7,16 @@ namespace Application.Services.Catalogs;
 public sealed class ToothStatusService(CatalogServiceCore<ToothStatusEntity> core) : IToothStatusService
 {
     public Task<IReadOnlyList<ToothStatusDto>> GetAllAsync() =>
-        core.GetAllAsync(EnglishCatalogMapping.ToToothStatusDto);
+        core.GetAllAsync(CatalogMapping.ToToothStatusDto);
 
     public Task<ToothStatusDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, EnglishCatalogMapping.ToToothStatusDto);
+        core.GetByIdAsync(id, CatalogMapping.ToToothStatusDto);
 
     public Task<ToothStatusDto> CreateAsync(CreateToothStatusRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = new ToothStatusEntity(request.Code, request.Name, request.Description, request.ColorHex, request.VisualCode, request.SortOrder);
-        return core.CreateAsync(entity, EnglishCatalogMapping.ToToothStatusDto);
+        return core.CreateAsync(entity, CatalogMapping.ToToothStatusDto);
     }
 
     public Task<ToothStatusDto?> UpdateAsync(Guid id, UpdateToothStatusRequestDto request)
@@ -24,8 +24,8 @@ public sealed class ToothStatusService(CatalogServiceCore<ToothStatusEntity> cor
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Name, request.Description, request.ColorHex, request.VisualCode, request.SortOrder); EnglishCatalogMapping.ApplyActive(entity, request.IsActive);
-        }, EnglishCatalogMapping.ToToothStatusDto);
+            entity.Update(request.Name, request.Description, request.ColorHex, request.VisualCode, request.SortOrder); CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToToothStatusDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

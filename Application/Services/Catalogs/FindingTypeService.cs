@@ -7,16 +7,16 @@ namespace Application.Services.Catalogs;
 public sealed class FindingTypeService(CatalogServiceCore<FindingTypeEntity> core) : IFindingTypeService
 {
     public Task<IReadOnlyList<FindingTypeDto>> GetAllAsync() =>
-        core.GetAllAsync(EnglishCatalogMapping.ToFindingTypeDto);
+        core.GetAllAsync(CatalogMapping.ToFindingTypeDto);
 
     public Task<FindingTypeDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, EnglishCatalogMapping.ToFindingTypeDto);
+        core.GetByIdAsync(id, CatalogMapping.ToFindingTypeDto);
 
     public Task<FindingTypeDto> CreateAsync(CreateFindingTypeRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = new FindingTypeEntity(request.Code, request.Name, request.Description, request.ColorHex, request.VisualSymbol, request.RequiresSurface, request.SortOrder);
-        return core.CreateAsync(entity, EnglishCatalogMapping.ToFindingTypeDto);
+        return core.CreateAsync(entity, CatalogMapping.ToFindingTypeDto);
     }
 
     public Task<FindingTypeDto?> UpdateAsync(Guid id, UpdateFindingTypeRequestDto request)
@@ -24,8 +24,8 @@ public sealed class FindingTypeService(CatalogServiceCore<FindingTypeEntity> cor
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Name, request.Description, request.ColorHex, request.VisualSymbol, request.RequiresSurface, request.SortOrder); EnglishCatalogMapping.ApplyActive(entity, request.IsActive);
-        }, EnglishCatalogMapping.ToFindingTypeDto);
+            entity.Update(request.Name, request.Description, request.ColorHex, request.VisualSymbol, request.RequiresSurface, request.SortOrder); CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToFindingTypeDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

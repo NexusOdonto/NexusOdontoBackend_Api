@@ -1,32 +1,33 @@
 using Application.Contracts.Services.Catalogs;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.DocumentType;
 using Domain.Entities.Catalogs;
 
 namespace Application.Services.Catalogs;
 
 public sealed class DocumentTypeService(CatalogServiceCore<DocumentTypeEntity> core) : IDocumentTypeService
 {
-    public Task<IReadOnlyList<TipoDocumentoDto>> GetAllAsync() =>
-        core.GetAllAsync(SpanishCatalogMapping.ToTipoDocumentoDto);
+    public Task<IReadOnlyList<DocumentTypeDto>> GetAllAsync() =>
+        core.GetAllAsync(CatalogMapping.ToDocumentTypeDto);
 
-    public Task<TipoDocumentoDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, SpanishCatalogMapping.ToTipoDocumentoDto);
+    public Task<DocumentTypeDto?> GetByIdAsync(Guid id) =>
+        core.GetByIdAsync(id, CatalogMapping.ToDocumentTypeDto);
 
-    public Task<TipoDocumentoDto> CreateAsync(TipoDocumentoDto request)
+    public Task<DocumentTypeDto> CreateAsync(DocumentTypeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = new DocumentTypeEntity(request.Codigo, request.Nombre, request.Descripcion, request.Orden);
-        entity.IsActive = request.Activo;
-        return core.CreateAsync(entity, SpanishCatalogMapping.ToTipoDocumentoDto);
+        var entity = new DocumentTypeEntity(request.Code, request.Name, request.Description, request.SortOrder);
+        entity.IsActive = request.IsActive;
+        return core.CreateAsync(entity, CatalogMapping.ToDocumentTypeDto);
     }
 
-    public Task<TipoDocumentoDto?> UpdateAsync(Guid id, TipoDocumentoDto request)
+    public Task<DocumentTypeDto?> UpdateAsync(Guid id, DocumentTypeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Nombre, request.Descripcion, request.Orden); SpanishCatalogMapping.ApplyActive(entity, request.Activo);
-        }, SpanishCatalogMapping.ToTipoDocumentoDto);
+            entity.Update(request.Name, request.Description, request.SortOrder);
+            CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToDocumentTypeDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

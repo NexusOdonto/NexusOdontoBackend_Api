@@ -7,16 +7,16 @@ namespace Application.Services.Catalogs;
 public sealed class SupportTicketStatusService(CatalogServiceCore<SupportTicketStatusEntity> core) : ISupportTicketStatusService
 {
     public Task<IReadOnlyList<SupportTicketStatusDto>> GetAllAsync() =>
-        core.GetAllAsync(EnglishCatalogMapping.ToSupportTicketStatusDto);
+        core.GetAllAsync(CatalogMapping.ToSupportTicketStatusDto);
 
     public Task<SupportTicketStatusDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, EnglishCatalogMapping.ToSupportTicketStatusDto);
+        core.GetByIdAsync(id, CatalogMapping.ToSupportTicketStatusDto);
 
     public Task<SupportTicketStatusDto> CreateAsync(CreateSupportTicketStatusRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = new SupportTicketStatusEntity(request.Code, request.Name, request.Description, request.IsFinal, request.AllowsAssignment, request.SortOrder);
-        return core.CreateAsync(entity, EnglishCatalogMapping.ToSupportTicketStatusDto);
+        return core.CreateAsync(entity, CatalogMapping.ToSupportTicketStatusDto);
     }
 
     public Task<SupportTicketStatusDto?> UpdateAsync(Guid id, UpdateSupportTicketStatusRequestDto request)
@@ -24,8 +24,8 @@ public sealed class SupportTicketStatusService(CatalogServiceCore<SupportTicketS
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Name, request.Description, request.IsFinal, request.AllowsAssignment, request.SortOrder); EnglishCatalogMapping.ApplyActive(entity, request.IsActive);
-        }, EnglishCatalogMapping.ToSupportTicketStatusDto);
+            entity.Update(request.Name, request.Description, request.IsFinal, request.AllowsAssignment, request.SortOrder); CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToSupportTicketStatusDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);

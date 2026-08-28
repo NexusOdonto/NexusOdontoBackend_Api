@@ -50,11 +50,11 @@ public sealed class RequirePermissionFilter(
             return;
         }
 
-        var UserEntity = await userRepository.GetByIdWithRolesAsync(
+        var user = await userRepository.GetByIdWithRolesAsync(
             userId,
             context.HttpContext.RequestAborted);
 
-        if (UserEntity is null)
+        if (user is null)
         {
             context.Result = new ForbidResult();
             return;
@@ -76,12 +76,12 @@ public sealed class RequirePermissionFilter(
             return;
         }
 
-        var isAllowed = UserEntity.UserRoles
+        var isAllowed = user.UserRoles
             .SelectMany(ur => ur.RoleEntity?.Permissions ?? [])
-            .Any(PermissionEntity =>
-                string.Equals(PermissionEntity.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
+            .Any(permission =>
+                string.Equals(permission.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(
-                    PermissionEntity.ActionPermissionEntity?.Code,
+                    permission.ActionPermissionEntity?.Code,
                     requiredActionCode,
                     StringComparison.OrdinalIgnoreCase));
 

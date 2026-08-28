@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Catalogos;
+using Application.DTOs.Catalogs.Specialty;
 
 namespace Application.Contracts.Services.Catalogs
 {
     public interface ISpecialtyService
     {
-        Task<IReadOnlyList<EspecialidadDto>> GetAllAsync();
-        Task<EspecialidadDto?> GetByIdAsync(Guid id);
-        Task<EspecialidadDto> CreateAsync(EspecialidadDto request);
-        Task<EspecialidadDto?> UpdateAsync(Guid id, EspecialidadDto request);
+        Task<IReadOnlyList<SpecialtyDto>> GetAllAsync();
+        Task<SpecialtyDto?> GetByIdAsync(Guid id);
+        Task<SpecialtyDto> CreateAsync(SpecialtyDto request);
+        Task<SpecialtyDto?> UpdateAsync(Guid id, SpecialtyDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

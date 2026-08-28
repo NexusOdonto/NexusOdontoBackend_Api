@@ -1,8 +1,8 @@
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.People;
 using Application.DTOs;
-using Application.DTOs.Pacientes;
-using Application.DTOs.Personas;
+using Application.DTOs.Patients;
+using Application.DTOs.People;
 using Domain.Entities.People;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,29 +45,29 @@ public sealed class PatientsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreatePatientRequestDto request)
     {
-        var PersonEntity = await _personService.CreateAsync(new CreatePersonaDto
+        var person = await _personService.CreateAsync(new CreatePersonDto
         {
-            TipoDocumentoId = request.DocumentTypeId,
-            NumeroDocumento = request.DocumentNumber,
-            Nombres = request.FirstName,
-            Apellidos = request.LastName,
-            FechaNacimiento = request.DateOfBirth,
-            SexoId = request.SexId,
-            Telefono = request.Phone,
+            DocumentTypeId = request.DocumentTypeId,
+            DocumentNumber = request.DocumentNumber,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            DateOfBirth = request.DateOfBirth,
+            SexId = request.SexId,
+            Phone = request.Phone,
             Email = request.Email,
-            Direccion = request.Address
+            Address = request.Address
         });
 
-        var personId = (Guid)PersonEntity.GetType().GetProperty("Id")!.GetValue(PersonEntity)!;
+        var personId = (Guid)person.GetType().GetProperty("Id")!.GetValue(person)!;
 
-        var PatientEntity = await _patientService.CreateAsync(new CreatePacienteDto
+        var patient = await _patientService.CreateAsync(new CreatePatientDto
         {
-            PersonaId = personId,
-            ContactoEmergencia = request.EmergencyContact,
-            TelefonoEmergencia = request.EmergencyPhone
+            PersonId = personId,
+            EmergencyContact = request.EmergencyContact,
+            EmergencyPhone = request.EmergencyPhone
         });
 
-        var patientId = (Guid)PatientEntity.GetType().GetProperty("Id")!.GetValue(PatientEntity)!;
+        var patientId = (Guid)patient.GetType().GetProperty("Id")!.GetValue(patient)!;
 
         return Created(
             $"/api/v1/patients/{patientId}",

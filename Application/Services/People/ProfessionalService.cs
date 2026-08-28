@@ -1,7 +1,7 @@
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
-using Application.DTOs.Profesionales;
+using Application.DTOs.Professionals;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -23,18 +23,18 @@ public sealed class ProfessionalService(
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateProfesionalDto request)
+    public async Task<object> CreateAsync(CreateProfessionalDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ProfessionalEntity(request.EmpleadoId, request.RegistroProfesional);
+            var entity = new ProfessionalEntity(request.EmployeeId, request.ProfessionalLicense);
             await professionalRepository.AddAsync(entity);
             return Map(entity);
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateProfesionalDto request)
+    public async Task<object?> UpdateAsync(Guid id, UpdateProfessionalDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await professionalRepository.GetByIdAsync(id);
@@ -42,8 +42,8 @@ public sealed class ProfessionalService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.Update(request.RegistroProfesional);
-            entity.IsActive = request.Activo;
+            entity.Update(request.ProfessionalLicense);
+            entity.IsActive = request.IsActive;
             professionalRepository.Update(entity);
             return Map(entity);
         });

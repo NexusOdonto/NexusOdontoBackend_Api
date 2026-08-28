@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.DTOs.Disponibilidades;
+using Application.DTOs.Availabilities;
 
 namespace Application.Contracts.Services.Schedule
 {
@@ -9,8 +6,8 @@ namespace Application.Contracts.Services.Schedule
     {
         Task<IReadOnlyList<object>> GetAllAsync();
         Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreateDisponibilidadDto request);
-        Task<object?> UpdateAsync(Guid id, UpdateDisponibilidadDto request);
+        Task<object> CreateAsync(CreateAvailabilityDto request);
+        Task<object?> UpdateAsync(Guid id, UpdateAvailabilityDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

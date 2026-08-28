@@ -7,16 +7,16 @@ namespace Application.Services.Catalogs;
 public sealed class DentalSurfaceService(CatalogServiceCore<DentalSurfaceEntity> core) : IDentalSurfaceService
 {
     public Task<IReadOnlyList<DentalSurfaceDto>> GetAllAsync() =>
-        core.GetAllAsync(EnglishCatalogMapping.ToDentalSurfaceDto);
+        core.GetAllAsync(CatalogMapping.ToDentalSurfaceDto);
 
     public Task<DentalSurfaceDto?> GetByIdAsync(Guid id) =>
-        core.GetByIdAsync(id, EnglishCatalogMapping.ToDentalSurfaceDto);
+        core.GetByIdAsync(id, CatalogMapping.ToDentalSurfaceDto);
 
     public Task<DentalSurfaceDto> CreateAsync(CreateDentalSurfaceRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = new DentalSurfaceEntity(request.Code, request.Name, request.Description, request.AppliesToAnterior, request.AppliesToPosterior, request.SortOrder);
-        return core.CreateAsync(entity, EnglishCatalogMapping.ToDentalSurfaceDto);
+        return core.CreateAsync(entity, CatalogMapping.ToDentalSurfaceDto);
     }
 
     public Task<DentalSurfaceDto?> UpdateAsync(Guid id, UpdateDentalSurfaceRequestDto request)
@@ -24,8 +24,8 @@ public sealed class DentalSurfaceService(CatalogServiceCore<DentalSurfaceEntity>
         ArgumentNullException.ThrowIfNull(request);
         return core.UpdateAsync(id, entity =>
         {
-            entity.Update(request.Name, request.Description, request.AppliesToAnterior, request.AppliesToPosterior, request.SortOrder); EnglishCatalogMapping.ApplyActive(entity, request.IsActive);
-        }, EnglishCatalogMapping.ToDentalSurfaceDto);
+            entity.Update(request.Name, request.Description, request.AppliesToAnterior, request.AppliesToPosterior, request.SortOrder); CatalogMapping.ApplyActive(entity, request.IsActive);
+        }, CatalogMapping.ToDentalSurfaceDto);
     }
 
     public Task<bool> DeleteAsync(Guid id) => core.DeleteAsync(id);
