@@ -10,19 +10,19 @@ public sealed class AppointmentService(
     IAppointmentRepository repository,
     IUnitOfWork unitOfWork) : IAppointmentService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<AppointmentResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<AppointmentResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateAppointmentDto request)
+    public async Task<AppointmentResponseDto> CreateAsync(CreateAppointmentDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -42,7 +42,7 @@ public sealed class AppointmentService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateAppointmentDto request)
+    public async Task<AppointmentResponseDto?> UpdateAsync(Guid id, UpdateAppointmentDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -77,10 +77,21 @@ public sealed class AppointmentService(
         return true;
     }
 
-    private static object Map(AppointmentEntity e) => new
+    private static AppointmentResponseDto Map(AppointmentEntity e) => new()
     {
-        e.Id, e.PatientId, e.ProfessionalId, e.ServiceId, e.StartsAt, e.EndsAt,
-        e.AppointmentStatusId, e.AppointmentOriginId, e.ReasonForVisit, e.Notes,
-        e.CreatedByUserId, e.CreatedAt, e.CancelledAt, e.CancellationReason
+        Id = e.Id,
+        PatientId = e.PatientId,
+        ProfessionalId = e.ProfessionalId,
+        ServiceId = e.ServiceId,
+        StartsAt = e.StartsAt,
+        EndsAt = e.EndsAt,
+        AppointmentStatusId = e.AppointmentStatusId,
+        AppointmentOriginId = e.AppointmentOriginId,
+        ReasonForVisit = e.ReasonForVisit,
+        Notes = e.Notes,
+        CreatedByUserId = e.CreatedByUserId,
+        CreatedAt = e.CreatedAt,
+        CancelledAt = e.CancelledAt,
+        CancellationReason = e.CancellationReason
     };
 }

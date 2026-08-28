@@ -9,19 +9,19 @@ public sealed class DiagnosisService(
     IRepository<DiagnosisEntity> repository,
     IUnitOfWork unitOfWork) : IDiagnosisService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<DiagnosisResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<DiagnosisResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateDiagnosisRequestDto request)
+    public async Task<DiagnosisResponseDto> CreateAsync(CreateDiagnosisRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -44,8 +44,12 @@ public sealed class DiagnosisService(
         return true;
     }
 
-    private static object Map(DiagnosisEntity e) => new
+    private static DiagnosisResponseDto Map(DiagnosisEntity e) => new()
     {
-        e.Id, e.ClinicalAttentionId, e.Code, e.Description, e.Type
+        Id = e.Id,
+        ClinicalAttentionId = e.ClinicalAttentionId,
+        Code = e.Code,
+        Description = e.Description,
+        Type = e.Type
     };
 }

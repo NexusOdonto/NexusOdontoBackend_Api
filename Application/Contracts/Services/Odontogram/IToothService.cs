@@ -1,15 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Application.DTOs.Odontogram.Tooth;
 
 namespace Application.Contracts.Services.Odontogram
 {
     public interface IToothService
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(object request);
-        Task<object?> UpdateAsync(Guid id, object request);
-        Task<bool> DeleteAsync(Guid id);
+        Task<IReadOnlyList<ToothResponseDto>> GetAllAsync();
+        Task<ToothResponseDto?> GetByCodeAsync(string code);
+        Task<ToothResponseDto> CreateAsync(CreateToothRequestDto request);
+        Task<ToothResponseDto?> UpdateAsync(string code, UpdateToothRequestDto request);
+        Task<bool> DeleteAsync(string code);
     }
 }

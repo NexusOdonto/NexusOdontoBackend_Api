@@ -10,19 +10,19 @@ public sealed class EmployeeService(
     IEmployeeRepository employeeRepository,
     IUnitOfWork unitOfWork) : IEmployeeService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<EmployeeResponseDto>> GetAllAsync()
     {
         var items = await employeeRepository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<EmployeeResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await employeeRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateEmployeeDto request)
+    public async Task<EmployeeResponseDto> CreateAsync(CreateEmployeeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -33,7 +33,7 @@ public sealed class EmployeeService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateEmployeeDto request)
+    public async Task<EmployeeResponseDto?> UpdateAsync(Guid id, UpdateEmployeeDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await employeeRepository.GetByIdAsync(id);
@@ -62,13 +62,13 @@ public sealed class EmployeeService(
         return true;
     }
 
-    private static object Map(EmployeeEntity e) => new
+    private static EmployeeResponseDto Map(EmployeeEntity e) => new()
     {
-        e.Id,
-        e.PersonId,
-        e.JobTitleId,
-        e.HireDate,
-        e.IsActive,
-        e.CreatedAt
+        Id = e.Id,
+        PersonId = e.PersonId,
+        JobTitleId = e.JobTitleId,
+        HireDate = e.HireDate,
+        IsActive = e.IsActive,
+        CreatedAt = e.CreatedAt
     };
 }

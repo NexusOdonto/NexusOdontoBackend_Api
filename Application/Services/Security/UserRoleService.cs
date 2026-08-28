@@ -2,6 +2,7 @@ using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.Security;
 using Application.DTOs.UserRoles;
+using Application.Exceptions;
 using Domain.Entities.Security;
 
 namespace Application.Services.Security;
@@ -35,7 +36,7 @@ public sealed class UserRoleService(
     {
         ArgumentNullException.ThrowIfNull(request);
         var user = await userRepository.GetByIdWithRolesAsync(request.UserId)
-            ?? throw new InvalidOperationException($"User {request.UserId} was not found.");
+            ?? throw new BusinessRuleException($"User {request.UserId} was not found.");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {

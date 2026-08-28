@@ -38,12 +38,12 @@ public class AppointmentStatusConfiguration : IEntityTypeConfiguration<Appointme
 
         builder.Property(c => c.IsFinal)
             .HasColumnName("is_final")
-            .HasDefaultValue(false)
+            .HasDefaultValueSql("0")
             .IsRequired();
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.HasIndex(c => c.Code).IsUnique();

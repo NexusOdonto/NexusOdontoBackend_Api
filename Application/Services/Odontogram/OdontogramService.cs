@@ -6,27 +6,27 @@ using Domain.Entities.Odontogram;
 namespace Application.Services.Odontogram;
 
 public sealed class OdontogramService(
-    IRepository<Domain.Entities.Odontogram.OdontogramEntity> repository,
+    IRepository<OdontogramEntity> repository,
     IUnitOfWork unitOfWork) : IOdontogramService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<OdontogramResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<OdontogramResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateOdontogramRequestDto request)
+    public async Task<OdontogramResponseDto> CreateAsync(CreateOdontogramRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new Domain.Entities.Odontogram.OdontogramEntity(
+            var entity = new OdontogramEntity(
                 request.ClinicalHistoryId,
                 request.ProfessionalId,
                 request.ClinicalAttentionId,
@@ -36,7 +36,7 @@ public sealed class OdontogramService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateOdontogramRequestDto request)
+    public async Task<OdontogramResponseDto?> UpdateAsync(Guid id, UpdateOdontogramRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -58,8 +58,13 @@ public sealed class OdontogramService(
         return true;
     }
 
-    private static object Map(Domain.Entities.Odontogram.OdontogramEntity e) => new
+    private static OdontogramResponseDto Map(OdontogramEntity e) => new()
     {
-        e.Id, e.ClinicalHistoryId, e.ClinicalAttentionId, e.ProfessionalId, e.RecordedAt, e.Notes
+        Id = e.Id,
+        ClinicalHistoryId = e.ClinicalHistoryId,
+        ClinicalAttentionId = e.ClinicalAttentionId,
+        ProfessionalId = e.ProfessionalId,
+        RecordedAt = e.RecordedAt,
+        Notes = e.Notes
     };
 }

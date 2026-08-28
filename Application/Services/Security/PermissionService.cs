@@ -10,19 +10,19 @@ public sealed class PermissionService(
     IPermissionRepository permissionRepository,
     IUnitOfWork unitOfWork) : IPermissionService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<PermissionResponseDto>> GetAllAsync()
     {
         var items = await permissionRepository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<PermissionResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await permissionRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePermissionDto request)
+    public async Task<PermissionResponseDto> CreateAsync(CreatePermissionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -33,7 +33,7 @@ public sealed class PermissionService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePermissionDto request)
+    public async Task<PermissionResponseDto?> UpdateAsync(Guid id, UpdatePermissionDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await permissionRepository.GetByIdAsync(id);
@@ -60,11 +60,11 @@ public sealed class PermissionService(
         return true;
     }
 
-    private static object Map(PermissionEntity e) => new
+    private static PermissionResponseDto Map(PermissionEntity e) => new()
     {
-        e.Id,
-        e.Module,
-        e.ActionPermissionId,
-        e.Description
+        Id = e.Id,
+        Module = e.Module,
+        ActionPermissionId = e.ActionPermissionId,
+        Description = e.Description
     };
 }

@@ -1,8 +1,5 @@
 ﻿using Api.Extensions;
-using Application.Validators;
-using FluentValidation;
-using Mapster;
-using MapsterMapper;
+using Application.Contracts.Services;
 using Serilog;
 using Application;
 using Infrastructure;
@@ -28,6 +25,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+    ?? builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JWT configuration is missing.");
+builder.Services.AddJwtAuthentication(jwtSettings);
+
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
@@ -45,6 +47,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

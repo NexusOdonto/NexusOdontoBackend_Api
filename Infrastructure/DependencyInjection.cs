@@ -20,6 +20,7 @@ using Infrastructure.Repositories.Schedule;
 using Infrastructure.Repositories.Security;
 using Infrastructure.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
+using Oracle.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,7 +34,8 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Connection string 'OracleConnection' not found.");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseOracle(connectionString));
+            options.UseOracle(connectionString, oracle =>
+                oracle.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19)));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

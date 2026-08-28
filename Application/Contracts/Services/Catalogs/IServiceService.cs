@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Application.Contracts.Services.Common;
 using Application.DTOs;
+using Application.DTOs.Service;
 
 namespace Application.Contracts.Services.Catalogs
 {
-    public interface IServiceService
+    public interface IServiceService : ICrudService<ServiceResponseDto, CreateServiceRequestDto, CreateServiceRequestDto>
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(CreateServiceRequestDto request);
-        Task<object?> UpdateAsync(Guid id, CreateServiceRequestDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

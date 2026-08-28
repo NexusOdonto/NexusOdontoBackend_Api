@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Application.DTOs.Audit;
 
 namespace Application.Contracts.Services.Audit
 {
     public interface IAuditEventService
     {
-        Task<IReadOnlyList<object>> GetAllAsync();
-        Task<object?> GetByIdAsync(Guid id);
-        Task<object> CreateAsync(object request);
+        Task<IReadOnlyList<AuditEventResponseDto>> GetAllAsync();
+        Task<AuditEventResponseDto?> GetByIdAsync(Guid id);
+        Task<AuditEventResponseDto> CreateAsync(CreateAuditEventRequestDto request);
         Task<bool> DeleteAsync(Guid id);
     }
 }

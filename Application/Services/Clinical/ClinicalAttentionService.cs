@@ -10,19 +10,19 @@ public sealed class ClinicalAttentionService(
     IClinicalAttentionRepository repository,
     IUnitOfWork unitOfWork) : IClinicalAttentionService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ClinicalAttentionResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ClinicalAttentionResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateClinicalAttentionRequestDto request)
+    public async Task<ClinicalAttentionResponseDto> CreateAsync(CreateClinicalAttentionRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -37,7 +37,7 @@ public sealed class ClinicalAttentionService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateClinicalAttentionRequestDto request)
+    public async Task<ClinicalAttentionResponseDto?> UpdateAsync(Guid id, UpdateClinicalAttentionRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -59,8 +59,13 @@ public sealed class ClinicalAttentionService(
         return true;
     }
 
-    private static object Map(ClinicalAttentionEntity e) => new
+    private static ClinicalAttentionResponseDto Map(ClinicalAttentionEntity e) => new()
     {
-        e.Id, e.AppointmentId, e.AttentionAt, e.ClinicalExam, e.ProgressNotes, e.TreatmentPlan
+        Id = e.Id,
+        AppointmentId = e.AppointmentId,
+        AttentionAt = e.AttentionAt,
+        ClinicalExam = e.ClinicalExam,
+        ProgressNotes = e.ProgressNotes,
+        TreatmentPlan = e.TreatmentPlan
     };
 }

@@ -9,19 +9,19 @@ public sealed class ChatbotMessageService(
     IRepository<ChatbotMessageEntity> repository,
     IUnitOfWork unitOfWork) : IChatbotMessageService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ChatbotMessageResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ChatbotMessageResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateChatbotMessageRequestDto request)
+    public async Task<ChatbotMessageResponseDto> CreateAsync(CreateChatbotMessageRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -44,8 +44,13 @@ public sealed class ChatbotMessageService(
         return true;
     }
 
-    private static object Map(ChatbotMessageEntity e) => new
+    private static ChatbotMessageResponseDto Map(ChatbotMessageEntity e) => new()
     {
-        e.Id, e.ChatbotConversationId, e.MessageRoleId, e.Content, e.RagConfidence, e.CreatedAt
+        Id = e.Id,
+        ChatbotConversationId = e.ChatbotConversationId,
+        MessageRoleId = e.MessageRoleId,
+        Content = e.Content,
+        RagConfidence = e.RagConfidence,
+        CreatedAt = e.CreatedAt
     };
 }

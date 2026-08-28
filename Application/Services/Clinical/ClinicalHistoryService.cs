@@ -10,19 +10,19 @@ public sealed class ClinicalHistoryService(
     IClinicalHistoryRepository repository,
     IUnitOfWork unitOfWork) : IClinicalHistoryService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ClinicalHistoryResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ClinicalHistoryResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateClinicalHistoryRequestDto request)
+    public async Task<ClinicalHistoryResponseDto?> UpdateAsync(Guid id, UpdateClinicalHistoryRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -49,8 +49,12 @@ public sealed class ClinicalHistoryService(
         return true;
     }
 
-    private static object Map(ClinicalHistoryEntity e) => new
+    private static ClinicalHistoryResponseDto Map(ClinicalHistoryEntity e) => new()
     {
-        e.Id, e.PatientId, e.OpenedAt, e.IsActive, e.GeneralNotes
+        Id = e.Id,
+        PatientId = e.PatientId,
+        OpenedAt = e.OpenedAt,
+        IsActive = e.IsActive,
+        GeneralNotes = e.GeneralNotes
     };
 }

@@ -31,17 +31,17 @@ public class DentalSurfaceConfiguration : IEntityTypeConfiguration<DentalSurface
 
         builder.Property(c => c.AppliesToAnterior)
             .HasColumnName("applies_to_anterior")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.AppliesToPosterior)
             .HasColumnName("applies_to_posterior")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.SortOrder)

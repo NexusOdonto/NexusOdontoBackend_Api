@@ -1,13 +1,9 @@
+using Application.Contracts.Services.Common;
 using Application.DTOs.Catalogs.HubNotificationType;
 
 namespace Application.Contracts.Services.Catalogs
 {
-    public interface IHubNotificationTypeService
+    public interface IHubNotificationTypeService : ICatalogCrudService<HubNotificationTypeDto>
     {
-        Task<IReadOnlyList<HubNotificationTypeDto>> GetAllAsync();
-        Task<HubNotificationTypeDto?> GetByIdAsync(Guid id);
-        Task<HubNotificationTypeDto> CreateAsync(HubNotificationTypeDto request);
-        Task<HubNotificationTypeDto?> UpdateAsync(Guid id, HubNotificationTypeDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

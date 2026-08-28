@@ -10,20 +10,20 @@ public sealed class ProfessionalService(
     IProfessionalRepository professionalRepository,
     IUnitOfWork unitOfWork) : IProfessionalService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ProfessionalResponseDto>> GetAllAsync()
     {
         var items = await professionalRepository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ProfessionalResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await professionalRepository.GetByIdWithSpecialtiesAsync(id)
             ?? await professionalRepository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateProfessionalDto request)
+    public async Task<ProfessionalResponseDto> CreateAsync(CreateProfessionalDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -34,7 +34,7 @@ public sealed class ProfessionalService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateProfessionalDto request)
+    public async Task<ProfessionalResponseDto?> UpdateAsync(Guid id, UpdateProfessionalDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await professionalRepository.GetByIdAsync(id);
@@ -63,13 +63,13 @@ public sealed class ProfessionalService(
         return true;
     }
 
-    private static object Map(ProfessionalEntity e) => new
+    private static ProfessionalResponseDto Map(ProfessionalEntity e) => new()
     {
-        e.Id,
-        e.EmployeeId,
-        e.ProfessionalLicense,
+        Id = e.Id,
+        EmployeeId = e.EmployeeId,
+        ProfessionalLicense = e.ProfessionalLicense,
         SpecialtyIds = e.Specialties.Select(s => s.Id).ToList(),
-        e.IsActive,
-        e.CreatedAt
+        IsActive = e.IsActive,
+        CreatedAt = e.CreatedAt
     };
 }

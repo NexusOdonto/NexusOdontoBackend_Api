@@ -1,13 +1,9 @@
+using Application.Contracts.Services.Common;
 using Application.DTOs.Catalogs.WhatsAppNotificationStatus;
 
 namespace Application.Contracts.Services.Catalogs
 {
-    public interface IWhatsAppNotificationStatusService
+    public interface IWhatsAppNotificationStatusService : ICatalogCrudService<WhatsAppNotificationStatusDto>
     {
-        Task<IReadOnlyList<WhatsAppNotificationStatusDto>> GetAllAsync();
-        Task<WhatsAppNotificationStatusDto?> GetByIdAsync(Guid id);
-        Task<WhatsAppNotificationStatusDto> CreateAsync(WhatsAppNotificationStatusDto request);
-        Task<WhatsAppNotificationStatusDto?> UpdateAsync(Guid id, WhatsAppNotificationStatusDto request);
-        Task<bool> DeleteAsync(Guid id);
     }
 }

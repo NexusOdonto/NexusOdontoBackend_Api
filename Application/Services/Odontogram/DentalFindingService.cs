@@ -9,19 +9,19 @@ public sealed class DentalFindingService(
     IRepository<DentalFindingEntity> repository,
     IUnitOfWork unitOfWork) : IDentalFindingService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<DentalFindingResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<DentalFindingResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateDentalFindingRequestDto request)
+    public async Task<DentalFindingResponseDto> CreateAsync(CreateDentalFindingRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -37,7 +37,7 @@ public sealed class DentalFindingService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateDentalFindingRequestDto request)
+    public async Task<DentalFindingResponseDto?> UpdateAsync(Guid id, UpdateDentalFindingRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -59,8 +59,14 @@ public sealed class DentalFindingService(
         return true;
     }
 
-    private static object Map(DentalFindingEntity e) => new
+    private static DentalFindingResponseDto Map(DentalFindingEntity e) => new()
     {
-        e.Id, e.OdontogramToothId, e.DentalSurfaceId, e.FindingTypeId, e.FindingStatusId, e.Note, e.RegisteredAt
+        Id = e.Id,
+        OdontogramToothId = e.OdontogramToothId,
+        DentalSurfaceId = e.DentalSurfaceId,
+        FindingTypeId = e.FindingTypeId,
+        FindingStatusId = e.FindingStatusId,
+        Note = e.Note,
+        RegisteredAt = e.RegisteredAt
     };
 }

@@ -9,19 +9,19 @@ public sealed class OdontogramToothService(
     IRepository<OdontogramToothEntity> repository,
     IUnitOfWork unitOfWork) : IOdontogramToothService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<OdontogramToothResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<OdontogramToothResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateOdontogramToothRequestDto request)
+    public async Task<OdontogramToothResponseDto> CreateAsync(CreateOdontogramToothRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -36,7 +36,7 @@ public sealed class OdontogramToothService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdateOdontogramToothRequestDto request)
+    public async Task<OdontogramToothResponseDto?> UpdateAsync(Guid id, UpdateOdontogramToothRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -58,8 +58,12 @@ public sealed class OdontogramToothService(
         return true;
     }
 
-    private static object Map(OdontogramToothEntity e) => new
+    private static OdontogramToothResponseDto Map(OdontogramToothEntity e) => new()
     {
-        e.Id, e.OdontogramId, e.ToothCode, e.ToothStatusId, e.Note
+        Id = e.Id,
+        OdontogramId = e.OdontogramId,
+        ToothCode = e.ToothCode,
+        ToothStatusId = e.ToothStatusId,
+        Note = e.Note
     };
 }

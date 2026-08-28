@@ -9,19 +9,19 @@ public sealed class PatientAntecedentService(
     IRepository<PatientAntecedentEntity> repository,
     IUnitOfWork unitOfWork) : IPatientAntecedentService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<PatientAntecedentResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<PatientAntecedentResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreatePatientAntecedentRequestDto request)
+    public async Task<PatientAntecedentResponseDto> CreateAsync(CreatePatientAntecedentRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -36,7 +36,7 @@ public sealed class PatientAntecedentService(
         });
     }
 
-    public async Task<object?> UpdateAsync(Guid id, UpdatePatientAntecedentRequestDto request)
+    public async Task<PatientAntecedentResponseDto?> UpdateAsync(Guid id, UpdatePatientAntecedentRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var entity = await repository.GetByIdAsync(id);
@@ -64,8 +64,14 @@ public sealed class PatientAntecedentService(
         return true;
     }
 
-    private static object Map(PatientAntecedentEntity e) => new
+    private static PatientAntecedentResponseDto Map(PatientAntecedentEntity e) => new()
     {
-        e.Id, e.PatientId, e.AntecedentTypeId, e.Description, e.IsActive, e.RegisteredByUserId, e.RegisteredAt
+        Id = e.Id,
+        PatientId = e.PatientId,
+        AntecedentTypeId = e.AntecedentTypeId,
+        Description = e.Description,
+        IsActive = e.IsActive,
+        RegisteredByUserId = e.RegisteredByUserId,
+        RegisteredAt = e.RegisteredAt
     };
 }

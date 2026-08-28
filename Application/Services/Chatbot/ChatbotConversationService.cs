@@ -13,19 +13,19 @@ public sealed class ChatbotConversationService(
     ICatalogRepository<ChatbotConversationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IChatbotConversationService
 {
-    public async Task<IReadOnlyList<object>> GetAllAsync()
+    public async Task<IReadOnlyList<ChatbotConversationResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).Cast<object>().ToList();
+        return items.Select(Map).ToList();
     }
 
-    public async Task<object?> GetByIdAsync(Guid id)
+    public async Task<ChatbotConversationResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
         return entity is null ? null : Map(entity);
     }
 
-    public async Task<object> CreateAsync(CreateChatbotConversationRequestDto request)
+    public async Task<ChatbotConversationResponseDto> CreateAsync(CreateChatbotConversationRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
         var statusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "OPEN", "ACTIVE", "NEW");
@@ -50,9 +50,15 @@ public sealed class ChatbotConversationService(
         return true;
     }
 
-    private static object Map(ChatbotConversationEntity e) => new
+    private static ChatbotConversationResponseDto Map(ChatbotConversationEntity e) => new()
     {
-        e.Id, e.PatientId, e.ChatIdentifier, e.ChatChannelId, e.ConversationStatusId,
-        e.StartedAt, e.LastInteractionAt, e.ClosedAt
+        Id = e.Id,
+        PatientId = e.PatientId,
+        ChatIdentifier = e.ChatIdentifier,
+        ChatChannelId = e.ChatChannelId,
+        ConversationStatusId = e.ConversationStatusId,
+        StartedAt = e.StartedAt,
+        LastInteractionAt = e.LastInteractionAt,
+        ClosedAt = e.ClosedAt
     };
 }

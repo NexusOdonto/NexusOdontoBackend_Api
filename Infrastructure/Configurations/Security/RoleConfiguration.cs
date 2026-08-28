@@ -31,7 +31,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<RoleEntity>
 
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
-            .HasDefaultValue(true)
+            .HasDefaultValueSql("1")
             .IsRequired();
 
         builder.Property(c => c.CreatedAt)
@@ -44,5 +44,19 @@ public class RoleConfiguration : IEntityTypeConfiguration<RoleEntity>
 
         builder.HasIndex(c => c.Code).IsUnique();
         builder.HasIndex(c => c.Name).IsUnique();
+
+        builder.HasMany(r => r.Permissions)
+            .WithMany(p => p.Roles)
+            .UsingEntity(
+                "role_permissions",
+                l => l.HasOne(typeof(PermissionEntity)).WithMany().HasForeignKey("permission_id"),
+                r => r.HasOne(typeof(RoleEntity)).WithMany().HasForeignKey("role_id"),
+                j =>
+                {
+                    j.HasKey("role_id", "permission_id");
+                    j.ToTable("role_permissions");
+                    j.Property<Guid>("role_id").HasColumnName("role_id");
+                    j.Property<Guid>("permission_id").HasColumnName("permission_id");
+                });
     }
 }
