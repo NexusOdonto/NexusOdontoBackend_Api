@@ -31,6 +31,7 @@ var jwtSettings = ResolveJwtSettings(builder.Configuration);
 builder.Services.AddJwtAuthentication(jwtSettings);
 
 builder.Services.AddResilientHttpClients();
+builder.Services.AddDevelopmentCors();
 
 var app = builder.Build();
 
@@ -43,16 +44,16 @@ if (IsRunningInContainer())
 
 app.UseGlobalExceptionMiddleware();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwaggerWithJwtBearerUi();
+
+if (!app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
-
 app.UseRouting();
+
+app.UseDevelopmentCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
