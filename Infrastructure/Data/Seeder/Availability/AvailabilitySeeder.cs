@@ -19,10 +19,10 @@ public static class AvailabilitySeeder
                 ProfessionalId = dent1Id,
                 StartDay = 1, // Lunes
                 EndDay = 5,   // Viernes
-                StartTime = "08:00",
-                LunchStartTime = "12:00",
-                LunchEndTime = "13:00",
-                EndTime = "17:00",
+                StartTime = new TimeOnly(8, 0),
+                LunchStartTime = new TimeOnly(12, 0),
+                LunchEndTime = new TimeOnly(13, 0),
+                EndTime = new TimeOnly(17, 0),
                 IsActive = true
             },
             // 2. Dra. Laura Gómez: Sábados 08:00 - 12:00
@@ -32,10 +32,10 @@ public static class AvailabilitySeeder
                 ProfessionalId = dent1Id,
                 StartDay = 6, // Sábado
                 EndDay = 6,   // Sábado
-                StartTime = "08:00",
-                LunchStartTime = "12:00",
-                LunchEndTime = "12:00",
-                EndTime = "12:00",
+                StartTime = new TimeOnly(8, 0),
+                LunchStartTime = new TimeOnly(12, 0),
+                LunchEndTime = new TimeOnly(12, 0),
+                EndTime = new TimeOnly(12, 0),
                 IsActive = true
             },
             // 3. Dr. Roberto Martínez: Lunes a Viernes 07:00 - 16:00 (Almuerzo 12:00 - 13:00)
@@ -45,10 +45,10 @@ public static class AvailabilitySeeder
                 ProfessionalId = dent2Id,
                 StartDay = 1, // Lunes
                 EndDay = 5,   // Viernes
-                StartTime = "07:00",
-                LunchStartTime = "12:00",
-                LunchEndTime = "13:00",
-                EndTime = "16:00",
+                StartTime = new TimeOnly(7, 0),
+                LunchStartTime = new TimeOnly(12, 0),
+                LunchEndTime = new TimeOnly(13, 0),
+                EndTime = new TimeOnly(16, 0),
                 IsActive = true
             },
             // 4. Dra. Ana Sofía Silva: Lunes a Viernes 09:00 - 18:00 (Almuerzo 13:00 - 14:00)
@@ -58,10 +58,10 @@ public static class AvailabilitySeeder
                 ProfessionalId = dent3Id,
                 StartDay = 1, // Lunes
                 EndDay = 5,   // Viernes
-                StartTime = "09:00",
-                LunchStartTime = "13:00",
-                LunchEndTime = "14:00",
-                EndTime = "18:00",
+                StartTime = new TimeOnly(9, 0),
+                LunchStartTime = new TimeOnly(13, 0),
+                LunchEndTime = new TimeOnly(14, 0),
+                EndTime = new TimeOnly(18, 0),
                 IsActive = true
             });
     }

@@ -10,6 +10,14 @@ public static class SwaggerExtensions
         {
             options.AddServer(new OpenApiServer { Url = "/" });
 
+            options.MapType<TimeOnly>(() => new OpenApiSchema
+            {
+                Type = JsonSchemaType.String,
+                Format = "time",
+                Pattern = "^([01]\\d|2[0-3]):[0-5]\\d$",
+                Example = "09:00"
+            });
+
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",

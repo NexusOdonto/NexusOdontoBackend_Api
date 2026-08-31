@@ -22,6 +22,16 @@ public class AppDbContext : DbContext
         configurationBuilder
             .Properties<DateOnly?>()
             .HaveConversion<NullableDateOnlyConverter>();
+
+        configurationBuilder
+            .Properties<TimeOnly>()
+            .HaveConversion<TimeOnlyConverter>()
+            .HaveMaxLength(5);
+
+        configurationBuilder
+            .Properties<TimeOnly?>()
+            .HaveConversion<NullableTimeOnlyConverter>()
+            .HaveMaxLength(5);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,6 +73,24 @@ internal sealed class NullableDateOnlyConverter : ValueConverter<DateOnly?, Date
     public NullableDateOnlyConverter() : base(
         d => d.HasValue ? d.Value.ToDateTime(TimeOnly.MinValue) : null,
         d => d.HasValue ? DateOnly.FromDateTime(d.Value) : null)
+    {
+    }
+}
+
+internal sealed class TimeOnlyConverter : ValueConverter<TimeOnly, string>
+{
+    public TimeOnlyConverter() : base(
+        time => time.ToString("HH:mm"),
+        value => TimeOnly.ParseExact(value, "HH:mm"))
+    {
+    }
+}
+
+internal sealed class NullableTimeOnlyConverter : ValueConverter<TimeOnly?, string?>
+{
+    public NullableTimeOnlyConverter() : base(
+        time => time.HasValue ? time.Value.ToString("HH:mm") : null,
+        value => value == null ? null : TimeOnly.ParseExact(value, "HH:mm"))
     {
     }
 }
