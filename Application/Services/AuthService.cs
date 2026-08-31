@@ -136,7 +136,7 @@ public sealed class AuthService(
 
             string.IsNullOrWhiteSpace(user.PersonEntity.Email) ||
 
-            !(user.PersonEntity.Email.Equals("bot_service@nexusodonto.com", StringComparison.OrdinalIgnoreCase) ? true : BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)))
+            !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
 
         {
 
