@@ -79,11 +79,31 @@ public static class DatabaseInitializer
                 await context.SaveChangesAsync();
             }
 
-            logger?.LogInformation("Usuario bot_service@nexusodonto.com verificado/inicializado correctamente en la base de datos.");
+            // 5. Asignar TODOS los permisos al rol BOT_SERVICE (acceso completo estilo Administrador)
+            var allPermissions = await context.Set<PermissionEntity>().ToListAsync();
+            var existingPermissionIds = await context.Database
+                .SqlQueryRaw<Guid>("SELECT permission_id FROM role_permissions WHERE role_id = {0}", botRole.Id)
+                .ToListAsync();
+
+            var missingPermissions = allPermissions
+                .Where(p => !existingPermissionIds.Contains(p.Id))
+                .ToList();
+
+            if (missingPermissions.Any())
+            {
+                foreach (var perm in missingPermissions)
+                {
+                    await context.Database.ExecuteSqlRawAsync(
+                        "INSERT INTO role_permissions (role_id, permission_id) VALUES ({0}, {1})",
+                        botRole.Id, perm.Id);
+                }
+            }
+
+            logger?.LogInformation("Usuario bot_service@nexusodonto.com verificado con TODOS los permisos de administrador en la base de datos.");
         }
         catch (Exception ex)
         {
-            logger?.LogError(ex, "Error inicializando el usuario bot_service@nexusodonto.com en la base de datos.");
+            logger?.LogError(ex, "Error inicializando el usuario bot_service@nexusodonto.com y sus permisos en la base de datos.");
         }
     }
 
