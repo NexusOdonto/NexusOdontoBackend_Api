@@ -10,7 +10,7 @@ public sealed class CreatePatientRequestDto
 
     public string LastName { get; set; } = string.Empty;
 
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
 
     public Guid? SexId { get; set; }
 

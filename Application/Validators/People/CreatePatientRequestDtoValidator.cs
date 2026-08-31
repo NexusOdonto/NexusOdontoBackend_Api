@@ -17,7 +17,7 @@ namespace Application.Validators.People
                 .MaximumLength(100).WithMessage("El apellido no puede exceder 100 caracteres.");
 
             RuleFor(x => x.DateOfBirth)
-                .Must(date => !date.HasValue || date.Value.Date <= DateTime.Today)
+                .Must(date => !date.HasValue || date.Value <= DateOnly.FromDateTime(DateTime.Today))
                 .WithMessage("La fecha de nacimiento no puede estar en el futuro.");
 
             RuleFor(x => x.Email)

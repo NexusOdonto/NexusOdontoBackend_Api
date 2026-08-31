@@ -11,20 +11,31 @@ public sealed class ProfessionalRepository : Common.Repository<ProfessionalEntit
     {
     }
 
+    public override async Task<IReadOnlyList<ProfessionalEntity>> GetAllAsync()
+    {
+        return await Set
+            .Include(p => p.Specialties)
+            .ToListAsync();
+    }
+
     public async Task<ProfessionalEntity?> GetByEmployeeIdAsync(
         Guid employeeId,
         CancellationToken cancellationToken = default)
     {
-        return await Set.FirstOrDefaultAsync(p => p.EmployeeId == employeeId, cancellationToken);
+        return await Set
+            .Include(p => p.Specialties)
+            .FirstOrDefaultAsync(p => p.EmployeeId == employeeId, cancellationToken);
     }
 
     public async Task<ProfessionalEntity?> GetByLicenseAsync(
         string professionalLicense,
         CancellationToken cancellationToken = default)
     {
-        return await Set.FirstOrDefaultAsync(
-            p => p.ProfessionalLicense == professionalLicense,
-            cancellationToken);
+        return await Set
+            .Include(p => p.Specialties)
+            .FirstOrDefaultAsync(
+                p => p.ProfessionalLicense == professionalLicense,
+                cancellationToken);
     }
 
     public async Task<ProfessionalEntity?> GetByIdWithSpecialtiesAsync(
