@@ -1,4 +1,5 @@
 using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Appointments;
@@ -8,6 +9,8 @@ namespace Application.Services.Schedule;
 
 public sealed class AppointmentService(
     IAppointmentRepository repository,
+    IPatientRepository patientRepository,
+    IProfessionalRepository professionalRepository,
     IUnitOfWork unitOfWork) : IAppointmentService
 {
     public async Task<IReadOnlyList<AppointmentResponseDto>> GetAllAsync()
@@ -26,15 +29,28 @@ public sealed class AppointmentService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (request.EndsAt <= request.StartsAt)
-        {
-            throw new InvalidOperationException("La fecha u hora de finalización debe ser posterior a la de inicio.");
-        }
+        var patientId = await ResolvePatientIdAsync(request.PatientId);
+        var professionalId = await ResolveProfessionalIdAsync(request.ProfessionalId);
+
+        var serviceId = request.ServiceId == Guid.Empty
+            ? new Guid("30000000-0000-0000-0000-000000000001") // VALORACION_GENERAL
+            : request.ServiceId;
+
+        var statusId = request.AppointmentStatusId == Guid.Empty
+            ? new Guid("17000000-0000-0000-0000-000000000001") // PENDIENTE
+            : request.AppointmentStatusId;
+
+        var originId = request.AppointmentOriginId == Guid.Empty
+            ? new Guid("19000000-0000-0000-0000-000000000002") // CHATBOT
+            : request.AppointmentOriginId;
+
+        var startsAt = request.StartsAt == default ? DateTime.UtcNow.AddHours(1) : request.StartsAt;
+        var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
         var overlapping = await repository.GetByProfessionalInRangeAsync(
-            request.ProfessionalId,
-            request.StartsAt,
-            request.EndsAt);
+            professionalId,
+            startsAt,
+            endsAt);
 
         if (overlapping.Any(a => a.CancelledAt == null))
         {
@@ -44,15 +60,16 @@ public sealed class AppointmentService(
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var entity = new AppointmentEntity(
-                request.PatientId,
-                request.ProfessionalId,
-                request.ServiceId,
-                request.StartsAt,
-                request.EndsAt,
-                request.AppointmentStatusId,
-                request.AppointmentOriginId,
-                request.ReasonForVisit,
+                patientId,
+                professionalId,
+                serviceId,
+                startsAt,
+                endsAt,
+                statusId,
+                originId,
+                string.IsNullOrWhiteSpace(request.ReasonForVisit) ? "Consulta dental programada via Chatbot" : request.ReasonForVisit,
                 request.Notes);
+
             await repository.AddAsync(entity);
             return Map(entity);
         });
@@ -62,18 +79,20 @@ public sealed class AppointmentService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (request.EndsAt <= request.StartsAt)
-        {
-            throw new InvalidOperationException("La fecha u hora de finalización debe ser posterior a la de inicio.");
-        }
-
         var entity = await repository.GetByIdAsync(id);
         if (entity is null) return null;
 
+        var professionalId = request.ProfessionalId == Guid.Empty ? entity.ProfessionalId : await ResolveProfessionalIdAsync(request.ProfessionalId);
+        var serviceId = request.ServiceId == Guid.Empty ? entity.ServiceId : request.ServiceId;
+        var originId = request.AppointmentOriginId == Guid.Empty ? entity.AppointmentOriginId : request.AppointmentOriginId;
+
+        var startsAt = request.StartsAt == default ? entity.StartsAt : request.StartsAt;
+        var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
+
         var overlapping = await repository.GetByProfessionalInRangeAsync(
-            request.ProfessionalId,
-            request.StartsAt,
-            request.EndsAt);
+            professionalId,
+            startsAt,
+            endsAt);
 
         if (overlapping.Any(a => a.Id != id && a.CancelledAt == null))
         {
@@ -82,20 +101,22 @@ public sealed class AppointmentService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            entity.ProfessionalId = request.ProfessionalId;
-            entity.ServiceId = request.ServiceId;
-            entity.AppointmentOriginId = request.AppointmentOriginId;
+            entity.ProfessionalId = professionalId;
+            entity.ServiceId = serviceId;
+            entity.AppointmentOriginId = originId;
             var cancelledAt = string.IsNullOrWhiteSpace(request.CancellationReason)
                 ? entity.CancelledAt
                 : DateTime.UtcNow;
+
             entity.Update(
-                request.StartsAt,
-                request.EndsAt,
-                request.AppointmentStatusId,
+                startsAt,
+                endsAt,
+                request.AppointmentStatusId == Guid.Empty ? entity.AppointmentStatusId : request.AppointmentStatusId,
                 request.ReasonForVisit,
                 request.Notes,
                 cancelledAt,
                 request.CancellationReason);
+
             repository.Update(entity);
             return Map(entity);
         });
@@ -107,6 +128,40 @@ public sealed class AppointmentService(
         if (entity is null) return false;
         await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
         return true;
+    }
+
+    private async Task<Guid> ResolvePatientIdAsync(Guid inputId)
+    {
+        var pat = await patientRepository.GetByIdAsync(inputId);
+        if (pat is not null) return pat.Id;
+
+        pat = await patientRepository.GetByPersonIdAsync(inputId);
+        if (pat is not null) return pat.Id;
+
+        var allPats = await patientRepository.GetAllAsync();
+        pat = allPats.FirstOrDefault(p => p.Id == inputId || p.PersonId == inputId);
+        if (pat is not null) return pat.Id;
+
+        throw new KeyNotFoundException($"No se encontró un paciente activo registrado con el ID '{inputId}'.");
+    }
+
+    private async Task<Guid> ResolveProfessionalIdAsync(Guid inputId)
+    {
+        var prof = await professionalRepository.GetByIdAsync(inputId);
+        if (prof is not null) return prof.Id;
+
+        prof = await professionalRepository.GetByEmployeeIdAsync(inputId);
+        if (prof is not null) return prof.Id;
+
+        var allProfs = await professionalRepository.GetAllAsync();
+        prof = allProfs.FirstOrDefault(p =>
+            p.Id == inputId ||
+            p.EmployeeId == inputId ||
+            (p.EmployeeEntity != null && p.EmployeeEntity.PersonId == inputId));
+
+        if (prof is not null) return prof.Id;
+
+        throw new KeyNotFoundException($"No se encontró un profesional odontólogo activo correspondiente al ID '{inputId}'.");
     }
 
     private static AppointmentResponseDto Map(AppointmentEntity e) => new()
