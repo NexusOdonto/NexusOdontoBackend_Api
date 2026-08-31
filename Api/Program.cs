@@ -9,7 +9,6 @@ using Infrastructure;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
-using Infrastructure;
 using Microsoft.AspNetCore.SignalR;
 using Serilog;
 
@@ -25,7 +24,10 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.FromLogContext()
     .WriteTo.Console());
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<Api.Filters.ValidationFilter>();
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerWithJwtBearer();
@@ -86,6 +88,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NexusNotificationHub>("/hubs/notifications");
+
+await DatabaseInitializer.SeedBotUserAsync(app.Services);
 
 app.Run();
 

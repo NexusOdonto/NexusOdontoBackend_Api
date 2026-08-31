@@ -11,16 +11,17 @@ public static class RolePermissionSeeder
     public static void Seed(ModelBuilder modelBuilder)
     {
         var data = new List<object>();
+        var seededPairs = new HashSet<(Guid RoleId, Guid PermId)>();
 
-        // 1. Administrator gets all permissions
-        for (var m = 0; m < ModuleCount; m++)
+        void AddPermission(Guid roleId, int moduleIndex, int actionIndex)
         {
-            for (var a = 0; a < ActionCount; a++)
+            var permId = new Guid($"14000000-0000-0000-{moduleIndex:D4}-{actionIndex:D12}");
+            if (seededPairs.Add((roleId, permId)))
             {
                 data.Add(new
                 {
-                    role_id = RoleSeeder.Administrator,
-                    permission_id = new Guid($"14000000-0000-0000-{m + 1:D4}-{a + 1:D12}")
+                    role_id = roleId,
+                    permission_id = permId
                 });
             }
         }
@@ -43,13 +44,62 @@ public static class RolePermissionSeeder
             new Guid("14000000-0000-0000-0011-000000000002")  // PEOPLE:CREATE
         };
 
-        foreach (var permId in botPermissions)
+        // 1. Administrator & Bot Service get ALL 48 permissions
+        for (var m = 1; m <= ModuleCount; m++)
         {
-            data.Add(new
+            for (var a = 1; a <= ActionCount; a++)
             {
-                role_id = RoleSeeder.BotService,
-                permission_id = permId
-            });
+                AddPermission(RoleSeeder.Administrator, m, a);
+                AddPermission(RoleSeeder.BotService, m, a);
+            }
+        }
+
+        // 2. Dentist (ODONTOLOGO)
+        int[] dentistModules = [1, 2, 3, 5, 6, 7, 8, 10]; // Patients, Appointments, Catalogs, Clinical, Odontogram, Notifications, Chatbot, People
+        foreach (var m in dentistModules)
+        {
+            AddPermission(RoleSeeder.Dentist, m, 1); // VIEW
+            AddPermission(RoleSeeder.Dentist, m, 2); // CREATE
+            AddPermission(RoleSeeder.Dentist, m, 3); // EDIT
+            if (m is 2 or 5 or 6) // APPOINTMENTS, CLINICAL, ODONTOGRAM
+            {
+                AddPermission(RoleSeeder.Dentist, m, 4); // DELETE
+            }
+        }
+
+        // 3. Receptionist (RECEPCIONISTA)
+        int[] receptionistModules = [1, 2, 3, 5, 7, 8, 10]; // Patients, Appointments, Catalogs, Clinical, Notifications, Chatbot, People
+        foreach (var m in receptionistModules)
+        {
+            AddPermission(RoleSeeder.Receptionist, m, 1); // VIEW
+            if (m is 1 or 2 or 7 or 8 or 10) // Patients, Appointments, Notifications, Chatbot, People
+            {
+                AddPermission(RoleSeeder.Receptionist, m, 2); // CREATE
+                AddPermission(RoleSeeder.Receptionist, m, 3); // EDIT
+            }
+            if (m is 1 or 2) // Patients, Appointments
+            {
+                AddPermission(RoleSeeder.Receptionist, m, 4); // DELETE
+            }
+        }
+
+        // 4. Assistant (ASISTENTE)
+        int[] assistantModules = [1, 2, 3, 5, 6, 7, 10];
+        foreach (var m in assistantModules)
+        {
+            AddPermission(RoleSeeder.Assistant, m, 1); // VIEW
+        }
+
+        // 5. Patient (PACIENTE)
+        int[] patientModules = [1, 2, 7, 8];
+        foreach (var m in patientModules)
+        {
+            AddPermission(RoleSeeder.Patient, m, 1); // VIEW
+            if (m is 1 or 2 or 8) // Patients, Appointments, Chatbot
+            {
+                AddPermission(RoleSeeder.Patient, m, 2); // CREATE
+                AddPermission(RoleSeeder.Patient, m, 3); // EDIT
+            }
         }
 
         modelBuilder.Entity("role_permissions").HasData(data);

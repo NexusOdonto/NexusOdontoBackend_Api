@@ -32,12 +32,12 @@ public static class UserSeeder
             UpdatedAt = (DateTime?)null
         });
 
-        // 2. Usuario exclusivo para el Bot (BCrypt hash de 'BotService2026!')
+        // 2. Usuario exclusivo para el Bot (BCrypt hash estático de 'BotService2026!')
         modelBuilder.Entity<UserEntity>().HasData(new
         {
             Id = BotUserId,
             PersonId = BotPersonId,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(BotDefaultPassword, 11),
+            PasswordHash = "$2a$11$7exqDQzqUbvt70Ph/7ySpev0OU8YKHaW81fEbDdAyhlUqRKD0Y6mW",
             LastAccessAt = (DateTime?)null,
             IsActive = true,
             CreatedAt = seedCreatedAt,
