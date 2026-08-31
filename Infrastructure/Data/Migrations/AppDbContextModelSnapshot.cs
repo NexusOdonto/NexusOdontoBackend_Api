@@ -59,11 +59,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("audit_event_type_id");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("NVARCHAR2(64)")
-                        .HasColumnName("ip_address");
-
                     b.Property<string>("NewData")
                         .HasColumnType("NVARCHAR2(2000)")
                         .HasColumnName("new_data");
@@ -84,11 +79,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("is_success")
                         .HasDefaultValueSql("1");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(1000)
-                        .HasColumnType("NVARCHAR2(1000)")
-                        .HasColumnName("user_agent");
 
                     b.Property<Guid?>("UserEntityId")
                         .HasColumnType("RAW(16)");
@@ -162,7 +152,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Code = "VER",
+                            Code = "VIEW",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Allows reading records of a module.",
                             IsActive = true,
@@ -172,7 +162,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Code = "CREAR",
+                            Code = "CREATE",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Allows creating records in a module.",
                             IsActive = true,
@@ -182,7 +172,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Code = "EDITAR",
+                            Code = "EDIT",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Allows modifying records of a module.",
                             IsActive = true,
@@ -192,7 +182,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Code = "ELIMINAR",
+                            Code = "DELETE",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Allows deleting or deactivating records of a module.",
                             IsActive = true,
@@ -4213,6 +4203,19 @@ namespace Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("persons", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentNumber = "1234567890",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "admin@nexus.local",
+                            FirstName = "Admin",
+                            IsActive = true,
+                            LastName = "Sistema"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.People.ProfessionalEntity", b =>
@@ -4272,19 +4275,9 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Device")
-                        .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("device");
-
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("expiration_date");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("NVARCHAR2(64)")
-                        .HasColumnName("ip_address");
 
                     b.Property<DateTime?>("LastUsedAt")
                         .HasColumnType("TIMESTAMP(7)")
@@ -4312,11 +4305,6 @@ namespace Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("token_family");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(1000)
-                        .HasColumnType("NVARCHAR2(1000)")
-                        .HasColumnName("user_agent");
 
                     b.Property<Guid?>("UserEntityId")
                         .HasColumnType("RAW(16)");
@@ -4380,6 +4368,16 @@ namespace Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$20hYXWKcqvIPrfsNyCCB1eJJZgRWoTXIA2JWITxYKRY3KJajuY0Aq",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000001")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Schedule.AppointmentEntity", b =>
@@ -4552,9 +4550,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("ActionPermissionEntityId")
-                        .HasColumnType("RAW(16)");
-
                     b.Property<Guid>("ActionPermissionId")
                         .HasColumnType("RAW(16)")
                         .HasColumnName("permission_action_id");
@@ -4572,7 +4567,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActionPermissionEntityId");
+                    b.HasIndex("ActionPermissionId");
 
                     b.ToTable("permissions", (string)null);
 
@@ -4581,225 +4576,337 @@ namespace Infrastructure.Data.Migrations
                         {
                             Id = new Guid("14000000-0000-0000-0001-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the PACIENTES module.",
-                            Module = "PACIENTES"
+                            Description = "Allows to view records of the PATIENTS module.",
+                            Module = "PATIENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0001-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the PACIENTES module.",
-                            Module = "PACIENTES"
+                            Description = "Allows to create records of the PATIENTS module.",
+                            Module = "PATIENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0001-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the PACIENTES module.",
-                            Module = "PACIENTES"
+                            Description = "Allows to edit records of the PATIENTS module.",
+                            Module = "PATIENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0001-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the PACIENTES module.",
-                            Module = "PACIENTES"
+                            Description = "Allows to delete records of the PATIENTS module.",
+                            Module = "PATIENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0002-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the CITAS module.",
-                            Module = "CITAS"
+                            Description = "Allows to view records of the APPOINTMENTS module.",
+                            Module = "APPOINTMENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0002-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the CITAS module.",
-                            Module = "CITAS"
+                            Description = "Allows to create records of the APPOINTMENTS module.",
+                            Module = "APPOINTMENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0002-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the CITAS module.",
-                            Module = "CITAS"
+                            Description = "Allows to edit records of the APPOINTMENTS module.",
+                            Module = "APPOINTMENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0002-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the CITAS module.",
-                            Module = "CITAS"
+                            Description = "Allows to delete records of the APPOINTMENTS module.",
+                            Module = "APPOINTMENTS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0003-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the CATALOGOS module.",
-                            Module = "CATALOGOS"
+                            Description = "Allows to view records of the CATALOGS module.",
+                            Module = "CATALOGS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0003-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the CATALOGOS module.",
-                            Module = "CATALOGOS"
+                            Description = "Allows to create records of the CATALOGS module.",
+                            Module = "CATALOGS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0003-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the CATALOGOS module.",
-                            Module = "CATALOGOS"
+                            Description = "Allows to edit records of the CATALOGS module.",
+                            Module = "CATALOGS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0003-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the CATALOGOS module.",
-                            Module = "CATALOGOS"
+                            Description = "Allows to delete records of the CATALOGS module.",
+                            Module = "CATALOGS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0004-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the USUARIOS module.",
-                            Module = "USUARIOS"
+                            Description = "Allows to view records of the USERS module.",
+                            Module = "USERS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0004-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the USUARIOS module.",
-                            Module = "USUARIOS"
+                            Description = "Allows to create records of the USERS module.",
+                            Module = "USERS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0004-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the USUARIOS module.",
-                            Module = "USUARIOS"
+                            Description = "Allows to edit records of the USERS module.",
+                            Module = "USERS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0004-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the USUARIOS module.",
-                            Module = "USUARIOS"
+                            Description = "Allows to delete records of the USERS module.",
+                            Module = "USERS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0005-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the HISTORIAS module.",
-                            Module = "HISTORIAS"
+                            Description = "Allows to view records of the CLINICAL module.",
+                            Module = "CLINICAL"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0005-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the HISTORIAS module.",
-                            Module = "HISTORIAS"
+                            Description = "Allows to create records of the CLINICAL module.",
+                            Module = "CLINICAL"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0005-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the HISTORIAS module.",
-                            Module = "HISTORIAS"
+                            Description = "Allows to edit records of the CLINICAL module.",
+                            Module = "CLINICAL"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0005-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the HISTORIAS module.",
-                            Module = "HISTORIAS"
+                            Description = "Allows to delete records of the CLINICAL module.",
+                            Module = "CLINICAL"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0006-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the ODONTOGRAMA module.",
-                            Module = "ODONTOGRAMA"
+                            Description = "Allows to view records of the ODONTOGRAM module.",
+                            Module = "ODONTOGRAM"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0006-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the ODONTOGRAMA module.",
-                            Module = "ODONTOGRAMA"
+                            Description = "Allows to create records of the ODONTOGRAM module.",
+                            Module = "ODONTOGRAM"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0006-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the ODONTOGRAMA module.",
-                            Module = "ODONTOGRAMA"
+                            Description = "Allows to edit records of the ODONTOGRAM module.",
+                            Module = "ODONTOGRAM"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0006-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the ODONTOGRAMA module.",
-                            Module = "ODONTOGRAMA"
+                            Description = "Allows to delete records of the ODONTOGRAM module.",
+                            Module = "ODONTOGRAM"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0007-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the NOTIFICACIONES module.",
-                            Module = "NOTIFICACIONES"
+                            Description = "Allows to view records of the NOTIFICATIONS module.",
+                            Module = "NOTIFICATIONS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0007-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the NOTIFICACIONES module.",
-                            Module = "NOTIFICACIONES"
+                            Description = "Allows to create records of the NOTIFICATIONS module.",
+                            Module = "NOTIFICATIONS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0007-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the NOTIFICACIONES module.",
-                            Module = "NOTIFICACIONES"
+                            Description = "Allows to edit records of the NOTIFICATIONS module.",
+                            Module = "NOTIFICATIONS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0007-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the NOTIFICACIONES module.",
-                            Module = "NOTIFICACIONES"
+                            Description = "Allows to delete records of the NOTIFICATIONS module.",
+                            Module = "NOTIFICATIONS"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0008-000000000001"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
-                            Description = "Allows to ver records of the SOPORTE module.",
-                            Module = "SOPORTE"
+                            Description = "Allows to view records of the CHATBOT module.",
+                            Module = "CHATBOT"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0008-000000000002"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
-                            Description = "Allows to crear records of the SOPORTE module.",
-                            Module = "SOPORTE"
+                            Description = "Allows to create records of the CHATBOT module.",
+                            Module = "CHATBOT"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0008-000000000003"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
-                            Description = "Allows to editar records of the SOPORTE module.",
-                            Module = "SOPORTE"
+                            Description = "Allows to edit records of the CHATBOT module.",
+                            Module = "CHATBOT"
                         },
                         new
                         {
                             Id = new Guid("14000000-0000-0000-0008-000000000004"),
                             ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
-                            Description = "Allows to eliminar records of the SOPORTE module.",
-                            Module = "SOPORTE"
+                            Description = "Allows to delete records of the CHATBOT module.",
+                            Module = "CHATBOT"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0009-000000000001"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
+                            Description = "Allows to view records of the AUDIT module.",
+                            Module = "AUDIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0009-000000000002"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
+                            Description = "Allows to create records of the AUDIT module.",
+                            Module = "AUDIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0009-000000000003"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
+                            Description = "Allows to edit records of the AUDIT module.",
+                            Module = "AUDIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0009-000000000004"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
+                            Description = "Allows to delete records of the AUDIT module.",
+                            Module = "AUDIT"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0010-000000000001"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
+                            Description = "Allows to view records of the PEOPLE module.",
+                            Module = "PEOPLE"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0010-000000000002"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
+                            Description = "Allows to create records of the PEOPLE module.",
+                            Module = "PEOPLE"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0010-000000000003"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
+                            Description = "Allows to edit records of the PEOPLE module.",
+                            Module = "PEOPLE"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0010-000000000004"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
+                            Description = "Allows to delete records of the PEOPLE module.",
+                            Module = "PEOPLE"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0011-000000000001"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
+                            Description = "Allows to view records of the ROLES module.",
+                            Module = "ROLES"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0011-000000000002"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
+                            Description = "Allows to create records of the ROLES module.",
+                            Module = "ROLES"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0011-000000000003"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
+                            Description = "Allows to edit records of the ROLES module.",
+                            Module = "ROLES"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0011-000000000004"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
+                            Description = "Allows to delete records of the ROLES module.",
+                            Module = "ROLES"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0012-000000000001"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000001"),
+                            Description = "Allows to view records of the PERMISSIONS module.",
+                            Module = "PERMISSIONS"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0012-000000000002"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000002"),
+                            Description = "Allows to create records of the PERMISSIONS module.",
+                            Module = "PERMISSIONS"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0012-000000000003"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000003"),
+                            Description = "Allows to edit records of the PERMISSIONS module.",
+                            Module = "PERMISSIONS"
+                        },
+                        new
+                        {
+                            Id = new Guid("14000000-0000-0000-0012-000000000004"),
+                            ActionPermissionId = new Guid("12000000-0000-0000-0000-000000000004"),
+                            Description = "Allows to delete records of the PERMISSIONS module.",
+                            Module = "PERMISSIONS"
                         });
                 });
 
@@ -4917,19 +5024,19 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("assigned_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("RoleEntityId")
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<Guid?>("UserEntityId")
-                        .HasColumnType("RAW(16)");
-
                     b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("RoleEntityId");
-
-                    b.HasIndex("UserEntityId");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("user_roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000002"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000001"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("professional_specialties", b =>
@@ -5125,6 +5232,86 @@ namespace Infrastructure.Data.Migrations
                         {
                             role_id = new Guid("13000000-0000-0000-0000-000000000001"),
                             permission_id = new Guid("14000000-0000-0000-0008-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0009-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0009-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0009-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0009-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0011-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0011-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0011-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0011-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0012-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0012-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0012-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000001"),
+                            permission_id = new Guid("14000000-0000-0000-0012-000000000004")
                         });
                 });
 
@@ -5581,7 +5768,9 @@ namespace Infrastructure.Data.Migrations
                 {
                     b.HasOne("Domain.Entities.Catalogs.ActionPermissionEntity", "ActionPermissionEntity")
                         .WithMany()
-                        .HasForeignKey("ActionPermissionEntityId");
+                        .HasForeignKey("ActionPermissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("ActionPermissionEntity");
                 });
@@ -5590,11 +5779,15 @@ namespace Infrastructure.Data.Migrations
                 {
                     b.HasOne("Domain.Entities.Security.RoleEntity", "RoleEntity")
                         .WithMany("UserRoles")
-                        .HasForeignKey("RoleEntityId");
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Domain.Entities.People.UserEntity", "UserEntity")
                         .WithMany("UserRoles")
-                        .HasForeignKey("UserEntityId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("RoleEntity");
 

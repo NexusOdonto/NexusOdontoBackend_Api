@@ -27,5 +27,10 @@ public class PermissionConfiguration : IEntityTypeConfiguration<PermissionEntity
         builder.Property(c => c.Description)
             .HasColumnName("description")
             .HasMaxLength(300);
+
+        builder.HasOne(p => p.ActionPermissionEntity)
+            .WithMany()
+            .HasForeignKey(p => p.ActionPermissionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

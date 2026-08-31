@@ -4,7 +4,7 @@ using Domain.Common;
 
 namespace Application.Services;
 
-internal static class ServiceWrite
+public static class ServiceWrite
 {
     public static async Task<TResult> InTransactionAsync<TResult>(
         IUnitOfWork unitOfWork,

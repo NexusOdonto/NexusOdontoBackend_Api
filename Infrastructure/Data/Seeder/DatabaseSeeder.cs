@@ -1,4 +1,5 @@
 using Infrastructure.Data.Seeder.ActionPermission;
+using Infrastructure.Data.Seeder.AdminUser;
 using Infrastructure.Data.Seeder.AntecedentType;
 using Infrastructure.Data.Seeder.AppointmentOrigin;
 using Infrastructure.Data.Seeder.AppointmentStatus;
@@ -74,8 +75,8 @@ public static class DatabaseSeeder
         // 4. Role-permission assignments (admin gets all permissions, bot gets minimum)
         RolePermissionSeeder.Seed(modelBuilder);
 
-        // 5. Users and People (Bot Service User)
-        UserSeeder.Seed(modelBuilder);
+        // 5. Development admin user (person + user + user_role)
+        AdminUserSeeder.Seed(modelBuilder);
 
         // 6. Teeth (depends on DentitionType)
         ToothSeeder.Seed(modelBuilder);
