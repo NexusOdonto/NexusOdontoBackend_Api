@@ -24,7 +24,10 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.FromLogContext()
     .WriteTo.Console());
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<Api.Filters.ValidationFilter>();
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerWithJwtBearer();
