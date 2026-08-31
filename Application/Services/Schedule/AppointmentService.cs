@@ -25,6 +25,22 @@ public sealed class AppointmentService(
     public async Task<AppointmentResponseDto> CreateAsync(CreateAppointmentDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        if (request.EndsAt <= request.StartsAt)
+        {
+            throw new InvalidOperationException("La fecha u hora de finalización debe ser posterior a la de inicio.");
+        }
+
+        var overlapping = await repository.GetByProfessionalInRangeAsync(
+            request.ProfessionalId,
+            request.StartsAt,
+            request.EndsAt);
+
+        if (overlapping.Any(a => a.CancelledAt == null))
+        {
+            throw new InvalidOperationException("El profesional ya tiene una cita agendada en ese rango de horario.");
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var entity = new AppointmentEntity(
@@ -45,8 +61,24 @@ public sealed class AppointmentService(
     public async Task<AppointmentResponseDto?> UpdateAsync(Guid id, UpdateAppointmentDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        if (request.EndsAt <= request.StartsAt)
+        {
+            throw new InvalidOperationException("La fecha u hora de finalización debe ser posterior a la de inicio.");
+        }
+
         var entity = await repository.GetByIdAsync(id);
         if (entity is null) return null;
+
+        var overlapping = await repository.GetByProfessionalInRangeAsync(
+            request.ProfessionalId,
+            request.StartsAt,
+            request.EndsAt);
+
+        if (overlapping.Any(a => a.Id != id && a.CancelledAt == null))
+        {
+            throw new InvalidOperationException("El profesional ya tiene otra cita agendada en ese rango de horario.");
+        }
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
