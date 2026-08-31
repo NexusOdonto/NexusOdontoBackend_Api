@@ -1,9 +1,14 @@
-﻿using Api.Extensions;
-using Application.Contracts.Services;
-using Serilog;
+using Api.Extensions;
+using Api.Hubs;
+using Api.Providers;
+using Api.Services.Notifications;
 using Application;
-using Infrastructure;
+using Application.Contracts.Services;
+using Application.Contracts.Services.Notifications;
 using DotNetEnv;
+using Infrastructure;
+using Microsoft.AspNetCore.SignalR;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +35,24 @@ var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
     ?? throw new InvalidOperationException("JWT configuration is missing.");
 builder.Services.AddJwtAuthentication(jwtSettings);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRCorsPolicy", policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true) // Configuración flexible para desarrollo/QA
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // REQUERIDO para SignalR WebSockets
+    });
+});
+
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+});
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddScoped<INotificationPublisherService, NotificationPublisherService>();
+
 builder.Services.AddResilientHttpClients();
 
 var app = builder.Build();
@@ -47,10 +70,13 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseCors("SignalRCorsPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NexusNotificationHub>("/hubs/notifications");
 
 app.Run();
 
