@@ -1,3 +1,4 @@
+using Api.Serialization;
 using Api.Extensions;
 using Api.Hubs;
 using Api.Providers;
@@ -27,6 +28,11 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<Api.Filters.ValidationFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new NullableTimeOnlyJsonConverter());
 });
 
 builder.Services.AddEndpointsApiExplorer();

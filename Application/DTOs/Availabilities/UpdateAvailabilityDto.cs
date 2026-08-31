@@ -4,10 +4,10 @@ namespace Application.DTOs.Availabilities
     {
         public int StartDay { get; set; }
         public int EndDay { get; set; }
-        public string StartTime { get; set; } = string.Empty;
-        public string LunchStartTime { get; set; } = string.Empty;
-        public string LunchEndTime { get; set; } = string.Empty;
-        public string EndTime { get; set; } = string.Empty;
+        public TimeOnly StartTime { get; set; }
+        public TimeOnly LunchStartTime { get; set; }
+        public TimeOnly LunchEndTime { get; set; }
+        public TimeOnly EndTime { get; set; }
         public bool IsActive { get; set; }
     }
 }

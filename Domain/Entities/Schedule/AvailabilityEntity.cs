@@ -8,10 +8,10 @@ public class AvailabilityEntity : Entity
     public Guid ProfessionalId { get; set; }
     public int StartDay { get; set; }
     public int EndDay { get; set; }
-    public string StartTime { get; set; } = null!;
-    public string LunchStartTime { get; set; } = null!;
-    public string LunchEndTime { get; set; } = null!;
-    public string EndTime { get; set; } = null!;
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly LunchStartTime { get; set; }
+    public TimeOnly LunchEndTime { get; set; }
+    public TimeOnly EndTime { get; set; }
     public bool IsActive { get; set; } = true;
 
     public ProfessionalEntity? ProfessionalEntity { get; set; }
@@ -24,10 +24,10 @@ public class AvailabilityEntity : Entity
         Guid professionalId,
         int startDay,
         int endDay,
-        string startTime,
-        string lunchStartTime,
-        string lunchEndTime,
-        string endTime)
+        TimeOnly startTime,
+        TimeOnly lunchStartTime,
+        TimeOnly lunchEndTime,
+        TimeOnly endTime)
     {
         ProfessionalId = professionalId;
         StartDay = startDay;
@@ -41,10 +41,10 @@ public class AvailabilityEntity : Entity
     public void Update(
         int startDay,
         int endDay,
-        string startTime,
-        string lunchStartTime,
-        string lunchEndTime,
-        string endTime,
+        TimeOnly startTime,
+        TimeOnly lunchStartTime,
+        TimeOnly lunchEndTime,
+        TimeOnly endTime,
         bool isActive)
     {
         StartDay = startDay;
