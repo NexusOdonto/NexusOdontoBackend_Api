@@ -18,7 +18,7 @@ public class Repository<TEntity> : IRepository<TEntity>
 
     public virtual async Task<TEntity?> GetByIdAsync(Guid id)
     {
-        return await Set.FindAsync(id);
+        return await Set.FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync()

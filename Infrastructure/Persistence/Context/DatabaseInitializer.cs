@@ -18,8 +18,10 @@ public static class DatabaseInitializer
 
         try
         {
-            // 1. Verificar o crear Rol BOT_SERVICE
-            var botRole = await context.Set<RoleEntity>().FirstOrDefaultAsync(r => r.Id == RoleSeeder.BotService || r.Code == "BOT_SERVICE");
+            // 1. Verificar o crear Rol BOT_SERVICE con sus permisos cargados
+            var botRole = await context.Set<RoleEntity>()
+                .Include(r => r.Permissions)
+                .FirstOrDefaultAsync(r => r.Id == RoleSeeder.BotService || r.Code == "BOT_SERVICE");
             if (botRole is null)
             {
                 botRole = new RoleEntity("BOT_SERVICE", "Bot Service", "Service role for automated Chatbot integration.");
@@ -81,9 +83,7 @@ public static class DatabaseInitializer
 
             // 5. Asignar TODOS los permisos al rol BOT_SERVICE (acceso completo estilo Administrador)
             var allPermissions = await context.Set<PermissionEntity>().ToListAsync();
-            var existingPermissionIds = await context.Database
-                .SqlQueryRaw<Guid>("SELECT permission_id FROM role_permissions WHERE role_id = {0}", botRole.Id)
-                .ToListAsync();
+            var existingPermissionIds = botRole.Permissions.Select(p => p.Id).ToHashSet();
 
             var missingPermissions = allPermissions
                 .Where(p => !existingPermissionIds.Contains(p.Id))
@@ -93,10 +93,9 @@ public static class DatabaseInitializer
             {
                 foreach (var perm in missingPermissions)
                 {
-                    await context.Database.ExecuteSqlRawAsync(
-                        "INSERT INTO role_permissions (role_id, permission_id) VALUES ({0}, {1})",
-                        botRole.Id, perm.Id);
+                    botRole.Permissions.Add(perm);
                 }
+                await context.SaveChangesAsync();
             }
 
             logger?.LogInformation("Usuario bot_service@nexusodonto.com verificado con TODOS los permisos de administrador en la base de datos.");
