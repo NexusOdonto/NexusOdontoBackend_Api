@@ -1,5 +1,6 @@
 using Application.Contracts.Repositories.People;
 using Domain.Entities.People;
+using Domain.Entities.Security;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,6 +53,25 @@ public sealed class UserRepository : Common.Repository<UserEntity>, IUserReposit
     {
         return await WithRoles()
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+    }
+
+    public async Task<bool> DeleteUserRoleAsync(
+        Guid userId,
+        Guid roleId,
+        CancellationToken cancellationToken = default)
+    {
+        var userRole = await Context.Set<UserRoleEntity>()
+            .FirstOrDefaultAsync(
+                ur => ur.UserId == userId && ur.RoleId == roleId,
+                cancellationToken);
+
+        if (userRole is null)
+        {
+            return false;
+        }
+
+        Context.Set<UserRoleEntity>().Remove(userRole);
+        return true;
     }
 
     private IQueryable<UserEntity> WithRoles()

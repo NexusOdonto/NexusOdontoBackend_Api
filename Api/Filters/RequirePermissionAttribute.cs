@@ -1,7 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
+using Application.Services.Security;
+using Api.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -60,7 +61,6 @@ public sealed class RequirePermissionFilter(
             return;
         }
 
-        var normalizedModule = module.Trim().ToUpperInvariant();
         var requiredActionCode = action switch
         {
             PermissionAction.Create => "CREATE",
@@ -70,22 +70,8 @@ public sealed class RequirePermissionFilter(
             _ => null
         };
 
-        if (requiredActionCode is null)
-        {
-            context.Result = new ForbidResult();
-            return;
-        }
-
-        var isAllowed = user.UserRoles
-            .SelectMany(ur => ur.RoleEntity?.Permissions ?? [])
-            .Any(permission =>
-                string.Equals(permission.Module, normalizedModule, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(
-                    permission.ActionPermissionEntity?.Code,
-                    requiredActionCode,
-                    StringComparison.OrdinalIgnoreCase));
-
-        if (!isAllowed)
+        if (requiredActionCode is null ||
+            !PermissionChecker.HasPermission(user, module, requiredActionCode))
         {
             context.Result = new ForbidResult();
         }

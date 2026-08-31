@@ -1,6 +1,5 @@
 using System.Text;
 using Application.Contracts.Services;
-using Api.Filters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -42,7 +41,6 @@ public static class AuthenticationExtensions
             });
 
         services.AddAuthorization();
-        services.AddScoped<RequirePermissionFilter>();
 
         return services;
     }

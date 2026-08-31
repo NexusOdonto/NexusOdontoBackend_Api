@@ -1,4 +1,6 @@
 using Application.Contracts.Services;
+using Application.Validators.Auth;
+using FluentValidation;
 using Application.Contracts.Services.Audit;
 using Application.Contracts.Services.Catalogs;
 using Application.Contracts.Services.Chatbot;
@@ -33,6 +35,8 @@ public static class DependencyInjection
             ?? configuration.GetSection("JwtSettings").Get<JwtSettings>()
             ?? new JwtSettings();
         services.AddSingleton(jwt);
+
+        services.AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>();
 
         services.AddScoped(typeof(CatalogServiceCore<>));
 

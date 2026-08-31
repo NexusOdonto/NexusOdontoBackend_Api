@@ -6,26 +6,30 @@ namespace Infrastructure.Data.Seeder.Permission;
 
 public static class PermissionSeeder
 {
-    //Modulos protegidos por permisos. El codigo resultante es MODULO_ACCION,
-    //que es el formato usado por las politicas de autorizacion de la capa Api.
+    // Modules protected by permissions. Resulting code is MODULE_ACTION,
+    // the format used by Api authorization policies.
     private static readonly string[] Modules =
     [
-        "PACIENTES",
-        "CITAS",
-        "CATALOGOS",
-        "USUARIOS",
-        "HISTORIAS",
-        "ODONTOGRAMA",
-        "NOTIFICACIONES",
-        "SOPORTE"
+        "PATIENTS",
+        "APPOINTMENTS",
+        "CATALOGS",
+        "USERS",
+        "CLINICAL",
+        "ODONTOGRAM",
+        "NOTIFICATIONS",
+        "CHATBOT",
+        "AUDIT",
+        "PEOPLE",
+        "ROLES",
+        "PERMISSIONS"
     ];
 
     private static readonly (Guid Id, string Code)[] Actions =
     [
-        (ActionPermissionSeeder.View, "VER"),
-        (ActionPermissionSeeder.Create, "CREAR"),
-        (ActionPermissionSeeder.Edit, "EDITAR"),
-        (ActionPermissionSeeder.Delete, "ELIMINAR")
+        (ActionPermissionSeeder.View, "VIEW"),
+        (ActionPermissionSeeder.Create, "CREATE"),
+        (ActionPermissionSeeder.Edit, "EDIT"),
+        (ActionPermissionSeeder.Delete, "DELETE")
     ];
 
     public static void Seed(ModelBuilder modelBuilder)
@@ -41,7 +45,7 @@ public static class PermissionSeeder
 
                 data.Add(new
                 {
-                    //Guid determinista: prefijo del catalogo + indice de modulo + indice de accion
+                    // Deterministic Guid: catalog prefix + module index + action index
                     Id = new Guid($"14000000-0000-0000-{m + 1:D4}-{a + 1:D12}"),
                     Module = module,
                     ActionPermissionId = action.Id,

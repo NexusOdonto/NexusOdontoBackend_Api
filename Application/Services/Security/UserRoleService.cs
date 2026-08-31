@@ -50,17 +50,9 @@ public sealed class UserRoleService(
         });
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid userId, Guid roleId)
     {
-        var user = await userRepository.GetByIdWithRolesAsync(id);
-        if (user is null || user.UserRoles.Count == 0) return false;
-
-        await ServiceWrite.InTransactionAsync(unitOfWork, () =>
-        {
-            user.UserRoles.Clear();
-            userRepository.Update(user);
-            return Task.CompletedTask;
-        });
-        return true;
+        return await ServiceWrite.InTransactionAsync(unitOfWork, () =>
+            userRepository.DeleteUserRoleAsync(userId, roleId));
     }
 }

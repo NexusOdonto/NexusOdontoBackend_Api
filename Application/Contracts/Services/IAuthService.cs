@@ -8,6 +8,18 @@ public interface IAuthService
         LoginRequestDto request,
         CancellationToken cancellationToken = default);
 
+    Task<AuthProfileDto?> GetProfileAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<AuthResponseDto?> RefreshAsync(
+        RefreshTokenRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> LogoutAsync(
+        RefreshTokenRequestDto request,
+        CancellationToken cancellationToken = default);
+
     Task<UserResponseDto> RegisterAsync(
         RegisterRequestDto request,
         CancellationToken cancellationToken = default);

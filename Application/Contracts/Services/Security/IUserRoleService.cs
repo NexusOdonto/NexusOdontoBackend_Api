@@ -7,6 +7,6 @@ namespace Application.Contracts.Services.Security
         Task<IReadOnlyList<UserRoleDto>> GetAllAsync();
         Task<UserRoleDto?> GetByIdAsync(Guid id);
         Task<UserRoleDto> CreateAsync(UserRoleDto request);
-        Task<bool> DeleteAsync(Guid id);
+        Task<bool> DeleteAsync(Guid userId, Guid roleId);
     }
 }

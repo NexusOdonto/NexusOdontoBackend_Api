@@ -38,10 +38,7 @@ public sealed class SessionService(
                 refreshHash,
                 tokenFamily,
                 request.ExpiresAt == default ? DateTime.UtcNow.AddDays(7) : request.ExpiresAt,
-                request.SessionStatusId,
-                request.Device,
-                request.IpAddress,
-                request.UserAgent);
+                request.SessionStatusId);
 
             await sessionRepository.AddAsync(entity);
             return Map(entity);
@@ -66,9 +63,6 @@ public sealed class SessionService(
     {
         Id = e.Id,
         UserId = e.UserId,
-        Device = e.Device,
-        IpAddress = e.IpAddress,
-        UserAgent = e.UserAgent,
         CreatedAt = e.CreatedAt,
         ExpiresAt = e.ExpiresAt,
         LastUsedAt = e.LastUsedAt,

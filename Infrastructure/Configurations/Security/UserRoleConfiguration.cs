@@ -24,5 +24,15 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRoleEntity>
             .HasColumnName("assigned_at")
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .IsRequired();
+
+        builder.HasOne(ur => ur.UserEntity)
+            .WithMany(u => u.UserRoles)
+            .HasForeignKey(ur => ur.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(ur => ur.RoleEntity)
+            .WithMany(r => r.UserRoles)
+            .HasForeignKey(ur => ur.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
