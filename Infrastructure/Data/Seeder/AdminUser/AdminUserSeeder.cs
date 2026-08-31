@@ -98,6 +98,108 @@ public static class AdminUserSeeder
                 IsActive = true,
                 CreatedAt = seedCreatedAt,
                 UpdatedAt = (DateTime?)null
+            },
+            // 5. Roberto Martínez (Odontólogo 2)
+            new
+            {
+                Id = new Guid("1b000000-0000-0000-0000-000000000010"),
+                DocumentTypeId = documentTypeId,
+                DocumentNumber = "1098765433",
+                FirstName = "Roberto",
+                LastName = "Martínez",
+                DateOfBirth = (DateOnly?)new DateOnly(1985, 4, 12),
+                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000002"), // MASCULINO
+                Phone = "+573001234567",
+                Email = "roberto.martinez@nexusodonto.com",
+                Address = "Calle 100 #15-20, Bogotá",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            // 6. Ana Sofía Silva (Odontólogo 3)
+            new
+            {
+                Id = new Guid("1b000000-0000-0000-0000-000000000011"),
+                DocumentTypeId = documentTypeId,
+                DocumentNumber = "1098765434",
+                FirstName = "Ana Sofía",
+                LastName = "Silva",
+                DateOfBirth = (DateOnly?)new DateOnly(1990, 8, 25),
+                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000001"), // FEMENINO
+                Phone = "+573002345678",
+                Email = "ana.silva@nexusodonto.com",
+                Address = "Carrera 43A #1-50, Medellín",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            // 7. Juan Castro (Asistente Dental)
+            new
+            {
+                Id = new Guid("1b000000-0000-0000-0000-000000000012"),
+                DocumentTypeId = documentTypeId,
+                DocumentNumber = "1087654322",
+                FirstName = "Juan",
+                LastName = "Castro",
+                DateOfBirth = (DateOnly?)new DateOnly(1995, 11, 5),
+                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000002"), // MASCULINO
+                Phone = "+573003456789",
+                Email = "asistente@nexusodonto.com",
+                Address = "Calle 5 #10-30, Cali",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            // 8. Camila López (Paciente 2)
+            new
+            {
+                Id = new Guid("1b000000-0000-0000-0000-000000000013"),
+                DocumentTypeId = documentTypeId,
+                DocumentNumber = "1076543211",
+                FirstName = "Camila",
+                LastName = "López",
+                DateOfBirth = (DateOnly?)new DateOnly(1998, 3, 15),
+                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000001"), // FEMENINO
+                Phone = "+573112345678",
+                Email = "camila.lopez@gmail.com",
+                Address = "Carrera 7 #72-10, Bogotá",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            // 9. Felipe Torres (Paciente 3)
+            new
+            {
+                Id = new Guid("1b000000-0000-0000-0000-000000000014"),
+                DocumentTypeId = documentTypeId,
+                DocumentNumber = "1076543212",
+                FirstName = "Felipe",
+                LastName = "Torres",
+                DateOfBirth = (DateOnly?)new DateOnly(1982, 9, 30),
+                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000002"), // MASCULINO
+                Phone = "+573123456789",
+                Email = "felipe.torres@hotmail.com",
+                Address = "Calle 53 #45-12, Medellín",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            // 10. Valentina Mendoza (Paciente 4)
+            new
+            {
+                Id = new Guid("1b000000-0000-0000-0000-000000000015"),
+                DocumentTypeId = documentTypeId,
+                DocumentNumber = "1076543213",
+                FirstName = "Valentina",
+                LastName = "Mendoza",
+                DateOfBirth = (DateOnly?)new DateOnly(2002, 6, 20),
+                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000001"), // FEMENINO
+                Phone = "+573134567890",
+                Email = "valentina.mendoza@yahoo.com",
+                Address = "Avenida Pasoancho #66-10, Cali",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
             });
 
         modelBuilder.Entity<UserEntity>().HasData(

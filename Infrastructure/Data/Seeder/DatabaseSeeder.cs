@@ -75,10 +75,22 @@ public static class DatabaseSeeder
         // 4. Role-permission assignments (admin gets all permissions, bot gets minimum)
         RolePermissionSeeder.Seed(modelBuilder);
 
-        // 5. Development admin user (person + user + user_role)
+        // 5. Development users (persons + users + user_roles)
         AdminUserSeeder.Seed(modelBuilder);
 
-        // 6. Teeth (depends on DentitionType)
+        // 6. Employees (depends on Person & JobTitle)
+        Infrastructure.Data.Seeder.Employee.EmployeeSeeder.Seed(modelBuilder);
+
+        // 7. Professionals (depends on Employee & Specialty)
+        Infrastructure.Data.Seeder.Professional.ProfessionalSeeder.Seed(modelBuilder);
+
+        // 8. Patients (depends on Person)
+        Infrastructure.Data.Seeder.Patient.PatientSeeder.Seed(modelBuilder);
+
+        // 9. Professional Availabilities / Working Hours (depends on Professional)
+        Infrastructure.Data.Seeder.Availability.AvailabilitySeeder.Seed(modelBuilder);
+
+        // 10. Teeth (depends on DentitionType)
         ToothSeeder.Seed(modelBuilder);
     }
 }
