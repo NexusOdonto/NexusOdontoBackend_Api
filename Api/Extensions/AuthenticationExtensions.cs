@@ -1,5 +1,7 @@
 using System.Text;
 using Application.Contracts.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -7,11 +9,18 @@ namespace Api.Extensions;
 
 public static class AuthenticationExtensions
 {
+    public const string GoogleOAuthCookieScheme = "GoogleOAuth";
+
     public static IServiceCollection AddJwtAuthentication(
         this IServiceCollection services,
-        JwtSettings jwtSettings)
+        JwtSettings jwtSettings,
+        GoogleSettings googleSettings)
     {
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -35,9 +44,26 @@ public static class AuthenticationExtensions
                         {
                             context.Token = accessToken;
                         }
+
                         return Task.CompletedTask;
                     }
                 };
+            })
+            .AddCookie(GoogleOAuthCookieScheme, options =>
+            {
+                options.Cookie.Name = "NexusOdonto.GoogleOAuth";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+                options.SlidingExpiration = false;
+            })
+            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            {
+                options.SignInScheme = GoogleOAuthCookieScheme;
+                options.ClientId = googleSettings.ClientId;
+                options.ClientSecret = googleSettings.ClientSecret;
+                options.CallbackPath = "/api/auth/google/callback";
             });
 
         services.AddAuthorization();

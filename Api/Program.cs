@@ -36,7 +36,8 @@ builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var jwtSettings = ResolveJwtSettings(builder.Configuration);
-builder.Services.AddJwtAuthentication(jwtSettings);
+var googleSettings = ResolveGoogleSettings(builder.Configuration);
+builder.Services.AddJwtAuthentication(jwtSettings, googleSettings);
 
 builder.Services.AddCors(options =>
 {
@@ -115,6 +116,11 @@ static JwtSettings ResolveJwtSettings(IConfiguration configuration)
     }
 
     return jwtSettings;
+}
+
+static GoogleSettings ResolveGoogleSettings(IConfiguration configuration)
+{
+    return configuration.GetSection("Google").Get<GoogleSettings>() ?? new GoogleSettings();
 }
 
 static void LoadEnvFile(string contentRoot)

@@ -11,10 +11,12 @@ public static class CorsExtensions
             options.AddPolicy(DevelopmentPolicyName, policy =>
             {
                 policy.WithOrigins(
+                        "http://localhost:3000",
                         "http://localhost:5170",
                         "https://localhost:7013")
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 

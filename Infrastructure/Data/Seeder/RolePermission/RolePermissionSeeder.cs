@@ -26,8 +26,23 @@ public static class RolePermissionSeeder
             }
         }
 
-        // Action indices: 1=VIEW, 2=CREATE, 3=EDIT, 4=DELETE
-        // Module indices: 1=PATIENTS, 2=APPOINTMENTS, 3=CATALOGS, 4=USERS, 5=CLINICAL, 6=ODONTOGRAM, 7=NOTIFICATIONS, 8=CHATBOT, 9=AUDIT, 10=PEOPLE, 11=ROLES, 12=PERMISSIONS
+        // 2. Bot Service gets minimum required permissions (Principle of Least Privilege)
+        var botPermissions = new[]
+        {
+            new Guid("14000000-0000-0000-0001-000000000001"), // PATIENTS:VIEW
+            new Guid("14000000-0000-0000-0001-000000000002"), // PATIENTS:CREATE
+            new Guid("14000000-0000-0000-0002-000000000001"), // APPOINTMENTS:VIEW
+            new Guid("14000000-0000-0000-0002-000000000002"), // APPOINTMENTS:CREATE
+            new Guid("14000000-0000-0000-0002-000000000003"), // APPOINTMENTS:EDIT
+            new Guid("14000000-0000-0000-0003-000000000001"), // CATALOGS:VIEW
+            new Guid("14000000-0000-0000-0004-000000000002"), // USERS:CREATE
+            new Guid("14000000-0000-0000-0007-000000000001"), // NOTIFICATIONS:VIEW
+            new Guid("14000000-0000-0000-0007-000000000002"), // NOTIFICATIONS:CREATE
+            new Guid("14000000-0000-0000-0008-000000000001"), // CHATBOT:VIEW
+            new Guid("14000000-0000-0000-0008-000000000002"), // CHATBOT:CREATE
+            new Guid("14000000-0000-0000-0008-000000000003"), // CHATBOT:EDIT
+            new Guid("14000000-0000-0000-0011-000000000002")  // PEOPLE:CREATE
+        };
 
         // 1. Administrator & Bot Service get ALL 48 permissions
         for (var m = 1; m <= ModuleCount; m++)

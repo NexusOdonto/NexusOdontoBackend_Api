@@ -40,6 +40,10 @@ services:
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__SigningKey=${JWT_SIGNING_KEY}
       - Jwt__ExpirationMinutes=${JWT_EXPIRATION_MINUTES}
+      - Google__ClientId=${Google__ClientId}
+      - Google__ClientSecret=${Google__ClientSecret}
+      - Auth__FrontendSuccessUrl=${Auth__FrontendSuccessUrl}
+      - Auth__FrontendLinkUrl=${Auth__FrontendLinkUrl}
     networks:
       - odontologia_network
 

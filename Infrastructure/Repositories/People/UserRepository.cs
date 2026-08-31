@@ -24,6 +24,18 @@ public sealed class UserRepository : Common.Repository<UserEntity>, IUserReposit
                 cancellationToken);
     }
 
+    public async Task<UserEntity?> GetByDocumentNumberWithRolesAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedDocument = documentNumber.Trim();
+
+        return await WithRoles()
+            .FirstOrDefaultAsync(
+                u => u.PersonEntity != null && u.PersonEntity.DocumentNumber == normalizedDocument,
+                cancellationToken);
+    }
+
     public async Task<string?> GetEmailByDocumentNumberAsync(
         string documentNumber,
         CancellationToken cancellationToken = default)

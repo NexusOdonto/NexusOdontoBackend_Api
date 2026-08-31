@@ -38,6 +38,10 @@ crear un `.env` en la raíz del proyecto con estas variables:
 | `JWT_AUDIENCE` | Audiencia del token |
 | `JWT_SIGNING_KEY` | Clave de firma, **mínimo 32 bytes** |
 | `JWT_EXPIRATION_MINUTES` | Vigencia del token |
+| `GOOGLE_CLIENT_ID` | Client ID de Google OAuth (Docker Compose) |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth (Docker Compose) |
+| `AUTH_FRONTEND_SUCCESS_URL` | URL frontend tras login Google exitoso |
+| `AUTH_FRONTEND_LINK_URL` | URL frontend para vincular Google a cédula |
 | `ConnectionStrings__OracleConnection` | Solo para `dotnet run` fuera de Docker |
 
 Los valores concretos los pide al equipo; no están en el repositorio a
@@ -111,7 +115,7 @@ curl -i -X POST http://localhost:8080/api/auth/login \
   -d '{"documentNumber":"1","password":"x"}'
 ```
 
-Debe responder **401** con `{"message":"Invalid email or password."}`.
+Debe responder **401** con `{"message":"Invalid document number or password."}`.
 
 Un 401 es la señal de éxito: significa que la API consultó Oracle de verdad y
 no encontró ese usuario. Un **500** indicaría que no llegó a la base.
@@ -272,3 +276,23 @@ dotnet run --project Api
 
 Fuera de Docker el `.env` **sí es obligatorio**: la app falla al arrancar si no
 lo encuentra.
+
+### Google OAuth (redirect en backend)
+
+Registra en Google Cloud Console el redirect URI según entorno:
+
+| Entorno | Redirect URI |
+|---|---|
+| `dotnet run` (HTTPS) | `https://localhost:7013/api/auth/google/callback` |
+| Docker (`API_PORT=8080`) | `http://localhost:8080/api/auth/google/callback` |
+
+Variables en `.env`:
+
+```env
+Google__ClientId=...
+Google__ClientSecret=...
+Auth__FrontendSuccessUrl=http://localhost:3000/auth/callback
+Auth__FrontendLinkUrl=http://localhost:3000/auth/link-google
+```
+
+Flujo: `GET /api/auth/google/login` → Google → callback → redirect al frontend con JWT o `linkToken`.

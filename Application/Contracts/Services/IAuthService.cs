@@ -8,6 +8,18 @@ public interface IAuthService
         LoginRequestDto request,
         CancellationToken cancellationToken = default);
 
+    Task<AuthResponseDto?> SignInByExternalLoginAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<AuthResponseDto?> LinkGoogleAsync(
+        GoogleLinkRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    string CreateGoogleLinkToken(string googleSub, string? googleEmail);
+
+    GoogleLinkTokenClaims? ValidateGoogleLinkToken(string linkToken);
+
     Task<AuthProfileDto?> GetProfileAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
@@ -18,9 +30,5 @@ public interface IAuthService
 
     Task<bool> LogoutAsync(
         RefreshTokenRequestDto request,
-        CancellationToken cancellationToken = default);
-
-    Task<UserResponseDto> RegisterAsync(
-        RegisterRequestDto request,
         CancellationToken cancellationToken = default);
 }
