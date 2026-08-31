@@ -16,7 +16,7 @@ public static class AuthenticationExtensions
         JwtSettings jwtSettings,
         GoogleSettings googleSettings)
     {
-        services.AddAuthentication(options =>
+        var authBuilder = services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -57,14 +57,18 @@ public static class AuthenticationExtensions
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
                 options.SlidingExpiration = false;
-            })
-            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            });
+
+        if (!string.IsNullOrWhiteSpace(googleSettings?.ClientId) && !string.IsNullOrWhiteSpace(googleSettings?.ClientSecret))
+        {
+            authBuilder.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
             {
                 options.SignInScheme = GoogleOAuthCookieScheme;
                 options.ClientId = googleSettings.ClientId;
                 options.ClientSecret = googleSettings.ClientSecret;
                 options.CallbackPath = "/api/auth/google/callback";
             });
+        }
 
         services.AddAuthorization();
 
