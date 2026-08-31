@@ -29,34 +29,18 @@ public class AvailabilityConfiguration : IEntityTypeConfiguration<AvailabilityEn
 
         builder.Property(c => c.StartTime)
             .HasColumnName("start_time")
-<<<<<<< HEAD
-=======
-            .HasMaxLength(15)
->>>>>>> a2beebe2792ef430591e6950941c11113000678c
             .IsRequired();
 
         builder.Property(c => c.LunchStartTime)
             .HasColumnName("lunch_start_time")
-<<<<<<< HEAD
-=======
-            .HasMaxLength(15)
->>>>>>> a2beebe2792ef430591e6950941c11113000678c
             .IsRequired();
 
         builder.Property(c => c.LunchEndTime)
             .HasColumnName("lunch_end_time")
-<<<<<<< HEAD
-=======
-            .HasMaxLength(15)
->>>>>>> a2beebe2792ef430591e6950941c11113000678c
             .IsRequired();
 
         builder.Property(c => c.EndTime)
             .HasColumnName("end_time")
-<<<<<<< HEAD
-=======
-            .HasMaxLength(15)
->>>>>>> a2beebe2792ef430591e6950941c11113000678c
             .IsRequired();
 
         builder.Property(c => c.IsActive)
