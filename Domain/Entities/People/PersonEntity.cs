@@ -9,7 +9,7 @@ public class PersonEntity : BaseEntity
     public string DocumentNumber { get; set; } = null!;
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
     public Guid? SexId { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }
@@ -30,7 +30,7 @@ public class PersonEntity : BaseEntity
         string documentNumber,
         string firstName,
         string lastName,
-        DateTime? dateOfBirth = null,
+        DateOnly? dateOfBirth = null,
         Guid? sexId = null,
         string? phone = null,
         string? email = null,
@@ -50,7 +50,7 @@ public class PersonEntity : BaseEntity
     public void Update(
         string firstName,
         string lastName,
-        DateTime? dateOfBirth,
+        DateOnly? dateOfBirth,
         Guid? sexId,
         string? phone,
         string? email,

@@ -9,6 +9,7 @@ public static class UserSeeder
 {
     public static readonly Guid BotPersonId = new("20000000-0000-0000-0000-000000000001");
     public static readonly Guid BotUserId = new("21000000-0000-0000-0000-000000000001");
+    public const string BotDefaultPassword = "BotService2026!";
 
     public static void Seed(ModelBuilder modelBuilder)
     {
@@ -31,13 +32,12 @@ public static class UserSeeder
             UpdatedAt = (DateTime?)null
         });
 
-        // 2. Usuario exclusivo para el Bot
+        // 2. Usuario exclusivo para el Bot (BCrypt hash de 'BotService2026!')
         modelBuilder.Entity<UserEntity>().HasData(new
         {
             Id = BotUserId,
             PersonId = BotPersonId,
-            // Hash BCrypt seguro de la contraseña predeterminada del servicio bot
-            PasswordHash = "$2a$11$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(BotDefaultPassword, 11),
             LastAccessAt = (DateTime?)null,
             IsActive = true,
             CreatedAt = seedCreatedAt,

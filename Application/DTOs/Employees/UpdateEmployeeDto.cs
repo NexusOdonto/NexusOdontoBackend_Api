@@ -1,9 +1,8 @@
-namespace Application.DTOs.Employees
+namespace Application.DTOs.Employees;
+
+public class UpdateEmployeeDto
 {
-    public class UpdateEmployeeDto
-    {
-        public Guid JobTitleId { get; set; }
-        public DateTime HireDate { get; set; }
-        public bool IsActive { get; set; }
-    }
+    public Guid JobTitleId { get; set; }
+    public DateOnly HireDate { get; set; }
+    public bool IsActive { get; set; }
 }

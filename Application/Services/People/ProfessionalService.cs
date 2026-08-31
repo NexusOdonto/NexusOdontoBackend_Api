@@ -1,13 +1,16 @@
+using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Professionals;
+using Domain.Entities.Catalogs;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
 
 public sealed class ProfessionalService(
     IProfessionalRepository professionalRepository,
+    ICatalogRepository<SpecialtyEntity> specialtyCatalogRepository,
     IUnitOfWork unitOfWork) : IProfessionalService
 {
     public async Task<IReadOnlyList<ProfessionalResponseDto>> GetAllAsync()
@@ -29,6 +32,17 @@ public sealed class ProfessionalService(
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var entity = new ProfessionalEntity(request.EmployeeId, request.ProfessionalLicense);
+
+            if (request.SpecialtyIds is { Count: > 0 })
+            {
+                var allSpecialties = await specialtyCatalogRepository.GetAllAsync();
+                var selected = allSpecialties.Where(s => request.SpecialtyIds.Contains(s.Id)).ToList();
+                foreach (var spec in selected)
+                {
+                    entity.Specialties.Add(spec);
+                }
+            }
+
             await professionalRepository.AddAsync(entity);
             return Map(entity);
         });
@@ -37,13 +51,29 @@ public sealed class ProfessionalService(
     public async Task<ProfessionalResponseDto?> UpdateAsync(Guid id, UpdateProfessionalDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var entity = await professionalRepository.GetByIdAsync(id);
+        var entity = await professionalRepository.GetByIdWithSpecialtiesAsync(id)
+            ?? await professionalRepository.GetByIdAsync(id);
         if (entity is null) return null;
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.Update(request.ProfessionalLicense);
             entity.IsActive = request.IsActive;
+
+            if (request.SpecialtyIds is not null)
+            {
+                entity.Specialties.Clear();
+                if (request.SpecialtyIds.Count > 0)
+                {
+                    var allSpecialties = await specialtyCatalogRepository.GetAllAsync();
+                    var selected = allSpecialties.Where(s => request.SpecialtyIds.Contains(s.Id)).ToList();
+                    foreach (var spec in selected)
+                    {
+                        entity.Specialties.Add(spec);
+                    }
+                }
+            }
+
             professionalRepository.Update(entity);
             return Map(entity);
         });
