@@ -36,6 +36,12 @@ public static class DependencyInjection
             ?? new JwtSettings();
         services.AddSingleton(jwt);
 
+        var authSettings = configuration.GetSection("Auth").Get<AuthSettings>() ?? new AuthSettings();
+        services.AddSingleton(authSettings);
+
+        var googleSettings = configuration.GetSection("Google").Get<GoogleSettings>() ?? new GoogleSettings();
+        services.AddSingleton(googleSettings);
+
         services.AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>();
 
         services.AddScoped(typeof(CatalogServiceCore<>));
@@ -74,6 +80,7 @@ public static class DependencyInjection
         // People
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IPatientOnboardingService, PatientOnboardingService>();
         services.AddScoped<IEmployeeService, EmployeeService>();
         services.AddScoped<IProfessionalService, ProfessionalService>();
         services.AddScoped<IUserService, UserService>();

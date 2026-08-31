@@ -9,6 +9,10 @@ public interface IUserRepository : IRepository<UserEntity>
         string email,
         CancellationToken cancellationToken = default);
 
+    Task<UserEntity?> GetByDocumentNumberWithRolesAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default);
+
     Task<string?> GetEmailByDocumentNumberAsync(
         string documentNumber,
         CancellationToken cancellationToken = default);

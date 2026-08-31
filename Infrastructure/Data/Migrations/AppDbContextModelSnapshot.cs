@@ -4035,9 +4035,10 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime>("HireDate")
+                    b.Property<string>("HireDate")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnType("NVARCHAR2(10)")
                         .HasColumnName("hire_date")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -4135,8 +4136,8 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("TIMESTAMP(7)")
+                    b.Property<string>("DateOfBirth")
+                        .HasColumnType("NVARCHAR2(10)")
                         .HasColumnName("birth_date");
 
                     b.Property<string>("DocumentNumber")
@@ -5005,7 +5006,50 @@ namespace Infrastructure.Data.Migrations
                             Description = "Access limited to the patient's own information.",
                             IsActive = true,
                             Name = "Patient"
+                        },
+                        new
+                        {
+                            Id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            Code = "BOT_SERVICE",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Service role for automated Chatbot integration with minimum required privileges.",
+                            IsActive = true,
+                            Name = "Bot Service"
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Security.UserExternalLoginEntity", b =>
+                {
+                    b.Property<string>("Provider")
+                        .HasMaxLength(32)
+                        .HasColumnType("NVARCHAR2(32)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ProviderKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("NVARCHAR2(128)")
+                        .HasColumnName("provider_key");
+
+                    b.Property<DateTime>("LinkedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("linked_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("ProviderEmail")
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("provider_email");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("RAW(16)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Provider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_external_logins", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Security.UserRoleEntity", b =>
@@ -5312,6 +5356,71 @@ namespace Infrastructure.Data.Migrations
                         {
                             role_id = new Guid("13000000-0000-0000-0000-000000000001"),
                             permission_id = new Guid("14000000-0000-0000-0012-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0004-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0011-000000000002")
                         });
                 });
 
@@ -5775,6 +5884,17 @@ namespace Infrastructure.Data.Migrations
                     b.Navigation("ActionPermissionEntity");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Security.UserExternalLoginEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.People.UserEntity", "UserEntity")
+                        .WithMany("ExternalLogins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserEntity");
+                });
+
             modelBuilder.Entity("Domain.Entities.Security.UserRoleEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Security.RoleEntity", "RoleEntity")
@@ -5862,6 +5982,8 @@ namespace Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Domain.Entities.People.UserEntity", b =>
                 {
+                    b.Navigation("ExternalLogins");
+
                     b.Navigation("UserRoles");
                 });
 
