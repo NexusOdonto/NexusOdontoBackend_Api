@@ -9,7 +9,6 @@ using Infrastructure;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
-using Infrastructure;
 using Microsoft.AspNetCore.SignalR;
 using Serilog;
 
@@ -85,6 +84,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NexusNotificationHub>("/hubs/notifications");
+
+await DatabaseInitializer.SeedBotUserAsync(app.Services);
 
 app.Run();
 
