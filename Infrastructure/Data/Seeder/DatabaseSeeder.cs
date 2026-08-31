@@ -26,6 +26,7 @@ using Infrastructure.Data.Seeder.SupportTicketReason;
 using Infrastructure.Data.Seeder.SupportTicketStatus;
 using Infrastructure.Data.Seeder.Tooth;
 using Infrastructure.Data.Seeder.ToothStatus;
+using Infrastructure.Data.Seeder.User;
 using Infrastructure.Data.Seeder.WhatsAppNotificationStatus;
 using Infrastructure.Data.Seeder.WhatsAppNotificationType;
 using Microsoft.EntityFrameworkCore;
@@ -70,10 +71,13 @@ public static class DatabaseSeeder
         // 3. Roles
         RoleSeeder.Seed(modelBuilder);
 
-        // 4. Role-permission assignments (admin gets all permissions)
+        // 4. Role-permission assignments (admin gets all permissions, bot gets minimum)
         RolePermissionSeeder.Seed(modelBuilder);
 
-        // 5. Teeth (depends on DentitionType)
+        // 5. Users and People (Bot Service User)
+        UserSeeder.Seed(modelBuilder);
+
+        // 6. Teeth (depends on DentitionType)
         ToothSeeder.Seed(modelBuilder);
     }
 }

@@ -10,6 +10,7 @@ public static class RoleSeeder
     public static readonly Guid Receptionist = new("13000000-0000-0000-0000-000000000003");
     public static readonly Guid Assistant = new("13000000-0000-0000-0000-000000000004");
     public static readonly Guid Patient = new("13000000-0000-0000-0000-000000000005");
+    public static readonly Guid BotService = new("13000000-0000-0000-0000-000000000006");
 
     public static void Seed(ModelBuilder modelBuilder)
     {
@@ -62,6 +63,16 @@ public static class RoleSeeder
                 Code = "PACIENTE",
                 Name = "Patient",
                 Description = "Access limited to the patient's own information.",
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            new
+            {
+                Id = BotService,
+                Code = "BOT_SERVICE",
+                Name = "Bot Service",
+                Description = "Service role for automated Chatbot integration with minimum required privileges.",
                 IsActive = true,
                 CreatedAt = seedCreatedAt,
                 UpdatedAt = (DateTime?)null
