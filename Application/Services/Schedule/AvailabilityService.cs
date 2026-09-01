@@ -31,10 +31,10 @@ public sealed class AvailabilityService(
 
         var professionalId = await ResolveProfessionalIdAsync(request.ProfessionalId);
 
-        var startTime = FormatTime(request.StartTime, "08:00");
-        var lunchStartTime = FormatTime(request.LunchStartTime, "12:00");
-        var lunchEndTime = FormatTime(request.LunchEndTime, "12:00");
-        var endTime = FormatTime(request.EndTime, "17:00");
+        var startTime = ResolveTime(request.StartTime, new TimeOnly(8, 0));
+        var lunchStartTime = ResolveTime(request.LunchStartTime, new TimeOnly(12, 0));
+        var lunchEndTime = ResolveTime(request.LunchEndTime, new TimeOnly(12, 0));
+        var endTime = ResolveTime(request.EndTime, new TimeOnly(17, 0));
 
         var startDay = request.StartDay is >= 1 and <= 7 ? request.StartDay : 1;
         var endDay = request.EndDay is >= 1 and <= 7 ? request.EndDay : 5;
@@ -61,10 +61,10 @@ public sealed class AvailabilityService(
         var entity = await repository.GetByIdAsync(id);
         if (entity is null) return null;
 
-        var startTime = FormatTime(request.StartTime, entity.StartTime);
-        var lunchStartTime = FormatTime(request.LunchStartTime, entity.LunchStartTime);
-        var lunchEndTime = FormatTime(request.LunchEndTime, entity.LunchEndTime);
-        var endTime = FormatTime(request.EndTime, entity.EndTime);
+        var startTime = request.StartTime;
+        var lunchStartTime = request.LunchStartTime;
+        var lunchEndTime = request.LunchEndTime;
+        var endTime = request.EndTime;
 
         var startDay = request.StartDay is >= 1 and <= 7 ? request.StartDay : entity.StartDay;
         var endDay = request.EndDay is >= 1 and <= 7 ? request.EndDay : entity.EndDay;
@@ -120,16 +120,8 @@ public sealed class AvailabilityService(
         throw new KeyNotFoundException($"No se encontró un profesional odontólogo activo correspondiente al ID '{inputId}'. Por favor verifique el ID del profesional.");
     }
 
-    private static string FormatTime(string? time, string fallback)
-    {
-        if (string.IsNullOrWhiteSpace(time)) return fallback;
-        time = time.Trim();
-        if (TimeSpan.TryParse(time, out var parsed))
-        {
-            return parsed.ToString(@"hh\:mm");
-        }
-        return time.Length > 5 ? time[..5] : time;
-    }
+    private static TimeOnly ResolveTime(TimeOnly time, TimeOnly fallback) =>
+        time == default ? fallback : time;
 
     private static AvailabilityResponseDto Map(AvailabilityEntity e) => new()
     {

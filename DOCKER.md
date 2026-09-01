@@ -38,10 +38,10 @@ crear un `.env` en la raíz del proyecto con estas variables:
 | `JWT_AUDIENCE` | Audiencia del token |
 | `JWT_SIGNING_KEY` | Clave de firma, **mínimo 32 bytes** |
 | `JWT_EXPIRATION_MINUTES` | Vigencia del token |
-| `GOOGLE_CLIENT_ID` | Client ID de Google OAuth (Docker Compose) |
-| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth (Docker Compose) |
-| `AUTH_FRONTEND_SUCCESS_URL` | URL frontend tras login Google exitoso |
-| `AUTH_FRONTEND_LINK_URL` | URL frontend para vincular Google a cédula |
+| `Google__ClientId` | Client ID de Google OAuth (misma app que `dotnet run`) |
+| `Google__ClientSecret` | Client Secret de Google OAuth (mismo valor que arriba) |
+| `Auth__FrontendSuccessUrl` | URL frontend tras login Google exitoso |
+| `Auth__FrontendLinkUrl` | URL frontend para vincular Google a cédula |
 | `ConnectionStrings__OracleConnection` | Solo para `dotnet run` fuera de Docker |
 
 Los valores concretos los pide al equipo; no están en el repositorio a
@@ -286,7 +286,9 @@ Registra en Google Cloud Console el redirect URI según entorno:
 | `dotnet run` (HTTPS) | `https://localhost:7013/api/auth/google/callback` |
 | Docker (`API_PORT=8080`) | `http://localhost:8080/api/auth/google/callback` |
 
-Variables en `.env`:
+Si cambias `API_PORT` en tu `.env`, registra también `http://localhost:<API_PORT>/api/auth/google/callback` en Google Console.
+
+Variables en `.env` (las mismas claves sirven para `dotnet run` y para Docker Compose; no hace falta duplicar `GOOGLE_*`):
 
 ```env
 Google__ClientId=...
@@ -294,5 +296,7 @@ Google__ClientSecret=...
 Auth__FrontendSuccessUrl=http://localhost:3000/auth/callback
 Auth__FrontendLinkUrl=http://localhost:3000/auth/link-google
 ```
+
+> JWT en Docker sigue usando `JWT_ISSUER`, `JWT_AUDIENCE`, etc. en Compose, y `Jwt__*` en `dotnet run`; deben coincidir (ver comentarios en `.env`).
 
 Flujo: `GET /api/auth/google/login` → Google → callback → redirect al frontend con JWT o `linkToken`.
