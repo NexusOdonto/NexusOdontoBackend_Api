@@ -4035,10 +4035,15 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("HireDate")
+                    b.Property<string>("EmployeeCode")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
                         .HasColumnType("NVARCHAR2(10)")
+                        .HasColumnName("employee_code");
+
+                    b.Property<DateTime>("HireDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("hire_date")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
@@ -4065,12 +4070,77 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmployeeCode")
+                        .IsUnique();
+
                     b.HasIndex("JobTitleEntityId");
 
                     b.HasIndex("PersonId")
                         .IsUnique();
 
                     b.ToTable("employees", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeCode = "AD001",
+                            HireDate = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            JobTitleId = new Guid("11000000-0000-0000-0000-000000000001"),
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeCode = "OD001",
+                            HireDate = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            JobTitleId = new Guid("11000000-0000-0000-0000-000000000003"),
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeCode = "OD002",
+                            HireDate = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            JobTitleId = new Guid("11000000-0000-0000-0000-000000000003"),
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeCode = "OD003",
+                            HireDate = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            JobTitleId = new Guid("11000000-0000-0000-0000-000000000003"),
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeCode = "RC001",
+                            HireDate = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            JobTitleId = new Guid("11000000-0000-0000-0000-000000000002"),
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("1c000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeCode = "BOT001",
+                            HireDate = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            JobTitleId = new Guid("11000000-0000-0000-0000-000000000004"),
+                            PersonId = new Guid("20000000-0000-0000-0000-000000000001")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.People.PatientEntity", b =>
@@ -4116,6 +4186,44 @@ namespace Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("patients", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1e000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmergencyContact = "Lucía Pérez (Madre)",
+                            EmergencyPhone = "+573101234567",
+                            IsActive = true,
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("1e000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmergencyContact = "Jorge López (Padre)",
+                            EmergencyPhone = "+573112345678",
+                            IsActive = true,
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("1e000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmergencyContact = "Marta Torres (Esposa)",
+                            EmergencyPhone = "+573123456789",
+                            IsActive = true,
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("1e000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmergencyContact = "Carlos Mendoza (Hermano)",
+                            EmergencyPhone = "+573134567890",
+                            IsActive = true,
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000015")
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.People.PersonEntity", b =>
@@ -4136,8 +4244,8 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("DateOfBirth")
-                        .HasColumnType("NVARCHAR2(10)")
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("birth_date");
 
                     b.Property<string>("DocumentNumber")
@@ -4212,10 +4320,118 @@ namespace Infrastructure.Data.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             DocumentNumber = "1234567890",
                             DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
-                            Email = "admin@nexus.local",
-                            FirstName = "Admin",
+                            Email = "admin@nexusodonto.com",
+                            FirstName = "Carlos",
                             IsActive = true,
-                            LastName = "Sistema"
+                            LastName = "Administrator"
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentNumber = "1098765432",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "odontologo@nexusodonto.com",
+                            FirstName = "Laura",
+                            IsActive = true,
+                            LastName = "Gómez"
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentNumber = "1087654321",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "recepcion@nexusodonto.com",
+                            FirstName = "María",
+                            IsActive = true,
+                            LastName = "Rodríguez"
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DocumentNumber = "1076543210",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "paciente@nexusodonto.com",
+                            FirstName = "Andrés",
+                            IsActive = true,
+                            LastName = "Pérez"
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000010"),
+                            Address = "Calle 100 #15-20, Bogotá",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateOfBirth = new DateTime(1985, 4, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DocumentNumber = "1098765433",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "roberto.martinez@nexusodonto.com",
+                            FirstName = "Roberto",
+                            IsActive = true,
+                            LastName = "Martínez",
+                            Phone = "+573001234567",
+                            SexId = new Guid("f0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000011"),
+                            Address = "Carrera 43A #1-50, Medellín",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateOfBirth = new DateTime(1990, 8, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DocumentNumber = "1098765434",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "ana.silva@nexusodonto.com",
+                            FirstName = "Ana Sofía",
+                            IsActive = true,
+                            LastName = "Silva",
+                            Phone = "+573002345678",
+                            SexId = new Guid("f0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000013"),
+                            Address = "Carrera 7 #72-10, Bogotá",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateOfBirth = new DateTime(1998, 3, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DocumentNumber = "1076543211",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "camila.lopez@gmail.com",
+                            FirstName = "Camila",
+                            IsActive = true,
+                            LastName = "López",
+                            Phone = "+573112345678",
+                            SexId = new Guid("f0000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000014"),
+                            Address = "Calle 53 #45-12, Medellín",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateOfBirth = new DateTime(1982, 9, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DocumentNumber = "1076543212",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "felipe.torres@hotmail.com",
+                            FirstName = "Felipe",
+                            IsActive = true,
+                            LastName = "Torres",
+                            Phone = "+573123456789",
+                            SexId = new Guid("f0000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000015"),
+                            Address = "Avenida Pasoancho #66-10, Cali",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateOfBirth = new DateTime(2002, 6, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DocumentNumber = "1076543213",
+                            DocumentTypeId = new Guid("e0000000-0000-0000-0000-000000000001"),
+                            Email = "valentina.mendoza@yahoo.com",
+                            FirstName = "Valentina",
+                            IsActive = true,
+                            LastName = "Mendoza",
+                            Phone = "+573134567890",
+                            SexId = new Guid("f0000000-0000-0000-0000-000000000001")
                         });
                 });
 
@@ -4261,6 +4477,32 @@ namespace Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("professionals", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1d000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeId = new Guid("1c000000-0000-0000-0000-000000000002"),
+                            IsActive = true,
+                            ProfessionalLicense = "TP-OD-1098765"
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeId = new Guid("1c000000-0000-0000-0000-000000000003"),
+                            IsActive = true,
+                            ProfessionalLicense = "TP-OD-1098766"
+                        },
+                        new
+                        {
+                            Id = new Guid("1d000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EmployeeId = new Guid("1c000000-0000-0000-0000-000000000004"),
+                            IsActive = true,
+                            ProfessionalLicense = "TP-OD-1098767"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.People.SessionEntity", b =>
@@ -4376,8 +4618,32 @@ namespace Infrastructure.Data.Migrations
                             Id = new Guid("1b000000-0000-0000-0000-000000000002"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
-                            PasswordHash = "$2a$11$20hYXWKcqvIPrfsNyCCB1eJJZgRWoTXIA2JWITxYKRY3KJajuY0Aq",
+                            PasswordHash = "$2a$11$niKp.bG.Nj.pEEV1ZZY41.MEByC9NN514GjlTZfPuYt.EP/PEO9QG",
                             PersonId = new Guid("1b000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$XIu0y.lHkWLbOkKZHjlxYerEkr/qEHhqR2qhIY8Q3FkXYbm1pOSN6",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$VdUVA/jwbm0gDxIOfNs0/OEzCQ.ea2DB48nz7LFJOv1xdkSkhhS9.",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$wBnMjN.GsYVvbI4loTatCO8H12Ljz9RZbCzbayXngNgRU1WwvLJ1m",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000007")
                         });
                 });
 
@@ -4542,6 +4808,56 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("ProfessionalEntityId");
 
                     b.ToTable("availabilities", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1f000000-0000-0000-0000-000000000001"),
+                            EndDay = 5,
+                            EndTime = "17:00",
+                            IsActive = true,
+                            LunchEndTime = "13:00",
+                            LunchStartTime = "12:00",
+                            ProfessionalId = new Guid("1d000000-0000-0000-0000-000000000001"),
+                            StartDay = 1,
+                            StartTime = "08:00"
+                        },
+                        new
+                        {
+                            Id = new Guid("1f000000-0000-0000-0000-000000000002"),
+                            EndDay = 6,
+                            EndTime = "12:00",
+                            IsActive = true,
+                            LunchEndTime = "12:00",
+                            LunchStartTime = "12:00",
+                            ProfessionalId = new Guid("1d000000-0000-0000-0000-000000000001"),
+                            StartDay = 6,
+                            StartTime = "08:00"
+                        },
+                        new
+                        {
+                            Id = new Guid("1f000000-0000-0000-0000-000000000003"),
+                            EndDay = 5,
+                            EndTime = "16:00",
+                            IsActive = true,
+                            LunchEndTime = "13:00",
+                            LunchStartTime = "12:00",
+                            ProfessionalId = new Guid("1d000000-0000-0000-0000-000000000002"),
+                            StartDay = 1,
+                            StartTime = "07:00"
+                        },
+                        new
+                        {
+                            Id = new Guid("1f000000-0000-0000-0000-000000000004"),
+                            EndDay = 5,
+                            EndTime = "18:00",
+                            IsActive = true,
+                            LunchEndTime = "14:00",
+                            LunchStartTime = "13:00",
+                            ProfessionalId = new Guid("1d000000-0000-0000-0000-000000000003"),
+                            StartDay = 1,
+                            StartTime = "09:00"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Security.PermissionEntity", b =>
@@ -5080,6 +5396,24 @@ namespace Infrastructure.Data.Migrations
                             UserId = new Guid("1b000000-0000-0000-0000-000000000002"),
                             RoleId = new Guid("13000000-0000-0000-0000-000000000001"),
                             AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000004"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000002"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000006"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000003"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000008"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000005"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -5098,6 +5432,38 @@ namespace Infrastructure.Data.Migrations
                     b.HasIndex("specialty_id");
 
                     b.ToTable("professional_specialties", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            professional_id = new Guid("1d000000-0000-0000-0000-000000000001"),
+                            specialty_id = new Guid("18000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            professional_id = new Guid("1d000000-0000-0000-0000-000000000001"),
+                            specialty_id = new Guid("18000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            professional_id = new Guid("1d000000-0000-0000-0000-000000000002"),
+                            specialty_id = new Guid("18000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            professional_id = new Guid("1d000000-0000-0000-0000-000000000002"),
+                            specialty_id = new Guid("18000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            professional_id = new Guid("1d000000-0000-0000-0000-000000000003"),
+                            specialty_id = new Guid("18000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            professional_id = new Guid("1d000000-0000-0000-0000-000000000003"),
+                            specialty_id = new Guid("18000000-0000-0000-0000-000000000005")
+                        });
                 });
 
             modelBuilder.Entity("role_permissions", b =>
@@ -5380,47 +5746,322 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0002-000000000003")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0003-000000000001")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
-                            permission_id = new Guid("14000000-0000-0000-0004-000000000002")
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000002")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0006-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0006-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0006-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0006-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0007-000000000001")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0007-000000000002")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0008-000000000001")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0008-000000000002")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0008-000000000003")
                         },
                         new
                         {
-                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
-                            permission_id = new Guid("14000000-0000-0000-0011-000000000002")
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000002"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000004")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0006-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000004"),
+                            permission_id = new Guid("14000000-0000-0000-0010-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0001-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0002-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0007-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000003")
                         });
                 });
 

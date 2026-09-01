@@ -23,6 +23,11 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEntity>
             .HasColumnName("job_position_id")
             .IsRequired();
 
+        builder.Property(c => c.EmployeeCode)
+            .HasColumnName("employee_code")
+            .HasMaxLength(10)
+            .IsRequired();
+
         builder.Property(c => c.HireDate)
             .HasColumnName("hire_date")
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
@@ -42,6 +47,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEntity>
             .HasColumnName("updated_at");
 
         builder.HasIndex(c => c.PersonId).IsUnique();
+        builder.HasIndex(c => c.EmployeeCode).IsUnique();
 
         builder.HasOne(e => e.PersonEntity)
             .WithOne(p => p.EmployeeEntity)

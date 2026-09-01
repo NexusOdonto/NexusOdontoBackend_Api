@@ -133,24 +133,7 @@ public static class AdminUserSeeder
                 CreatedAt = seedCreatedAt,
                 UpdatedAt = (DateTime?)null
             },
-            // 7. Juan Castro (Asistente Dental)
-            new
-            {
-                Id = new Guid("1b000000-0000-0000-0000-000000000012"),
-                DocumentTypeId = documentTypeId,
-                DocumentNumber = "1087654322",
-                FirstName = "Juan",
-                LastName = "Castro",
-                DateOfBirth = (DateOnly?)new DateOnly(1995, 11, 5),
-                SexId = (Guid?)new Guid("f0000000-0000-0000-0000-000000000002"), // MASCULINO
-                Phone = "+573003456789",
-                Email = "asistente@nexusodonto.com",
-                Address = "Calle 5 #10-30, Cali",
-                IsActive = true,
-                CreatedAt = seedCreatedAt,
-                UpdatedAt = (DateTime?)null
-            },
-            // 8. Camila López (Paciente 2)
+            // 7. Camila López (Paciente 2)
             new
             {
                 Id = new Guid("1b000000-0000-0000-0000-000000000013"),
@@ -167,7 +150,7 @@ public static class AdminUserSeeder
                 CreatedAt = seedCreatedAt,
                 UpdatedAt = (DateTime?)null
             },
-            // 9. Felipe Torres (Paciente 3)
+            // 8. Felipe Torres (Paciente 3)
             new
             {
                 Id = new Guid("1b000000-0000-0000-0000-000000000014"),
@@ -184,7 +167,7 @@ public static class AdminUserSeeder
                 CreatedAt = seedCreatedAt,
                 UpdatedAt = (DateTime?)null
             },
-            // 10. Valentina Mendoza (Paciente 4)
+            // 9. Valentina Mendoza (Paciente 4)
             new
             {
                 Id = new Guid("1b000000-0000-0000-0000-000000000015"),

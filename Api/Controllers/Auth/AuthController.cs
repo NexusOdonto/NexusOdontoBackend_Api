@@ -29,7 +29,7 @@ public sealed class AuthController(
 
         if (result is null)
         {
-            return Unauthorized(new { message = "Invalid document number or password." });
+            return Unauthorized(new { message = "Invalid login ID or password." });
         }
 
         return Ok(result);

@@ -27,8 +27,8 @@ public static class PermissionChecker
             return false;
         }
 
-        // Full system access for Administrator and Bot Service roles
-        if (user.UserRoles.Any(ur => ur.RoleEntity?.Code is "ADMINISTRADOR" or "BOT_SERVICE"))
+        // Full system access for Administrator role only
+        if (user.UserRoles.Any(ur => ur.RoleEntity?.Code is "ADMINISTRADOR"))
         {
             return true;
         }

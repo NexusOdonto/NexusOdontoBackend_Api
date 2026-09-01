@@ -13,6 +13,10 @@ public interface IUserRepository : IRepository<UserEntity>
         string documentNumber,
         CancellationToken cancellationToken = default);
 
+    Task<UserEntity?> GetByEmployeeCodeWithRolesAsync(
+        string employeeCode,
+        CancellationToken cancellationToken = default);
+
     Task<string?> GetEmailByDocumentNumberAsync(
         string documentNumber,
         CancellationToken cancellationToken = default);

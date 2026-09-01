@@ -8,6 +8,15 @@ public static class RolePermissionSeeder
     private const int ModuleCount = 12;
     private const int ActionCount = 4;
 
+    private static readonly Guid[] BotMinimalPermissionIds =
+    [
+        new Guid("14000000-0000-0000-0001-000000000001"), // PATIENTS:VIEW
+        new Guid("14000000-0000-0000-0001-000000000002"), // PATIENTS:CREATE
+        new Guid("14000000-0000-0000-0002-000000000001"), // APPOINTMENTS:VIEW
+        new Guid("14000000-0000-0000-0002-000000000002"), // APPOINTMENTS:CREATE
+        new Guid("14000000-0000-0000-0010-000000000001")  // PEOPLE:VIEW
+    ];
+
     public static void Seed(ModelBuilder modelBuilder)
     {
         var data = new List<object>();
@@ -26,79 +35,78 @@ public static class RolePermissionSeeder
             }
         }
 
-        // 2. Bot Service gets minimum required permissions (Principle of Least Privilege)
-        var botPermissions = new[]
+        void AddPermissionById(Guid roleId, Guid permissionId)
         {
-            new Guid("14000000-0000-0000-0001-000000000001"), // PATIENTS:VIEW
-            new Guid("14000000-0000-0000-0001-000000000002"), // PATIENTS:CREATE
-            new Guid("14000000-0000-0000-0002-000000000001"), // APPOINTMENTS:VIEW
-            new Guid("14000000-0000-0000-0002-000000000002"), // APPOINTMENTS:CREATE
-            new Guid("14000000-0000-0000-0002-000000000003"), // APPOINTMENTS:EDIT
-            new Guid("14000000-0000-0000-0003-000000000001"), // CATALOGS:VIEW
-            new Guid("14000000-0000-0000-0004-000000000002"), // USERS:CREATE
-            new Guid("14000000-0000-0000-0007-000000000001"), // NOTIFICATIONS:VIEW
-            new Guid("14000000-0000-0000-0007-000000000002"), // NOTIFICATIONS:CREATE
-            new Guid("14000000-0000-0000-0008-000000000001"), // CHATBOT:VIEW
-            new Guid("14000000-0000-0000-0008-000000000002"), // CHATBOT:CREATE
-            new Guid("14000000-0000-0000-0008-000000000003"), // CHATBOT:EDIT
-            new Guid("14000000-0000-0000-0011-000000000002")  // PEOPLE:CREATE
-        };
+            if (seededPairs.Add((roleId, permissionId)))
+            {
+                data.Add(new
+                {
+                    role_id = roleId,
+                    permission_id = permissionId
+                });
+            }
+        }
 
-        // 1. Administrator & Bot Service get ALL 48 permissions
+        // Administrator gets ALL 48 permissions
         for (var m = 1; m <= ModuleCount; m++)
         {
             for (var a = 1; a <= ActionCount; a++)
             {
                 AddPermission(RoleSeeder.Administrator, m, a);
-                AddPermission(RoleSeeder.BotService, m, a);
             }
         }
 
-        // 2. Dentist (ODONTOLOGO)
-        int[] dentistModules = [1, 2, 3, 5, 6, 7, 8, 10]; // Patients, Appointments, Catalogs, Clinical, Odontogram, Notifications, Chatbot, People
+        // Bot Service gets minimum required permissions only
+        foreach (var permissionId in BotMinimalPermissionIds)
+        {
+            AddPermissionById(RoleSeeder.BotService, permissionId);
+        }
+
+        // Dentist (ODONTOLOGO)
+        int[] dentistModules = [1, 2, 3, 5, 6, 7, 8, 10];
         foreach (var m in dentistModules)
         {
-            AddPermission(RoleSeeder.Dentist, m, 1); // VIEW
-            AddPermission(RoleSeeder.Dentist, m, 2); // CREATE
-            AddPermission(RoleSeeder.Dentist, m, 3); // EDIT
-            if (m is 2 or 5 or 6) // APPOINTMENTS, CLINICAL, ODONTOGRAM
+            AddPermission(RoleSeeder.Dentist, m, 1);
+            AddPermission(RoleSeeder.Dentist, m, 2);
+            AddPermission(RoleSeeder.Dentist, m, 3);
+            if (m is 2 or 5 or 6)
             {
-                AddPermission(RoleSeeder.Dentist, m, 4); // DELETE
+                AddPermission(RoleSeeder.Dentist, m, 4);
             }
         }
 
-        // 3. Receptionist (RECEPCIONISTA)
-        int[] receptionistModules = [1, 2, 3, 5, 7, 8, 10]; // Patients, Appointments, Catalogs, Clinical, Notifications, Chatbot, People
+        // Receptionist (RECEPCIONISTA)
+        int[] receptionistModules = [1, 2, 3, 5, 7, 8, 10];
         foreach (var m in receptionistModules)
         {
-            AddPermission(RoleSeeder.Receptionist, m, 1); // VIEW
-            if (m is 1 or 2 or 7 or 8 or 10) // Patients, Appointments, Notifications, Chatbot, People
+            AddPermission(RoleSeeder.Receptionist, m, 1);
+            if (m is 1 or 2 or 7 or 8 or 10)
             {
-                AddPermission(RoleSeeder.Receptionist, m, 2); // CREATE
-                AddPermission(RoleSeeder.Receptionist, m, 3); // EDIT
+                AddPermission(RoleSeeder.Receptionist, m, 2);
+                AddPermission(RoleSeeder.Receptionist, m, 3);
             }
-            if (m is 1 or 2) // Patients, Appointments
+            if (m is 1 or 2)
             {
-                AddPermission(RoleSeeder.Receptionist, m, 4); // DELETE
+                AddPermission(RoleSeeder.Receptionist, m, 4);
             }
         }
 
-        // 4. Assistant (ASISTENTE)
+        // Assistant (ASISTENTE)
         int[] assistantModules = [1, 2, 3, 5, 6, 7, 10];
         foreach (var m in assistantModules)
         {
-            AddPermission(RoleSeeder.Assistant, m, 1); // VIEW
+            AddPermission(RoleSeeder.Assistant, m, 1);
         }
 
-        // 5. Patient (PACIENTE)
+        // Patient (PACIENTE)
         int[] patientModules = [1, 2, 7, 8];
         foreach (var m in patientModules)
         {
-            AddPermission(RoleSeeder.Patient, m, 1); // VIEW
-            if (m is 1 or 2 or 8) // Patients, Appointments, Chatbot
+            AddPermission(RoleSeeder.Patient, m, 1);
+            if (m is 1 or 2 or 8)
             {
-                AddPermission(RoleSeeder.Patient, m, 2); // CREATE
-                AddPermission(RoleSeeder.Patient, m, 3); // EDIT
+                AddPermission(RoleSeeder.Patient, m, 2);
+                AddPermission(RoleSeeder.Patient, m, 3);
             }
         }
 
