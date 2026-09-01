@@ -213,12 +213,12 @@ public static class DatabaseInitializer
             }
 
             // 8. Ensure Availabilities
-            var availabilitiesToEnsure = new (Guid AvailId, Guid ProfId, int StartDay, int EndDay, string StartTime, string LunchStart, string LunchEnd, string EndTime)[]
+            var availabilitiesToEnsure = new (Guid AvailId, Guid ProfId, int StartDay, int EndDay, TimeOnly StartTime, TimeOnly LunchStart, TimeOnly LunchEnd, TimeOnly EndTime)[]
             {
-                (new Guid("1f000000-0000-0000-0000-000000000001"), ProfessionalSeeder.Dentist1ProfessionalId, 1, 5, "08:00", "12:00", "13:00", "17:00"),
-                (new Guid("1f000000-0000-0000-0000-000000000002"), ProfessionalSeeder.Dentist1ProfessionalId, 6, 6, "08:00", "12:00", "12:00", "12:00"),
-                (new Guid("1f000000-0000-0000-0000-000000000003"), ProfessionalSeeder.Dentist2ProfessionalId, 1, 5, "07:00", "12:00", "13:00", "16:00"),
-                (new Guid("1f000000-0000-0000-0000-000000000004"), ProfessionalSeeder.Dentist3ProfessionalId, 1, 5, "09:00", "13:00", "14:00", "18:00")
+                (new Guid("1f000000-0000-0000-0000-000000000001"), ProfessionalSeeder.Dentist1ProfessionalId, 1, 5, new TimeOnly(8, 0), new TimeOnly(12, 0), new TimeOnly(13, 0), new TimeOnly(17, 0)),
+                (new Guid("1f000000-0000-0000-0000-000000000002"), ProfessionalSeeder.Dentist1ProfessionalId, 6, 6, new TimeOnly(8, 0), new TimeOnly(12, 0), new TimeOnly(12, 0), new TimeOnly(12, 0)),
+                (new Guid("1f000000-0000-0000-0000-000000000003"), ProfessionalSeeder.Dentist2ProfessionalId, 1, 5, new TimeOnly(7, 0), new TimeOnly(12, 0), new TimeOnly(13, 0), new TimeOnly(16, 0)),
+                (new Guid("1f000000-0000-0000-0000-000000000004"), ProfessionalSeeder.Dentist3ProfessionalId, 1, 5, new TimeOnly(9, 0), new TimeOnly(13, 0), new TimeOnly(14, 0), new TimeOnly(18, 0))
             };
 
             foreach (var avInfo in availabilitiesToEnsure)
