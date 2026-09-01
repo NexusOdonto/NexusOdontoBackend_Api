@@ -36,6 +36,20 @@ public sealed class UserRepository : Common.Repository<UserEntity>, IUserReposit
                 cancellationToken);
     }
 
+    public async Task<UserEntity?> GetByEmployeeCodeWithRolesAsync(
+        string employeeCode,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedCode = employeeCode.Trim().ToUpperInvariant();
+
+        return await WithRoles()
+            .FirstOrDefaultAsync(
+                u => u.PersonEntity != null &&
+                     u.PersonEntity.EmployeeEntity != null &&
+                     u.PersonEntity.EmployeeEntity.EmployeeCode == normalizedCode,
+                cancellationToken);
+    }
+
     public async Task<string?> GetEmailByDocumentNumberAsync(
         string documentNumber,
         CancellationToken cancellationToken = default)
@@ -90,6 +104,7 @@ public sealed class UserRepository : Common.Repository<UserEntity>, IUserReposit
     {
         return Set
             .Include(u => u.PersonEntity)
+                .ThenInclude(p => p!.EmployeeEntity)
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.RoleEntity)
                     .ThenInclude(r => r!.Permissions)

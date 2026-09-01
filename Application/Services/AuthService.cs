@@ -7,6 +7,7 @@ using Application.Contracts.Repositories.Security;
 using Application.Contracts.Services;
 using Application.DTOs.Auth;
 using Application.Exceptions;
+using Application.Services.People;
 using Application.Services.Security;
 using Domain.Entities.Audit;
 using Domain.Entities.People;
@@ -45,9 +46,7 @@ public sealed class AuthService(
             throw new Exceptions.ValidationException(validationResult.Errors);
         }
 
-        var user = await userRepository.GetByDocumentNumberWithRolesAsync(
-            request.DocumentNumber.Trim(),
-            cancellationToken);
+        var user = await ResolveUserByLoginIdAsync(request.LoginId, cancellationToken);
 
         if (!IsValidForPasswordSignIn(user, request.Password))
         {
@@ -102,9 +101,7 @@ public sealed class AuthService(
             throw new ConflictException("This Google account is already linked to another user.");
         }
 
-        var user = await userRepository.GetByDocumentNumberWithRolesAsync(
-            request.DocumentNumber.Trim(),
-            cancellationToken);
+        var user = await ResolveUserByLoginIdAsync(request.LoginId, cancellationToken);
 
         if (!IsValidForPasswordSignIn(user, request.Password))
         {
@@ -323,6 +320,24 @@ public sealed class AuthService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return response;
+    }
+
+    private async Task<UserEntity?> ResolveUserByLoginIdAsync(
+        string loginId,
+        CancellationToken cancellationToken)
+    {
+        var normalized = loginId.Trim();
+
+        if (EmployeeCodeGenerator.LooksLikeEmployeeCode(normalized))
+        {
+            return await userRepository.GetByEmployeeCodeWithRolesAsync(
+                EmployeeCodeGenerator.NormalizeEmployeeCode(normalized),
+                cancellationToken);
+        }
+
+        return await userRepository.GetByDocumentNumberWithRolesAsync(
+            normalized,
+            cancellationToken);
     }
 
     private static bool IsValidForPasswordSignIn(UserEntity? user, string password)

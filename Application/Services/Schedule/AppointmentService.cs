@@ -3,6 +3,7 @@ using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Appointments;
+using Application.Exceptions;
 using Domain.Entities.Schedule;
 
 namespace Application.Services.Schedule;
@@ -11,6 +12,7 @@ public sealed class AppointmentService(
     IAppointmentRepository repository,
     IPatientRepository patientRepository,
     IProfessionalRepository professionalRepository,
+    IAvailabilityRepository availabilityRepository,
     IUnitOfWork unitOfWork) : IAppointmentService
 {
     public async Task<IReadOnlyList<AppointmentResponseDto>> GetAllAsync()
@@ -33,19 +35,21 @@ public sealed class AppointmentService(
         var professionalId = await ResolveProfessionalIdAsync(request.ProfessionalId);
 
         var serviceId = request.ServiceId == Guid.Empty
-            ? new Guid("30000000-0000-0000-0000-000000000001") // VALORACION_GENERAL
+            ? new Guid("30000000-0000-0000-0000-000000000001")
             : request.ServiceId;
 
         var statusId = request.AppointmentStatusId == Guid.Empty
-            ? new Guid("17000000-0000-0000-0000-000000000001") // PENDIENTE
+            ? new Guid("17000000-0000-0000-0000-000000000001")
             : request.AppointmentStatusId;
 
         var originId = request.AppointmentOriginId == Guid.Empty
-            ? new Guid("19000000-0000-0000-0000-000000000002") // CHATBOT
+            ? new Guid("19000000-0000-0000-0000-000000000002")
             : request.AppointmentOriginId;
 
         var startsAt = request.StartsAt == default ? DateTime.UtcNow.AddHours(1) : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
+
+        await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
 
         var overlapping = await repository.GetByProfessionalInRangeAsync(
             professionalId,
@@ -54,7 +58,8 @@ public sealed class AppointmentService(
 
         if (overlapping.Any(a => a.CancelledAt == null))
         {
-            throw new InvalidOperationException("El profesional ya tiene una cita agendada en ese rango de horario.");
+            throw new ConflictException(
+                "The professional already has an appointment scheduled during the requested time range.");
         }
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -89,6 +94,8 @@ public sealed class AppointmentService(
         var startsAt = request.StartsAt == default ? entity.StartsAt : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
+        await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
+
         var overlapping = await repository.GetByProfessionalInRangeAsync(
             professionalId,
             startsAt,
@@ -96,7 +103,8 @@ public sealed class AppointmentService(
 
         if (overlapping.Any(a => a.Id != id && a.CancelledAt == null))
         {
-            throw new InvalidOperationException("El profesional ya tiene otra cita agendada en ese rango de horario.");
+            throw new ConflictException(
+                "The professional already has another appointment scheduled during the requested time range.");
         }
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -128,6 +136,60 @@ public sealed class AppointmentService(
         if (entity is null) return false;
         await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
         return true;
+    }
+
+    private async Task ValidateAvailabilityAsync(Guid professionalId, DateTime startsAt, DateTime endsAt)
+    {
+        var availabilities = await availabilityRepository.GetByProfessionalAsync(professionalId);
+        var activeAvailabilities = availabilities.Where(a => a.IsActive).ToList();
+
+        if (activeAvailabilities.Count == 0 ||
+            !activeAvailabilities.Any(a => IsWithinAvailability(startsAt, endsAt, a)))
+        {
+            throw new ConflictException(
+                "The appointment time is outside the professional's active availability.");
+        }
+    }
+
+    private static bool IsWithinAvailability(DateTime startsAt, DateTime endsAt, AvailabilityEntity availability)
+    {
+        var startIsoDay = ToIsoDayOfWeek(startsAt.DayOfWeek);
+        var endIsoDay = ToIsoDayOfWeek(endsAt.DayOfWeek);
+
+        if (startIsoDay < availability.StartDay || startIsoDay > availability.EndDay)
+        {
+            return false;
+        }
+
+        if (endsAt.Date != startsAt.Date)
+        {
+            if (endIsoDay < availability.StartDay || endIsoDay > availability.EndDay)
+            {
+                return false;
+            }
+        }
+
+        var startTime = TimeOnly.FromDateTime(startsAt);
+        var endTime = TimeOnly.FromDateTime(endsAt);
+
+        if (startTime < availability.StartTime || endTime > availability.EndTime)
+        {
+            return false;
+        }
+
+        if (availability.LunchStartTime < availability.LunchEndTime &&
+            startTime < availability.LunchEndTime &&
+            endTime > availability.LunchStartTime)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static int ToIsoDayOfWeek(DayOfWeek dayOfWeek)
+    {
+        return dayOfWeek == DayOfWeek.Sunday ? 7 : (int)dayOfWeek;
     }
 
     private async Task<Guid> ResolvePatientIdAsync(Guid inputId)

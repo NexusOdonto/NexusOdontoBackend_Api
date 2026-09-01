@@ -41,7 +41,7 @@ crear un `.env` en la raíz del proyecto con estas variables:
 | `Google__ClientId` | Client ID de Google OAuth (misma app que `dotnet run`) |
 | `Google__ClientSecret` | Client Secret de Google OAuth (mismo valor que arriba) |
 | `Auth__FrontendSuccessUrl` | URL frontend tras login Google exitoso |
-| `Auth__FrontendLinkUrl` | URL frontend para vincular Google a cédula |
+| `Auth__FrontendLinkUrl` | URL frontend para vincular Google a loginId (cédula o código empleado) |
 | `ConnectionStrings__OracleConnection` | Solo para `dotnet run` fuera de Docker |
 
 Los valores concretos los pide al equipo; no están en el repositorio a
@@ -112,10 +112,20 @@ Los arranques siguientes tardan segundos, porque los datos quedan en un volumen.
 ```bash
 curl -i -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"documentNumber":"1","password":"x"}'
+  -d '{"loginId":"AD001","password":"x"}'
 ```
 
-Debe responder **401** con `{"message":"Invalid document number or password."}`.
+Debe responder **401** con `{"message":"Invalid login ID or password."}`.
+
+Ejemplos de login dev (passwords sin cambio):
+
+| Rol | Login ID | Password |
+|---|---|---|
+| Admin | `AD001` | `Admin123!` |
+| Odontólogo | `OD001` | `Doctor123!` |
+| Recepcionista | `RC001` | `Recepcion123!` |
+| Paciente | `1076543210` | `Paciente123!` |
+| Bot Python | `BOT001` | `BotService2026!` |
 
 Un 401 es la señal de éxito: significa que la API consultó Oracle de verdad y
 no encontró ese usuario. Un **500** indicaría que no llegó a la base.

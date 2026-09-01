@@ -1,3 +1,4 @@
+using Domain.Entities.Catalogs;
 using Domain.Entities.People;
 using Domain.Entities.Security;
 using Domain.Entities.Schedule;
@@ -15,6 +16,15 @@ namespace Infrastructure.Persistence.Context;
 
 public static class DatabaseInitializer
 {
+    private static readonly Guid[] BotMinimalPermissionIds =
+    [
+        new Guid("14000000-0000-0000-0001-000000000001"), // PATIENTS:VIEW
+        new Guid("14000000-0000-0000-0001-000000000002"), // PATIENTS:CREATE
+        new Guid("14000000-0000-0000-0002-000000000001"), // APPOINTMENTS:VIEW
+        new Guid("14000000-0000-0000-0002-000000000002"), // APPOINTMENTS:CREATE
+        new Guid("14000000-0000-0000-0010-000000000001")  // PEOPLE:VIEW
+    ];
+
     public static async Task SeedBotUserAsync(IServiceProvider serviceProvider)
     {
         await SeedAllDataAsync(serviceProvider);
@@ -28,7 +38,6 @@ public static class DatabaseInitializer
 
         try
         {
-            // 1. Ensure Roles exist with full permissions for Admin and BotService
             var allPermissions = await context.Set<PermissionEntity>().ToListAsync();
 
             var rolesToEnsure = new (Guid Id, string Code, string Name)[]
@@ -55,26 +64,51 @@ public static class DatabaseInitializer
                     await context.SaveChangesAsync();
                 }
 
-                if (rCode is "ADMINISTRADOR" or "BOT_SERVICE")
+                if (rCode == "ADMINISTRADOR")
                 {
                     var existingPermIds = role.Permissions.Select(p => p.Id).ToHashSet();
                     var missing = allPermissions.Where(p => !existingPermIds.Contains(p.Id)).ToList();
-                    if (missing.Any())
+                    if (missing.Count > 0)
                     {
                         foreach (var perm in missing)
                         {
                             role.Permissions.Add(perm);
                         }
+
+                        await context.SaveChangesAsync();
+                    }
+                }
+                else if (rCode == "BOT_SERVICE")
+                {
+                    var minimalPermissions = allPermissions
+                        .Where(p => BotMinimalPermissionIds.Contains(p.Id))
+                        .ToList();
+
+                    var toRemove = role.Permissions
+                        .Where(p => !BotMinimalPermissionIds.Contains(p.Id))
+                        .ToList();
+
+                    foreach (var perm in toRemove)
+                    {
+                        role.Permissions.Remove(perm);
+                    }
+
+                    var existingPermIds = role.Permissions.Select(p => p.Id).ToHashSet();
+                    foreach (var perm in minimalPermissions.Where(p => !existingPermIds.Contains(p.Id)))
+                    {
+                        role.Permissions.Add(perm);
+                    }
+
+                    if (toRemove.Count > 0 || minimalPermissions.Any(p => !existingPermIds.Contains(p.Id)))
+                    {
                         await context.SaveChangesAsync();
                     }
                 }
             }
 
-            // 2. Ensure DocumentType
-            var docType = await context.Set<Domain.Entities.Catalogs.DocumentTypeEntity>().FirstOrDefaultAsync();
+            var docType = await context.Set<DocumentTypeEntity>().FirstOrDefaultAsync();
             var docTypeId = docType?.Id ?? new Guid("e0000000-0000-0000-0000-000000000001");
 
-            // 3. Ensure Persons
             var personsToEnsure = new (Guid Id, string DocNum, string First, string Last, string Email)[]
             {
                 (AdminUserSeeder.AdminPersonId, "1234567890", "Carlos", "Administrator", "admin@nexusodonto.com"),
@@ -84,7 +118,6 @@ public static class DatabaseInitializer
                 (UserSeeder.BotPersonId, "BOT-SERVICE-01", "Chatbot", "Service", "bot_service@nexusodonto.com"),
                 (new Guid("1b000000-0000-0000-0000-000000000010"), "1098765433", "Roberto", "Martínez", "roberto.martinez@nexusodonto.com"),
                 (new Guid("1b000000-0000-0000-0000-000000000011"), "1098765434", "Ana Sofía", "Silva", "ana.silva@nexusodonto.com"),
-                (new Guid("1b000000-0000-0000-0000-000000000012"), "1087654322", "Juan", "Castro", "asistente@nexusodonto.com"),
                 (new Guid("1b000000-0000-0000-0000-000000000013"), "1076543211", "Camila", "López", "camila.lopez@gmail.com"),
                 (new Guid("1b000000-0000-0000-0000-000000000014"), "1076543212", "Felipe", "Torres", "felipe.torres@hotmail.com"),
                 (new Guid("1b000000-0000-0000-0000-000000000015"), "1076543213", "Valentina", "Mendoza", "valentina.mendoza@yahoo.com")
@@ -102,7 +135,6 @@ public static class DatabaseInitializer
                 }
             }
 
-            // 4. Ensure Users and UserRoles
             var usersToEnsure = new (Guid UserId, Guid PersonId, string Password, Guid RoleId)[]
             {
                 (AdminUserSeeder.AdminUserId, AdminUserSeeder.AdminPersonId, "Admin123!", RoleSeeder.Administrator),
@@ -143,20 +175,19 @@ public static class DatabaseInitializer
                 }
             }
 
-            // 5. Ensure Employees
             var empJobAdmin = new Guid("11000000-0000-0000-0000-000000000001");
             var empJobRecep = new Guid("11000000-0000-0000-0000-000000000002");
             var empJobDent = new Guid("11000000-0000-0000-0000-000000000003");
             var empJobAssist = new Guid("11000000-0000-0000-0000-000000000004");
 
-            var employeesToEnsure = new (Guid EmpId, Guid PersonId, Guid JobId)[]
+            var employeesToEnsure = new (Guid EmpId, Guid PersonId, Guid JobId, string EmployeeCode)[]
             {
-                (EmployeeSeeder.AdminEmployeeId, AdminUserSeeder.AdminPersonId, empJobAdmin),
-                (EmployeeSeeder.Dentist1EmployeeId, AdminUserSeeder.DentistPersonId, empJobDent),
-                (EmployeeSeeder.Dentist2EmployeeId, new Guid("1b000000-0000-0000-0000-000000000010"), empJobDent),
-                (EmployeeSeeder.Dentist3EmployeeId, new Guid("1b000000-0000-0000-0000-000000000011"), empJobDent),
-                (EmployeeSeeder.ReceptionistEmployeeId, AdminUserSeeder.ReceptionistPersonId, empJobRecep),
-                (EmployeeSeeder.AssistantEmployeeId, new Guid("1b000000-0000-0000-0000-000000000012"), empJobAssist)
+                (EmployeeSeeder.AdminEmployeeId, AdminUserSeeder.AdminPersonId, empJobAdmin, "AD001"),
+                (EmployeeSeeder.Dentist1EmployeeId, AdminUserSeeder.DentistPersonId, empJobDent, "OD001"),
+                (EmployeeSeeder.Dentist2EmployeeId, new Guid("1b000000-0000-0000-0000-000000000010"), empJobDent, "OD002"),
+                (EmployeeSeeder.Dentist3EmployeeId, new Guid("1b000000-0000-0000-0000-000000000011"), empJobDent, "OD003"),
+                (EmployeeSeeder.ReceptionistEmployeeId, AdminUserSeeder.ReceptionistPersonId, empJobRecep, "RC001"),
+                (EmployeeSeeder.BotEmployeeId, UserSeeder.BotPersonId, empJobAssist, "BOT001")
             };
 
             foreach (var eInfo in employeesToEnsure)
@@ -164,14 +195,19 @@ public static class DatabaseInitializer
                 var emp = await context.Set<EmployeeEntity>().FirstOrDefaultAsync(e => e.Id == eInfo.EmpId || e.PersonId == eInfo.PersonId);
                 if (emp is null)
                 {
-                    emp = new EmployeeEntity(eInfo.PersonId, eInfo.JobId, new DateOnly(2026, 1, 15));
+                    emp = new EmployeeEntity(eInfo.PersonId, eInfo.JobId, new DateOnly(2026, 1, 15), eInfo.EmployeeCode);
                     SetEntityId(emp, eInfo.EmpId);
                     await context.Set<EmployeeEntity>().AddAsync(emp);
                     await context.SaveChangesAsync();
                 }
+                else if (!string.Equals(emp.EmployeeCode, eInfo.EmployeeCode, StringComparison.Ordinal))
+                {
+                    emp.Update(eInfo.JobId, emp.HireDate, eInfo.EmployeeCode);
+                    context.Set<EmployeeEntity>().Update(emp);
+                    await context.SaveChangesAsync();
+                }
             }
 
-            // 6. Ensure Professionals
             var professionalsToEnsure = new (Guid ProfId, Guid EmpId, string License)[]
             {
                 (ProfessionalSeeder.Dentist1ProfessionalId, EmployeeSeeder.Dentist1EmployeeId, "TP-OD-1098765"),
@@ -179,9 +215,31 @@ public static class DatabaseInitializer
                 (ProfessionalSeeder.Dentist3ProfessionalId, EmployeeSeeder.Dentist3EmployeeId, "TP-OD-1098767")
             };
 
+            var professionalSpecialties = new (Guid ProfId, Guid[] SpecialtyIds)[]
+            {
+                (ProfessionalSeeder.Dentist1ProfessionalId,
+                [
+                    new Guid("18000000-0000-0000-0000-000000000001"),
+                    new Guid("18000000-0000-0000-0000-000000000002")
+                ]),
+                (ProfessionalSeeder.Dentist2ProfessionalId,
+                [
+                    new Guid("18000000-0000-0000-0000-000000000003"),
+                    new Guid("18000000-0000-0000-0000-000000000006")
+                ]),
+                (ProfessionalSeeder.Dentist3ProfessionalId,
+                [
+                    new Guid("18000000-0000-0000-0000-000000000004"),
+                    new Guid("18000000-0000-0000-0000-000000000005")
+                ])
+            };
+
             foreach (var profInfo in professionalsToEnsure)
             {
-                var prof = await context.Set<ProfessionalEntity>().FirstOrDefaultAsync(p => p.Id == profInfo.ProfId || p.EmployeeId == profInfo.EmpId);
+                var prof = await context.Set<ProfessionalEntity>()
+                    .Include(p => p.Specialties)
+                    .FirstOrDefaultAsync(p => p.Id == profInfo.ProfId || p.EmployeeId == profInfo.EmpId);
+
                 if (prof is null)
                 {
                     prof = new ProfessionalEntity(profInfo.EmpId, profInfo.License);
@@ -189,9 +247,26 @@ public static class DatabaseInitializer
                     await context.Set<ProfessionalEntity>().AddAsync(prof);
                     await context.SaveChangesAsync();
                 }
+
+                var mapping = professionalSpecialties.First(m => m.ProfId == profInfo.ProfId);
+                var existingSpecialtyIds = prof.Specialties.Select(s => s.Id).ToHashSet();
+                var missingSpecialtyIds = mapping.SpecialtyIds.Where(id => !existingSpecialtyIds.Contains(id)).ToList();
+
+                if (missingSpecialtyIds.Count > 0)
+                {
+                    var specialties = await context.Set<SpecialtyEntity>()
+                        .Where(s => missingSpecialtyIds.Contains(s.Id))
+                        .ToListAsync();
+
+                    foreach (var specialty in specialties)
+                    {
+                        prof.Specialties.Add(specialty);
+                    }
+
+                    await context.SaveChangesAsync();
+                }
             }
 
-            // 7. Ensure Patients
             var patientsToEnsure = new (Guid PatId, Guid PersonId, string Contact, string Phone)[]
             {
                 (PatientSeeder.Patient1Id, AdminUserSeeder.PatientPersonId, "Lucía Pérez", "+573101234567"),
@@ -212,7 +287,6 @@ public static class DatabaseInitializer
                 }
             }
 
-            // 8. Ensure Availabilities
             var availabilitiesToEnsure = new (Guid AvailId, Guid ProfId, int StartDay, int EndDay, TimeOnly StartTime, TimeOnly LunchStart, TimeOnly LunchEnd, TimeOnly EndTime)[]
             {
                 (new Guid("1f000000-0000-0000-0000-000000000001"), ProfessionalSeeder.Dentist1ProfessionalId, 1, 5, new TimeOnly(8, 0), new TimeOnly(12, 0), new TimeOnly(13, 0), new TimeOnly(17, 0)),

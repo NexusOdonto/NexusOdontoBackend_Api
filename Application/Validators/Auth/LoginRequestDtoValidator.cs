@@ -7,11 +7,11 @@ public sealed class LoginRequestDtoValidator : AbstractValidator<LoginRequestDto
 {
     public LoginRequestDtoValidator()
     {
-        RuleFor(x => x.DocumentNumber)
+        RuleFor(x => x.LoginId)
             .NotEmpty()
-            .WithMessage("Document number is required.")
+            .WithMessage("Login ID is required.")
             .MaximumLength(30)
-            .WithMessage("Document number cannot exceed 30 characters.");
+            .WithMessage("Login ID cannot exceed 30 characters.");
 
         RuleFor(x => x.Password)
             .NotEmpty()
