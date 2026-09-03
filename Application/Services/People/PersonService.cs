@@ -2,6 +2,7 @@ using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.People;
+using Application.Exceptions;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -25,11 +26,19 @@ public sealed class PersonService(
     public async Task<PersonResponseDto> CreateAsync(CreatePersonDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        var documentNumber = request.DocumentNumber.Trim();
+        var existingPerson = await personRepository.GetByDocumentNumberAsync(documentNumber);
+        if (existingPerson is not null)
+        {
+            throw new ConflictException("A person with this document number already exists.");
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var person = new PersonEntity(
                 request.DocumentTypeId,
-                request.DocumentNumber,
+                documentNumber,
                 request.FirstName,
                 request.LastName,
                 request.DateOfBirth,
@@ -48,10 +57,17 @@ public sealed class PersonService(
         var entity = await personRepository.GetByIdAsync(id);
         if (entity is null) return null;
 
+        var documentNumber = request.DocumentNumber.Trim();
+        var existingPerson = await personRepository.GetByDocumentNumberAsync(documentNumber);
+        if (existingPerson is not null && existingPerson.Id != id)
+        {
+            throw new ConflictException("A person with this document number already exists.");
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.DocumentTypeId = request.DocumentTypeId;
-            entity.DocumentNumber = request.DocumentNumber;
+            entity.DocumentNumber = documentNumber;
             entity.Update(
                 request.FirstName,
                 request.LastName,

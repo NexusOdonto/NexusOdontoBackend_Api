@@ -16,8 +16,17 @@ public sealed class PersonRepository : Common.Repository<PersonEntity>, IPersonR
         string documentNumber,
         CancellationToken cancellationToken = default)
     {
+        _ = documentTypeId;
+        return await GetByDocumentNumberAsync(documentNumber, cancellationToken);
+    }
+
+    public async Task<PersonEntity?> GetByDocumentNumberAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedDocument = documentNumber.Trim();
         return await Set.SingleOrDefaultAsync(
-            p => p.DocumentTypeId == documentTypeId && p.DocumentNumber == documentNumber,
+            p => p.DocumentNumber == normalizedDocument,
             cancellationToken);
     }
 

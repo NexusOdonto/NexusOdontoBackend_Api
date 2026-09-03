@@ -4302,14 +4302,14 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DocumentNumber")
+                        .IsUnique();
+
                     b.HasIndex("DocumentTypeEntityId");
 
                     b.HasIndex("Email");
 
                     b.HasIndex("SexEntityId");
-
-                    b.HasIndex("DocumentTypeId", "DocumentNumber")
-                        .IsUnique();
 
                     b.ToTable("persons", (string)null);
 

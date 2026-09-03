@@ -10,6 +10,10 @@ public interface IPersonRepository : IRepository<PersonEntity>
         string documentNumber,
         CancellationToken cancellationToken = default);
 
+    Task<PersonEntity?> GetByDocumentNumberAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default);
+
     Task<PersonEntity?> GetByEmailAsync(
         string email,
         CancellationToken cancellationToken = default);
