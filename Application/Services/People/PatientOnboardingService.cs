@@ -33,9 +33,8 @@ public sealed class PatientOnboardingService(
             throw new Exceptions.ValidationException(validationResult.Errors);
         }
 
-        var existingPerson = await personRepository.GetByDocumentAsync(
-            request.DocumentTypeId,
-            request.DocumentNumber.Trim(),
+        var existingPerson = await personRepository.GetByDocumentNumberAsync(
+            request.DocumentNumber,
             cancellationToken);
 
         if (existingPerson is not null)

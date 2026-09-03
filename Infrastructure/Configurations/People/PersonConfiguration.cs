@@ -65,7 +65,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<PersonEntity>
         builder.Property(c => c.UpdatedAt)
             .HasColumnName("updated_at");
 
-        builder.HasIndex(c => new { c.DocumentTypeId, c.DocumentNumber }).IsUnique();
+        builder.HasIndex(c => c.DocumentNumber).IsUnique();
         builder.HasIndex(c => c.Email);
     }
 }
