@@ -8,8 +8,8 @@ namespace Application.Validators.Service
         public CreateServiceRequestDtoValidator()
         {
             RuleFor(x => x.Code)
-                .NotEmpty().WithMessage("El código del servicio es obligatorio.")
-                .MaximumLength(30).WithMessage("El código no puede exceder los 30 caracteres.");
+                .MaximumLength(30).WithMessage("El código no puede exceder los 30 caracteres.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Code));
 
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("El nombre del servicio es obligatorio.")

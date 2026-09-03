@@ -8,4 +8,8 @@ public interface IServiceRepository : IRepository<ServiceEntity>
     Task<ServiceEntity?> GetByCodeAsync(
         string code,
         CancellationToken cancellationToken = default);
+
+    Task<int> GetMaxSequenceForPrefixAsync(
+        string prefix,
+        CancellationToken cancellationToken = default);
 }

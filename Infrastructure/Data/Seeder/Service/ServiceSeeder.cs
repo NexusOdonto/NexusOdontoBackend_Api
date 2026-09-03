@@ -13,7 +13,7 @@ public static class ServiceSeeder
             new
             {
                 Id = new Guid("30000000-0000-0000-0000-000000000001"),
-                Code = "VALORACION_GENERAL",
+                Code = "GA",
                 Name = "General Assessment",
                 Description = "Initial oral examination and general dental assessment.",
                 DurationMinutes = 30,
@@ -26,7 +26,7 @@ public static class ServiceSeeder
             new
             {
                 Id = new Guid("30000000-0000-0000-0000-000000000002"),
-                Code = "PROFILAXIS",
+                Code = "DP",
                 Name = "Dental Prophylaxis",
                 Description = "Professional dental cleaning and plaque removal.",
                 DurationMinutes = 45,
@@ -39,7 +39,7 @@ public static class ServiceSeeder
             new
             {
                 Id = new Guid("30000000-0000-0000-0000-000000000003"),
-                Code = "CALZA_RESINA",
+                Code = "CRF",
                 Name = "Composite Resin Filling",
                 Description = "Restoration of a tooth using composite resin material.",
                 DurationMinutes = 60,
@@ -52,7 +52,7 @@ public static class ServiceSeeder
             new
             {
                 Id = new Guid("30000000-0000-0000-0000-000000000004"),
-                Code = "BLANQUEAMIENTO",
+                Code = "TW",
                 Name = "Teeth Whitening",
                 Description = "Professional treatment to improve the color of the teeth.",
                 DurationMinutes = 90,

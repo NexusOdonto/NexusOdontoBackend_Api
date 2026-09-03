@@ -1902,7 +1902,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Code = "VALORACION_GENERAL",
+                            Code = "GA",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Initial oral examination and general dental assessment.",
                             DurationMinutes = 30,
@@ -1914,7 +1914,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000002"),
-                            Code = "PROFILAXIS",
+                            Code = "DP",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Professional dental cleaning and plaque removal.",
                             DurationMinutes = 45,
@@ -1926,7 +1926,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000003"),
-                            Code = "CALZA_RESINA",
+                            Code = "CRF",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Restoration of a tooth using composite resin material.",
                             DurationMinutes = 60,
@@ -1938,7 +1938,7 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000004"),
-                            Code = "BLANQUEAMIENTO",
+                            Code = "TW",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Professional treatment to improve the color of the teeth.",
                             DurationMinutes = 90,
@@ -5757,6 +5757,11 @@ namespace Infrastructure.Data.Migrations
                         {
                             role_id = new Guid("13000000-0000-0000-0000-000000000006"),
                             permission_id = new Guid("14000000-0000-0000-0010-000000000001")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000001")
                         },
                         new
                         {
