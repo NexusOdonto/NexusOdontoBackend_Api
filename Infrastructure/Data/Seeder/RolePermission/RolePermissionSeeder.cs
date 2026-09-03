@@ -16,7 +16,8 @@ public static class RolePermissionSeeder
         new Guid("14000000-0000-0000-0002-000000000002"), // APPOINTMENTS:CREATE
         new Guid("14000000-0000-0000-0002-000000000003"), // APPOINTMENTS:EDIT
         new Guid("14000000-0000-0000-0002-000000000004"), // APPOINTMENTS:DELETE
-        new Guid("14000000-0000-0000-0010-000000000001")  // PEOPLE:VIEW
+        new Guid("14000000-0000-0000-0010-000000000001"), // PEOPLE:VIEW
+        new Guid("14000000-0000-0000-0003-000000000001")  // CATALOGS:VIEW
     ];
 
     public static void Seed(ModelBuilder modelBuilder)

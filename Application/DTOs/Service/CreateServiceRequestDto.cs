@@ -2,7 +2,7 @@ namespace Application.DTOs;
 
 public sealed class CreateServiceRequestDto
 {
-    public string Code { get; set; } = string.Empty;
+    public string? Code { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
