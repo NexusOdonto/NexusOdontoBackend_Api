@@ -12,6 +12,8 @@ public static class CorsExtensions
             {
                 policy.WithOrigins(
                         "http://localhost:3000",
+                        "http://localhost:5173",
+                        "http://localhost:5174",
                         "http://localhost:5170",
                         "https://localhost:7013")
                     .AllowAnyHeader()

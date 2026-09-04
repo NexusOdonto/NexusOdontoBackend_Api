@@ -1,3 +1,5 @@
+﻿using Application.Contracts.Services.People;
+using Application.DTOs.Patients;
 using System.Security.Claims;
 using Application.Contracts.Repositories.Security;
 using Application.Contracts.Services;
@@ -33,6 +35,51 @@ public sealed class AuthController(
         }
 
         return Ok(result);
+    }
+
+        [AllowAnonymous]
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(OnboardPatientResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Register(
+        [FromBody] OnboardPatientDto request,
+        [FromServices] IPatientOnboardingService onboardingService,
+        CancellationToken cancellationToken)
+    {
+        var result = await onboardingService.OnboardAsync(request, cancellationToken);
+        return Created(string.Empty, result);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("register-google")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RegisterGoogle(
+        [FromBody] GoogleRegisterRequestDto request,
+        [FromServices] IPatientOnboardingService onboardingService,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            request.Password = Guid.NewGuid().ToString("N") + "Aa1!";
+        }
+
+        var result = await onboardingService.OnboardAsync(request, cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(request.GoogleSub))
+        {
+            var externalLogin = new Domain.Entities.Security.UserExternalLoginEntity(
+                result.UserId,
+                AuthService.GoogleProvider,
+                request.GoogleSub,
+                request.Email);
+            await externalLoginRepository.AddAsync(externalLogin, cancellationToken);
+        }
+
+        var authResponse = await authService.SignInByExternalLoginAsync(result.UserId, cancellationToken);
+        return Ok(authResponse);
     }
 
     [AllowAnonymous]

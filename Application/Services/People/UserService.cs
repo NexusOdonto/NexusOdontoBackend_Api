@@ -1,9 +1,10 @@
-using Application.Contracts.Repositories.Common;
+﻿using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Users;
 using Application.Exceptions;
 using Domain.Entities.People;
+using Domain.Entities.Security;
 
 namespace Application.Services.People;
 
@@ -38,6 +39,25 @@ public sealed class UserService(
         {
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
             var entity = new UserEntity(request.PersonId, passwordHash);
+
+            var rolesToAdd = new HashSet<Guid>();
+            if (request.RoleId.HasValue && request.RoleId.Value != Guid.Empty)
+            {
+                rolesToAdd.Add(request.RoleId.Value);
+            }
+            if (request.RoleIds is not null)
+            {
+                foreach (var rid in request.RoleIds.Where(id => id != Guid.Empty))
+                {
+                    rolesToAdd.Add(rid);
+                }
+            }
+
+            foreach (var roleId in rolesToAdd)
+            {
+                entity.UserRoles.Add(new UserRoleEntity(entity.Id, roleId));
+            }
+
             await userRepository.AddAsync(entity);
             return Map(entity);
         });

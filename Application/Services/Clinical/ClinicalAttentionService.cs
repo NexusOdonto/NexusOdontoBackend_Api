@@ -1,3 +1,4 @@
+﻿using Application.Exceptions;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Services.Clinical;
@@ -25,6 +26,13 @@ public sealed class ClinicalAttentionService(
     public async Task<ClinicalAttentionResponseDto> CreateAsync(CreateClinicalAttentionRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        var existing = await repository.GetByAppointmentIdAsync(request.AppointmentId);
+        if (existing is not null)
+        {
+            throw new ConflictException($"Ya existe una atención clínica registrada para la cita {request.AppointmentId}.");
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var entity = new ClinicalAttentionEntity(

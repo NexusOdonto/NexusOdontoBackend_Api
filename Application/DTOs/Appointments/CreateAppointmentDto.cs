@@ -1,4 +1,4 @@
-namespace Application.DTOs.Appointments
+﻿namespace Application.DTOs.Appointments
 {
     public class CreateAppointmentDto
     {
@@ -11,5 +11,6 @@ namespace Application.DTOs.Appointments
         public Guid AppointmentOriginId { get; set; }
         public string? ReasonForVisit { get; set; }
         public string? Notes { get; set; }
+        public Guid? CreatedByUserId { get; set; }
     }
 }

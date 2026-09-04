@@ -1,6 +1,6 @@
-namespace Application.DTOs.Patients;
+﻿namespace Application.DTOs.Patients;
 
-public sealed class OnboardPatientDto
+public class OnboardPatientDto
 {
     public Guid DocumentTypeId { get; set; }
     public string DocumentNumber { get; set; } = string.Empty;

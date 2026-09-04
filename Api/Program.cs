@@ -71,6 +71,12 @@ var app = builder.Build();
 // Always migrate then seed (Docker and local). Migrations and DatabaseInitializer are idempotent.
 await ApplyMigrationsAsync(app.Services);
 await DatabaseInitializer.SeedBotUserAsync(app.Services);
+// En contenedor la base arranca vacia: aplicar migraciones y seeders al iniciar
+// deja el stack listo con un solo "docker compose up".
+if (IsRunningInContainer() || app.Environment.IsDevelopment())
+{
+    await ApplyMigrationsAsync(app.Services);
+}
 
 app.UseGlobalExceptionMiddleware();
 

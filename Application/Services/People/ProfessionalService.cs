@@ -1,4 +1,4 @@
-using Application.Contracts.Repositories.Catalogs;
+﻿using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
@@ -11,6 +11,7 @@ namespace Application.Services.People;
 public sealed class ProfessionalService(
     IProfessionalRepository professionalRepository,
     ICatalogRepository<SpecialtyEntity> specialtyCatalogRepository,
+    IEmployeeRepository employeeRepository,
     IUnitOfWork unitOfWork) : IProfessionalService
 {
     public async Task<IReadOnlyList<ProfessionalResponseDto>> GetAllAsync()
@@ -29,9 +30,34 @@ public sealed class ProfessionalService(
     public async Task<ProfessionalResponseDto> CreateAsync(CreateProfessionalDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.ProfessionalLicense) && !string.IsNullOrWhiteSpace(request.LicenseNumber))
+        {
+            request.ProfessionalLicense = request.LicenseNumber;
+        }
+
+        if (request.SpecialtyId.HasValue && !request.SpecialtyIds.Contains(request.SpecialtyId.Value))
+        {
+            request.SpecialtyIds.Add(request.SpecialtyId.Value);
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
-            var entity = new ProfessionalEntity(request.EmployeeId, request.ProfessionalLicense);
+            var employeeId = request.EmployeeId;
+            if (employeeId == Guid.Empty && request.PersonId.HasValue && request.PersonId.Value != Guid.Empty)
+            {
+                var emp = await employeeRepository.GetByPersonIdAsync(request.PersonId.Value);
+                if (emp is null)
+                {
+                    var jobTitleId = new Guid("11000000-0000-0000-0000-000000000002");
+                    var code = $"OD{Guid.NewGuid():N}"[..7].ToUpper();
+                    emp = new EmployeeEntity(request.PersonId.Value, jobTitleId, DateOnly.FromDateTime(DateTime.UtcNow), code);
+                    await employeeRepository.AddAsync(emp);
+                }
+                employeeId = emp.Id;
+            }
+
+            var entity = new ProfessionalEntity(employeeId, request.ProfessionalLicense);
 
             if (request.SpecialtyIds is { Count: > 0 })
             {

@@ -1,4 +1,4 @@
-using Application.Contracts.Repositories.Common;
+﻿using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
@@ -73,7 +73,8 @@ public sealed class AppointmentService(
                 statusId,
                 originId,
                 string.IsNullOrWhiteSpace(request.ReasonForVisit) ? "Consulta dental programada via Chatbot" : request.ReasonForVisit,
-                request.Notes);
+                request.Notes,
+                createdByUserId: request.CreatedByUserId);
 
             await repository.AddAsync(entity);
             return Map(entity);

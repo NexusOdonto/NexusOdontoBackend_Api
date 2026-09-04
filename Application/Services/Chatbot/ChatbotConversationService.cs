@@ -1,8 +1,9 @@
-using Application.Contracts.Repositories.Common;
+﻿using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Repositories.Chatbot;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Chatbot.ChatbotConversation;
+using Application.DTOs.Chatbot.ChatbotMessage;
 using Domain.Entities.Catalogs;
 using Domain.Entities.Chatbot;
 
@@ -10,6 +11,7 @@ namespace Application.Services.Chatbot;
 
 public sealed class ChatbotConversationService(
     IChatbotConversationRepository repository,
+    IRepository<ChatbotMessageEntity> messageRepository,
     ICatalogRepository<ChatbotConversationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IChatbotConversationService
 {
@@ -40,6 +42,42 @@ public sealed class ChatbotConversationService(
             await repository.AddAsync(entity);
             return Map(entity);
         });
+    }
+
+    public async Task<ChatbotConversationResponseDto?> UpdateAsync(Guid id, UpdateChatbotConversationRequestDto request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var entity = await repository.GetByIdAsync(id);
+        if (entity is null) return null;
+
+        return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
+        {
+            entity.Update(
+                request.ConversationStatusId,
+                DateTime.UtcNow,
+                request.ClosedAt,
+                request.PatientId);
+            repository.Update(entity);
+            return Map(entity);
+        });
+    }
+
+    public async Task<IReadOnlyList<ChatbotMessageResponseDto>> GetMessagesAsync(Guid conversationId)
+    {
+        var allMessages = await messageRepository.GetAllAsync();
+        return allMessages
+            .Where(m => m.ChatbotConversationId == conversationId)
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => new ChatbotMessageResponseDto
+            {
+                Id = m.Id,
+                ChatbotConversationId = m.ChatbotConversationId,
+                MessageRoleId = m.MessageRoleId,
+                Content = m.Content,
+                RagConfidence = m.RagConfidence,
+                CreatedAt = m.CreatedAt
+            })
+            .ToList();
     }
 
     public async Task<bool> DeleteAsync(Guid id)
