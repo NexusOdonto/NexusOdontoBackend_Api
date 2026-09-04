@@ -31,9 +31,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var jwt = configuration.GetSection("Jwt").Get<JwtSettings>()
+        // Same Normalize path as Api.Program.ResolveJwtSettings: binder can set
+        // RefreshTokenExpirationDays=0 when Jwt exists without that key; default to 7.
+        var jwt = JwtSettings.Normalize(
+            configuration.GetSection("Jwt").Get<JwtSettings>()
             ?? configuration.GetSection("JwtSettings").Get<JwtSettings>()
-            ?? new JwtSettings();
+            ?? new JwtSettings());
         services.AddSingleton(jwt);
 
         var authSettings = configuration.GetSection("Auth").Get<AuthSettings>() ?? new AuthSettings();

@@ -109,8 +109,12 @@ static JwtSettings ResolveJwtSettings(IConfiguration configuration)
         throw new InvalidOperationException(
             "JWT configuration is missing. Add a 'Jwt' section to appsettings.json " +
             "or set Jwt__Issuer, Jwt__Audience, Jwt__SigningKey (min 32 bytes), " +
-            "and Jwt__ExpirationMinutes in .env or environment variables.");
+            "Jwt__ExpirationMinutes, and Jwt__RefreshTokenExpirationDays in .env or environment variables.");
     }
+
+    // Binder may leave ExpirationMinutes / RefreshTokenExpirationDays at 0 when the Jwt
+    // section is present but those keys are omitted; Normalize applies defaults (15 / 7).
+    jwtSettings = JwtSettings.Normalize(jwtSettings);
 
     if (string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
         string.IsNullOrWhiteSpace(jwtSettings.Audience) ||
@@ -118,7 +122,9 @@ static JwtSettings ResolveJwtSettings(IConfiguration configuration)
     {
         throw new InvalidOperationException(
             "JWT configuration is incomplete. Required: Jwt:Issuer, Jwt:Audience, Jwt:SigningKey " +
-            "(or JwtSettings:* equivalents). SigningKey must be at least 32 bytes.");
+            "(or JwtSettings:* equivalents). SigningKey must be at least 32 bytes. " +
+            "Also set Jwt__ExpirationMinutes and Jwt__RefreshTokenExpirationDays " +
+            "(defaults applied when missing/<=0: 15 minutes and 7 days).");
     }
 
     return jwtSettings;

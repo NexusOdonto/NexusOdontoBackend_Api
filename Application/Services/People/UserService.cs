@@ -2,6 +2,7 @@ using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Users;
+using Application.Exceptions;
 using Domain.Entities.People;
 
 namespace Application.Services.People;
@@ -26,6 +27,13 @@ public sealed class UserService(
     public async Task<UserDetailResponseDto> CreateAsync(CreateUserDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        var existingUser = await userRepository.GetByPersonIdAsync(request.PersonId);
+        if (existingUser is not null)
+        {
+            throw new ConflictException("A user already exists for this person.");
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
