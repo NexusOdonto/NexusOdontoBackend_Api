@@ -68,12 +68,9 @@ builder.Services.AddDevelopmentCors();
 
 var app = builder.Build();
 
-// En contenedor la base arranca vacia: aplicar migraciones y seeders al iniciar
-// deja el stack listo con un solo "docker compose up".
-if (IsRunningInContainer())
-{
-    await ApplyMigrationsAsync(app.Services);
-}
+// Always migrate then seed (Docker and local). Migrations and DatabaseInitializer are idempotent.
+await ApplyMigrationsAsync(app.Services);
+await DatabaseInitializer.SeedBotUserAsync(app.Services);
 
 app.UseGlobalExceptionMiddleware();
 
@@ -94,8 +91,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NexusNotificationHub>("/hubs/notifications");
-
-await DatabaseInitializer.SeedBotUserAsync(app.Services);
 
 app.Run();
 
