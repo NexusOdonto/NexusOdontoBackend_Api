@@ -37,7 +37,8 @@ crear un `.env` en la raíz del proyecto con estas variables:
 | `JWT_ISSUER` | Emisor del token |
 | `JWT_AUDIENCE` | Audiencia del token |
 | `JWT_SIGNING_KEY` | Clave de firma, **mínimo 32 bytes** |
-| `JWT_EXPIRATION_MINUTES` | Vigencia del token |
+| `JWT_EXPIRATION_MINUTES` | Vigencia del access token (minutos). En `dotnet run`: `Jwt__ExpirationMinutes`. Si falta o es ≤0, la API aplica **15**. |
+| `JWT_REFRESH_TOKEN_EXPIRATION_DAYS` | Vigencia del refresh token (días). En `dotnet run`: `Jwt__RefreshTokenExpirationDays=7`. Si falta o es ≤0, la API aplica **7** (evita 500 en login). |
 | `Google__ClientId` | Client ID de Google OAuth (misma app que `dotnet run`) |
 | `Google__ClientSecret` | Client Secret de Google OAuth (mismo valor que arriba) |
 | `Auth__FrontendSuccessUrl` | URL frontend tras login Google exitoso |
@@ -307,6 +308,6 @@ Auth__FrontendSuccessUrl=http://localhost:3000/auth/callback
 Auth__FrontendLinkUrl=http://localhost:3000/auth/link-google
 ```
 
-> JWT en Docker sigue usando `JWT_ISSUER`, `JWT_AUDIENCE`, etc. en Compose, y `Jwt__*` en `dotnet run`; deben coincidir (ver comentarios en `.env`).
+> JWT en Docker sigue usando `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_EXPIRATION_MINUTES`, `JWT_REFRESH_TOKEN_EXPIRATION_DAYS` en Compose, y `Jwt__*` en `dotnet run` (p. ej. `Jwt__RefreshTokenExpirationDays=7`); deben coincidir (ver comentarios en `.env`).
 
 Flujo: `GET /api/auth/google/login` → Google → callback → redirect al frontend con JWT o `linkToken`.

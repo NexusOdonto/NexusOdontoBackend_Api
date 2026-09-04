@@ -40,6 +40,7 @@ services:
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__SigningKey=${JWT_SIGNING_KEY}
       - Jwt__ExpirationMinutes=${JWT_EXPIRATION_MINUTES}
+      - Jwt__RefreshTokenExpirationDays=${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:-7}
       - Google__ClientId=${Google__ClientId}
       - Google__ClientSecret=${Google__ClientSecret}
       - Auth__FrontendSuccessUrl=${Auth__FrontendSuccessUrl}
