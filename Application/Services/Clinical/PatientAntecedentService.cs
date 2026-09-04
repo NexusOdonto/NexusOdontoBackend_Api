@@ -1,4 +1,4 @@
-using Application.Contracts.Repositories.Common;
+﻿using Application.Contracts.Repositories.Common;
 using Application.Contracts.Services.Clinical;
 using Application.DTOs.Clinical.PatientAntecedent;
 using Domain.Entities.Clinical;
@@ -26,11 +26,15 @@ public sealed class PatientAntecedentService(
         ArgumentNullException.ThrowIfNull(request);
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
+            var registeredBy = request.RegisteredByUserId.HasValue && request.RegisteredByUserId.Value != Guid.Empty
+                ? request.RegisteredByUserId.Value
+                : new Guid("1b000000-0000-0000-0000-000000000002");
+
             var entity = new PatientAntecedentEntity(
                 request.PatientId,
                 request.AntecedentTypeId,
                 request.Description,
-                Guid.Empty);
+                registeredBy);
             await repository.AddAsync(entity);
             return Map(entity);
         });

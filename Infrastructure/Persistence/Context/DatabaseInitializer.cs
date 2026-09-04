@@ -1,4 +1,4 @@
-using Domain.Entities.Catalogs;
+﻿using Domain.Entities.Catalogs;
 using Domain.Entities.People;
 using Domain.Entities.Security;
 using Domain.Entities.Schedule;
@@ -109,6 +109,26 @@ public static class DatabaseInitializer
                         await context.SaveChangesAsync();
                     }
                 }
+                else
+                {
+                    var targetPermIds = GetPermissionsForRole(rCode).ToHashSet();
+                    if (targetPermIds.Count > 0)
+                    {
+                        var existingPermIds = role.Permissions.Select(p => p.Id).ToHashSet();
+                        var missing = allPermissions
+                            .Where(p => targetPermIds.Contains(p.Id) && !existingPermIds.Contains(p.Id))
+                            .ToList();
+
+                        if (missing.Count > 0)
+                        {
+                            foreach (var perm in missing)
+                            {
+                                role.Permissions.Add(perm);
+                            }
+                            await context.SaveChangesAsync();
+                        }
+                    }
+                }
             }
 
             var docType = await context.Set<DocumentTypeEntity>().FirstOrDefaultAsync();
@@ -130,12 +150,18 @@ public static class DatabaseInitializer
 
             foreach (var pInfo in personsToEnsure)
             {
-                var person = await context.Set<PersonEntity>().FirstOrDefaultAsync(p => p.Id == pInfo.Id || p.Email == pInfo.Email);
+                var person = await context.Set<PersonEntity>().FirstOrDefaultAsync(p => p.Id == pInfo.Id || p.DocumentNumber == pInfo.DocNum || p.Email == pInfo.Email);
                 if (person is null)
                 {
                     person = new PersonEntity(docTypeId, pInfo.DocNum, pInfo.First, pInfo.Last, email: pInfo.Email, address: "NexusOdonto Clinic");
                     SetEntityId(person, pInfo.Id);
                     await context.Set<PersonEntity>().AddAsync(person);
+                    await context.SaveChangesAsync();
+                }
+                else if (pInfo.Id == AdminUserSeeder.AdminPersonId && (person.FirstName != pInfo.First || person.Email != pInfo.Email))
+                {
+                    person.Update(pInfo.First, pInfo.Last, person.DateOfBirth, person.SexId, person.Phone, pInfo.Email, person.Address);
+                    context.Set<PersonEntity>().Update(person);
                     await context.SaveChangesAsync();
                 }
             }
@@ -318,6 +344,57 @@ public static class DatabaseInitializer
         {
             logger?.LogError(ex, "Error ejecutando el inicializador de datos de la base de datos.");
         }
+    }
+
+    private static List<Guid> GetPermissionsForRole(string roleCode)
+    {
+        var result = new List<Guid>();
+        void Add(int m, int a) => result.Add(new Guid($"14000000-0000-0000-{m:D4}-{a:D12}"));
+
+        if (roleCode == "ODONTOLOGO")
+        {
+            int[] dentistModules = [1, 2, 3, 5, 6, 7, 8, 10];
+            foreach (var m in dentistModules)
+            {
+                Add(m, 1);
+                Add(m, 2);
+                Add(m, 3);
+                if (m is 2 or 5 or 6) Add(m, 4);
+            }
+        }
+        else if (roleCode == "RECEPCIONISTA")
+        {
+            int[] receptionistModules = [1, 2, 3, 5, 7, 8, 10];
+            foreach (var m in receptionistModules)
+            {
+                Add(m, 1);
+                if (m is 1 or 2 or 7 or 8 or 10)
+                {
+                    Add(m, 2);
+                    Add(m, 3);
+                }
+                if (m is 1 or 2) Add(m, 4);
+            }
+        }
+        else if (roleCode == "ASISTENTE")
+        {
+            int[] assistantModules = [1, 2, 3, 5, 6, 7, 10];
+            foreach (var m in assistantModules) Add(m, 1);
+        }
+        else if (roleCode == "PACIENTE")
+        {
+            int[] patientModules = [1, 2, 7, 8];
+            foreach (var m in patientModules)
+            {
+                Add(m, 1);
+                if (m is 1 or 2 or 8)
+                {
+                    Add(m, 2);
+                    Add(m, 3);
+                }
+            }
+        }
+        return result;
     }
 
     private static void SetEntityId<T>(T entity, Guid id) where T : class
