@@ -19,7 +19,8 @@ public static class RolePermissionSeeder
         new Guid("14000000-0000-0000-0010-000000000001"), // PEOPLE:VIEW
         new Guid("14000000-0000-0000-0003-000000000001"), // CATALOGS:VIEW
         new Guid("14000000-0000-0000-0008-000000000001"), // CHATBOT:VIEW
-        new Guid("14000000-0000-0000-0008-000000000002")  // CHATBOT:CREATE
+        new Guid("14000000-0000-0000-0008-000000000002"), // CHATBOT:CREATE
+        new Guid("14000000-0000-0000-0008-000000000003")  // CHATBOT:EDIT
     ];
 
     public static void Seed(ModelBuilder modelBuilder)
