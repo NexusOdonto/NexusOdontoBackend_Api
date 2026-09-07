@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Repositories.Chatbot;
@@ -10,7 +15,12 @@ namespace Application.Services.Chatbot;
 
 public sealed class SupportTicketService(
     ISupportTicketRepository repository,
+    IChatbotConversationRepository conversationRepository,
+    IRepository<ChatbotMessageEntity> messageRepository,
     ICatalogRepository<SupportTicketStatusEntity> statusCatalog,
+    ICatalogRepository<ChatbotConversationStatusEntity> conversationStatusCatalog,
+    ICatalogRepository<ChatbotMessageRoleEntity> roleCatalog,
+    IChatbotClient chatbotClient,
     IUnitOfWork unitOfWork) : ISupportTicketService
 {
     public async Task<IReadOnlyList<SupportTicketResponseDto>> GetAllAsync()
@@ -79,6 +89,85 @@ public sealed class SupportTicketService(
         var entity = await repository.GetByIdAsync(id);
         if (entity is null) return false;
         await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
+        return true;
+    }
+
+    public async Task<bool> ReplyToTicketAsync(Guid ticketId, string messageContent, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(messageContent)) return false;
+
+        var ticket = await repository.GetByIdAsync(ticketId);
+        if (ticket is null || ticket.ChatbotConversationId == Guid.Empty) return false;
+
+        var conversation = await conversationRepository.GetByIdAsync(ticket.ChatbotConversationId);
+        if (conversation is null || string.IsNullOrWhiteSpace(conversation.ChatIdentifier)) return false;
+
+        var roleId = await ServiceWrite.ResolveCatalogIdAsync(roleCatalog, "AGENTE_HUMANO", "HUMAN_AGENT", "ASESOR");
+
+        await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
+        {
+            var msgEntity = new ChatbotMessageEntity(
+                conversation.Id,
+                roleId,
+                messageContent.Trim()
+            );
+            await messageRepository.AddAsync(msgEntity);
+
+            if (userId.HasValue)
+            {
+                ticket.AssignedToUserId = userId;
+                ticket.AttendedAt ??= DateTime.UtcNow;
+                repository.Update(ticket);
+            }
+        });
+
+        // Pushes the message to the patient's WhatsApp via FastAPI Chatbot
+        return await chatbotClient.SendAgentMessageAsync(conversation.ChatIdentifier, messageContent.Trim(), cancellationToken);
+    }
+
+    public async Task<bool> ResolveTicketAsync(Guid ticketId, string? resolution = null, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var ticket = await repository.GetByIdAsync(ticketId);
+        if (ticket is null) return false;
+
+        var resolvedStatusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "RESOLVED", "RESUELTO", "CLOSED");
+        var activeConvStatusId = await ServiceWrite.ResolveCatalogIdAsync(conversationStatusCatalog, "ACTIVE", "ACTIVA");
+
+        string? chatIdentifier = null;
+        if (ticket.ChatbotConversationId != Guid.Empty)
+        {
+            var conversation = await conversationRepository.GetByIdAsync(ticket.ChatbotConversationId);
+            if (conversation is not null)
+            {
+                chatIdentifier = conversation.ChatIdentifier;
+                conversation.Update(activeConvStatusId, DateTime.UtcNow, DateTime.UtcNow, conversation.PatientId);
+                conversationRepository.Update(conversation);
+            }
+        }
+
+        await ServiceWrite.InTransactionAsync(unitOfWork, () =>
+        {
+            ticket.Update(
+                resolvedStatusId,
+                ticket.NotificationPriorityId,
+                userId ?? ticket.AssignedToUserId,
+                ticket.AssignedAt ?? DateTime.UtcNow,
+                ticket.AttendedAt ?? DateTime.UtcNow,
+                userId ?? ticket.ResolvedByUserId,
+                DateTime.UtcNow,
+                resolution ?? "Resuelto por asesor humano",
+                DateTime.UtcNow
+            );
+            repository.Update(ticket);
+            return Task.CompletedTask;
+        });
+
+        if (!string.IsNullOrWhiteSpace(chatIdentifier))
+        {
+            // Notifies FastAPI Chatbot to resume auto-responses
+            await chatbotClient.ResumeConversationAsync(chatIdentifier, clearHistory: false, cancellationToken);
+        }
+
         return true;
     }
 
