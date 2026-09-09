@@ -28,9 +28,9 @@ public sealed class SupportTicketsController(ISupportTicketService service)
         if (request == null || string.IsNullOrWhiteSpace(request.Content))
             return BadRequest(new { message = "El contenido del mensaje es obligatorio." });
 
-        var success = await Service.ReplyToTicketAsync(id, request.Content, GetUserId(), cancellationToken);
+        var success = await Service.ReplyToTicketAsync(id, request.Content, request.MessageRoleId, GetUserId(), cancellationToken);
         return success
-            ? Ok(new { message = "Mensaje enviado al paciente en WhatsApp con éxito." })
+            ? Ok(new { message = "Mensaje enviado al paciente en WhatsApp con ï¿½xito." })
             : NotFound(new { message = "No se pudo enviar el mensaje o el ticket no existe." });
     }
 
@@ -42,7 +42,7 @@ public sealed class SupportTicketsController(ISupportTicketService service)
     {
         var success = await Service.ResolveTicketAsync(id, request?.Resolution, GetUserId(), cancellationToken);
         return success
-            ? Ok(new { message = "Ticket resuelto y atención devuelta al asistente virtual." })
+            ? Ok(new { message = "Ticket resuelto y atenciï¿½n devuelta al asistente virtual." })
             : NotFound(new { message = "Ticket no encontrado." });
     }
 
