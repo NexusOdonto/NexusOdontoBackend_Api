@@ -13,9 +13,6 @@ namespace Application.Validators.Schedule
             RuleFor(x => x.ProfessionalId)
                 .NotEmpty().WithMessage("Debe indicar un profesional válido.");
 
-            RuleFor(x => x.ServiceId)
-                .NotEmpty().WithMessage("Debe indicar un servicio válido.");
-
             RuleFor(x => x.StartsAt)
                 .NotEmpty().WithMessage("La fecha y hora de inicio son obligatorias.");
 

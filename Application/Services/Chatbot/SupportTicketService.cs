@@ -92,7 +92,7 @@ public sealed class SupportTicketService(
         return true;
     }
 
-    public async Task<bool> ReplyToTicketAsync(Guid ticketId, string messageContent, Guid? userId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> ReplyToTicketAsync(Guid ticketId, string messageContent, string? messageRoleId = null, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(messageContent)) return false;
 
@@ -102,7 +102,15 @@ public sealed class SupportTicketService(
         var conversation = await conversationRepository.GetByIdAsync(ticket.ChatbotConversationId);
         if (conversation is null || string.IsNullOrWhiteSpace(conversation.ChatIdentifier)) return false;
 
-        var roleId = await ServiceWrite.ResolveCatalogIdAsync(roleCatalog, "AGENTE_HUMANO", "HUMAN_AGENT", "ASESOR");
+        Guid roleId;
+        if (!string.IsNullOrWhiteSpace(messageRoleId) && Guid.TryParse(messageRoleId, out var parsedRoleId))
+        {
+            roleId = parsedRoleId;
+        }
+        else
+        {
+            roleId = await ServiceWrite.ResolveCatalogIdAsync(roleCatalog, "AGENTE_HUMANO", "HUMAN_AGENT", "ASESOR");
+        }
 
         await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
