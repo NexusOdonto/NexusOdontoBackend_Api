@@ -8,6 +8,7 @@ using Application.Contracts.Services;
 using Application.Contracts.Services.Notifications;
 using Infrastructure;
 using Infrastructure.Persistence.Context;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Microsoft.AspNetCore.SignalR;
@@ -55,6 +56,18 @@ builder.Services.AddScoped<INotificationPublisherService, NotificationPublisherS
 builder.Services.AddResilientHttpClients();
 builder.Services.AddNexusCors();
 
+// Trust X-Forwarded-* from nginx so OAuth redirects and scheme/host match the public API URL.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost;
+    // Clear defaults so headers from the Docker/nginx proxy are accepted.
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 // Always migrate then seed (Docker and local). Migrations and DatabaseInitializer are idempotent.
@@ -66,6 +79,9 @@ if (IsRunningInContainer() || app.Environment.IsDevelopment())
 {
     await ApplyMigrationsAsync(app.Services);
 }
+
+// Must run before HTTPS redirection / routing that depend on scheme or host.
+app.UseForwardedHeaders();
 
 app.UseGlobalExceptionMiddleware();
 

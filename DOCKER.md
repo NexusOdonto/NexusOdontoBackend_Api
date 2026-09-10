@@ -4,6 +4,9 @@ Levanta la API y la base de datos Oracle en dos contenedores, con las tablas
 creadas y los catálogos poblados automáticamente. No necesitas instalar .NET,
 el SDK ni Oracle en tu máquina.
 
+El chatbot (WhatsApp + Qdrant + memoria) vive en **otro Compose** en el mismo
+servidor; ambos stacks se unen por la red fija `odontologia_network`.
+
 ---
 
 ## Requisitos
@@ -12,7 +15,7 @@ el SDK ni Oracle en tu máquina.
 |---|---|
 | Docker Desktop | Windows, macOS o Linux |
 | Memoria asignada a Docker | **mínimo 4 GB** |
-| Puertos libres | `5170` (API) y `1521` (Oracle) |
+| Puertos libres | `5170` (API), `1521` (Oracle), `8000` (chatbot, Compose B) |
 
 > **La memoria no es opcional.** Oracle necesita cerca de 2 GB para arrancar. Con
 > menos, el contenedor muere sin un mensaje claro.
@@ -80,20 +83,52 @@ la imagen ya cargada en vez de construirla.
 
 ---
 
-## Stack completo (API + Oracle + chatbot)
+## Dos stacks Docker (mismo servidor)
 
-El chatbot vive en un Compose aparte y se une a la misma red Docker
-`odontologia_network` (nombre fijo). Arranca el backend primero (Oracle tarda
-~3 min la primera vez) y después el chatbot:
+| Compose | Ruta | Contenedores | Puertos en el host |
+|---|---|---|---|
+| **A** — API + Oracle | `NexusOdontoBackend_Api` | `odontologia_api`, `odontologia_oracle` | `5170` → API `:8080`, `1521` → Oracle |
+| **B** — Chatbot | `NexusOdonto_ChatBot_AI` | `agente_python`, Evolution WhatsApp (+ Postgres), Qdrant, Postgres de memoria | `8000` → bot |
+
+Ambos definen la red bridge con nombre fijo **`odontologia_network`**. No uses
+`localhost` ni `host.docker.internal` entre contenedores: el DNS de Docker
+resuelve los nombres de servicio.
+
+| Quién → quién | URL |
+|---|---|
+| API → chatbot | `http://agente_python:8000` (`Chatbot__BaseUrl` en Compose A) |
+| Chatbot → API | `http://odontologia_api:8080/api/v1` (`DOTNET_API_URL` en Compose B) |
+| API → Oracle | `oracle-db:1521` (cadena de conexión en Compose A) |
+
+Dentro del Compose B, el bot ya habla con Qdrant y Evolution por DNS interno
+(`qdrant-db`, `evolution-whatsapp`); no hace falta exponerlos a nginx.
+
+Arranca el backend primero (Oracle tarda ~3 min la primera vez) y después el
+chatbot:
 
 ```bash
 cd NexusOdontoBackend_Api && docker compose up -d --build
 cd NexusOdonto_ChatBot_AI && docker compose up -d --build
 ```
 
-Ambos stacks comparten `odontologia_network`, así la API alcanza el bot en
-`http://agente_python:8000` y el bot alcanza la API por el nombre del
-contenedor (`odontologia_api`).
+`localhost:8000` / `localhost:5170` solo desde el **host** (curl, nginx, SSH).
+
+---
+
+## Nginx en el VPS (checklist)
+
+Tú configuras nginx; este repo no incluye un `.conf` completo. Checklist mínimo
+para `https://api.nexusodonto.chatcampuslands.com`:
+
+1. **Proxy** al host local: `proxy_pass http://127.0.0.1:5170;` (valor de `API_PORT`).
+2. **X-Forwarded-***: reenvía `X-Forwarded-For`, `X-Forwarded-Proto` y
+   `X-Forwarded-Host` (la API usa ForwardedHeaders para OAuth/HTTPS detrás del proxy).
+3. **WebSocket** para SignalR en `/hubs/notifications` (`Upgrade` / `Connection`,
+   timeouts largos si hace falta).
+4. TLS en nginx; el contenedor de la API escucha HTTP en `:8080`.
+
+El frontend público sigue en `https://nexusodonto.chatcampuslands.com` (CORS ya
+lo permite). Qdrant y Evolution no van por dominio público.
 
 ---
 
@@ -212,7 +247,8 @@ Falta el `.env` o le falta alguna variable. Revisa la tabla de la sección
 
 ### `port is already allocated`
 
-Algo ya usa el 5170 o el 1521. Cambia los puertos en tu `.env`:
+Algo ya usa el 5170, el 1521 o el 8000. Cambia los puertos en tu `.env` (API/Oracle)
+o el mapeo del bot en el Compose B:
 
 ```
 API_PORT=5171
@@ -265,15 +301,15 @@ docker compose up -d
 ┌─────────────────────┐        ┌─────────────────────┐
 │   backend-api       │        │     oracle-db       │
 │   host :5170 → :8080│───────▶│     :1521           │
-│   nexusodonto/      │        │  gvenzl/oracle-free │
-│   backend-api       │        │                     │
+│   odontologia_api   │        │  odontologia_oracle │
 └─────────┬───────────┘        └─────────────────────┘
-          │  Chatbot__BaseUrl
+          │  Chatbot__BaseUrl = http://agente_python:8000
           ▼
-┌─────────────────────┐
-│  agente_python      │  (Compose aparte: NexusOdonto_ChatBot_AI)
-│  :8000              │
-└─────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  Compose B (NexusOdonto_ChatBot_AI)                 │
+│  agente_python :8000  │  Evolution  │  Qdrant       │
+│  bot → API: http://odontologia_api:8080/api/v1      │
+└─────────────────────────────────────────────────────┘
          odontologia_network (bridge, name: odontologia_network)
 ```
 
@@ -282,8 +318,8 @@ usa `oracle-db:1521`, no `localhost`: dentro de un contenedor, `localhost` es
 ese mismo contenedor. Docker resuelve `oracle-db` por su DNS interno. La API
 llama al chatbot en `http://agente_python:8000` vía la red compartida.
 
-El mapeo `5170:8080` (API) y `1521:1521` (Oracle) existe solo para que **tú**
-puedas conectarte desde fuera.
+El mapeo `5170:8080` (API), `1521:1521` (Oracle) y `8000:8000` (bot) existe
+solo para que **tú** puedas conectarte desde el host (o nginx).
 
 **El arranque está ordenado por un healthcheck.** La API no arranca hasta que
 Oracle acepta conexiones, no solo hasta que el contenedor existe.
@@ -319,7 +355,8 @@ Registra en Google Cloud Console el redirect URI según entorno:
 | Entorno | Redirect URI |
 |---|---|
 | `dotnet run` (HTTPS) | `https://localhost:7013/api/auth/google/callback` |
-| Docker (`API_PORT=5170`) | `http://localhost:5170/api/auth/google/callback` |
+| Docker local (`API_PORT=5170`) | `http://localhost:5170/api/auth/google/callback` |
+| Producción (nginx) | `https://api.nexusodonto.chatcampuslands.com/api/auth/google/callback` |
 
 Si cambias `API_PORT` en tu `.env`, registra también `http://localhost:<API_PORT>/api/auth/google/callback` en Google Console.
 
