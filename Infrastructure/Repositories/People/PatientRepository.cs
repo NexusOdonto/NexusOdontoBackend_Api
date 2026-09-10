@@ -23,6 +23,7 @@ public sealed class PatientRepository : Common.Repository<PatientEntity>, IPatie
         CancellationToken cancellationToken = default)
     {
         return await Set
+            .IgnoreQueryFilters()
             .Include(p => p.PersonEntity)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }

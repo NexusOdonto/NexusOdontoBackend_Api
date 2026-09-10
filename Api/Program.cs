@@ -45,17 +45,6 @@ var jwtSettings = ResolveJwtSettings(builder.Configuration);
 var googleSettings = ResolveGoogleSettings(builder.Configuration);
 builder.Services.AddJwtAuthentication(jwtSettings, googleSettings);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("SignalRCorsPolicy", policy =>
-    {
-        policy.SetIsOriginAllowed(_ => true) // Configuración flexible para desarrollo/QA
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // REQUERIDO para SignalR WebSockets
-    });
-});
-
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = builder.Environment.IsDevelopment();
@@ -64,7 +53,7 @@ builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<INotificationPublisherService, NotificationPublisherService>();
 
 builder.Services.AddResilientHttpClients();
-builder.Services.AddDevelopmentCors();
+builder.Services.AddNexusCors();
 
 var app = builder.Build();
 
@@ -89,8 +78,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseCors("SignalRCorsPolicy");
-app.UseDevelopmentCors();
+app.UseNexusCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

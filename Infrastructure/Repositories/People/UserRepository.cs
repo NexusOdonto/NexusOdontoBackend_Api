@@ -64,19 +64,26 @@ public sealed class UserRepository : Common.Repository<UserEntity>, IUserReposit
         Guid personId,
         CancellationToken cancellationToken = default)
     {
-        return await Set.FirstOrDefaultAsync(u => u.PersonId == personId, cancellationToken);
+        return await Set
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.PersonId == personId, cancellationToken);
     }
 
     public async Task<IReadOnlyList<UserEntity>> GetAllWithRolesAsync(
         CancellationToken cancellationToken = default)
     {
-        return await WithRoles().ToListAsync(cancellationToken);
+        // Include inactive users so /usuarios can list and reactivate them.
+        return await WithRoles()
+            .IgnoreQueryFilters()
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<UserEntity?> GetByIdWithRolesAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
+        // Keep global IsActive filter: auth/permissions must not load deactivated users.
+        // UserService.GetById falls back to GetByIdAsync (IgnoreQueryFilters) for inactive rows.
         return await WithRoles()
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
