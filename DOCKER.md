@@ -12,7 +12,7 @@ el SDK ni Oracle en tu máquina.
 |---|---|
 | Docker Desktop | Windows, macOS o Linux |
 | Memoria asignada a Docker | **mínimo 4 GB** |
-| Puertos libres | `8080` (API) y `1521` (Oracle) |
+| Puertos libres | `5170` (API) y `1521` (Oracle) |
 
 > **La memoria no es opcional.** Oracle necesita cerca de 2 GB para arrancar. Con
 > menos, el contenedor muere sin un mensaje claro.
@@ -80,6 +80,23 @@ la imagen ya cargada en vez de construirla.
 
 ---
 
+## Stack completo (API + Oracle + chatbot)
+
+El chatbot vive en un Compose aparte y se une a la misma red Docker
+`odontologia_network` (nombre fijo). Arranca el backend primero (Oracle tarda
+~3 min la primera vez) y después el chatbot:
+
+```bash
+cd NexusOdontoBackend_Api && docker compose up -d --build
+cd NexusOdonto_ChatBot_AI && docker compose up -d --build
+```
+
+Ambos stacks comparten `odontologia_network`, así la API alcanza el bot en
+`http://agente_python:8000` y el bot alcanza la API por el nombre del
+contenedor (`odontologia_api`).
+
+---
+
 ## El primer arranque tarda ~3 minutos
 
 Oracle inicializa la base desde cero la primera vez. La API **espera** a que
@@ -106,12 +123,12 @@ Los arranques siguientes tardan segundos, porque los datos quedan en un volumen.
 
 ## Verificar que funciona
 
-**Swagger:** abre <http://localhost:8080/swagger>
+**Swagger:** abre <http://localhost:5170/swagger>
 
 **Desde la terminal:**
 
 ```bash
-curl -i -X POST http://localhost:8080/api/auth/login \
+curl -i -X POST http://localhost:5170/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"loginId":"AD001","password":"x"}'
 ```
@@ -195,10 +212,10 @@ Falta el `.env` o le falta alguna variable. Revisa la tabla de la sección
 
 ### `port is already allocated`
 
-Algo ya usa el 8080 o el 1521. Cambia los puertos en tu `.env`:
+Algo ya usa el 5170 o el 1521. Cambia los puertos en tu `.env`:
 
 ```
-API_PORT=8081
+API_PORT=5171
 ORACLE_PORT=1522
 ```
 
@@ -247,19 +264,26 @@ docker compose up -d
 ```
 ┌─────────────────────┐        ┌─────────────────────┐
 │   backend-api       │        │     oracle-db       │
-│   :8080             │───────▶│     :1521           │
+│   host :5170 → :8080│───────▶│     :1521           │
 │   nexusodonto/      │        │  gvenzl/oracle-free │
 │   backend-api       │        │                     │
-└─────────────────────┘        └─────────────────────┘
-         odontologia_network (bridge)
+└─────────┬───────────┘        └─────────────────────┘
+          │  Chatbot__BaseUrl
+          ▼
+┌─────────────────────┐
+│  agente_python      │  (Compose aparte: NexusOdonto_ChatBot_AI)
+│  :8000              │
+└─────────────────────┘
+         odontologia_network (bridge, name: odontologia_network)
 ```
 
 **Los contenedores se hablan por nombre de servicio.** La cadena de conexión
 usa `oracle-db:1521`, no `localhost`: dentro de un contenedor, `localhost` es
-ese mismo contenedor. Docker resuelve `oracle-db` por su DNS interno.
+ese mismo contenedor. Docker resuelve `oracle-db` por su DNS interno. La API
+llama al chatbot en `http://agente_python:8000` vía la red compartida.
 
-El mapeo `1521:1521` existe solo para que **tú** puedas conectarte con un
-cliente desde fuera.
+El mapeo `5170:8080` (API) y `1521:1521` (Oracle) existe solo para que **tú**
+puedas conectarte desde fuera.
 
 **El arranque está ordenado por un healthcheck.** La API no arranca hasta que
 Oracle acepta conexiones, no solo hasta que el contenedor existe.
@@ -295,7 +319,7 @@ Registra en Google Cloud Console el redirect URI según entorno:
 | Entorno | Redirect URI |
 |---|---|
 | `dotnet run` (HTTPS) | `https://localhost:7013/api/auth/google/callback` |
-| Docker (`API_PORT=8080`) | `http://localhost:8080/api/auth/google/callback` |
+| Docker (`API_PORT=5170`) | `http://localhost:5170/api/auth/google/callback` |
 
 Si cambias `API_PORT` en tu `.env`, registra también `http://localhost:<API_PORT>/api/auth/google/callback` en Google Console.
 
@@ -304,9 +328,11 @@ Variables en `.env` (las mismas claves sirven para `dotnet run` y para Docker Co
 ```env
 Google__ClientId=...
 Google__ClientSecret=...
-Auth__FrontendSuccessUrl=http://localhost:3000/auth/callback
-Auth__FrontendLinkUrl=http://localhost:3000/auth/link-google
+Auth__FrontendSuccessUrl=https://nexusodonto.chatcampuslands.com/auth/callback
+Auth__FrontendLinkUrl=https://nexusodonto.chatcampuslands.com/auth/link-google
 ```
+
+En desarrollo local con el front en `localhost:3000`, puedes sobreescribir esas URLs en el `.env`.
 
 > JWT en Docker sigue usando `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_EXPIRATION_MINUTES`, `JWT_REFRESH_TOKEN_EXPIRATION_DAYS` en Compose, y `Jwt__*` en `dotnet run` (p. ej. `Jwt__RefreshTokenExpirationDays=7`); deben coincidir (ver comentarios en `.env`).
 

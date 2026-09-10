@@ -18,12 +18,14 @@ public class Repository<TEntity> : IRepository<TEntity>
 
     public virtual async Task<TEntity?> GetByIdAsync(Guid id)
     {
-        return await Set.FirstOrDefaultAsync(e => e.Id == id);
+        // Soft-deleted (IsActive=false) rows must still be loadable to reactivate/update.
+        return await Set.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync()
     {
-        return await Set.ToListAsync();
+        // Admin CRUD lists need inactive rows so toggles can reactivate them.
+        return await Set.IgnoreQueryFilters().ToListAsync();
     }
 
     public virtual async Task AddAsync(TEntity entity)
