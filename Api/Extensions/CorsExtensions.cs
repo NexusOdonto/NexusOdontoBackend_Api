@@ -2,20 +2,26 @@ namespace Api.Extensions;
 
 public static class CorsExtensions
 {
-    public const string DevelopmentPolicyName = "Development";
+    public const string PolicyName = "NexusCorsPolicy";
 
-    public static IServiceCollection AddDevelopmentCors(this IServiceCollection services)
+    private static readonly string[] AllowedOrigins =
+    [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5170",
+        "https://localhost:7013",
+        "http://nexusodonto.chatcampuslands.com",
+        "https://nexusodonto.chatcampuslands.com"
+    ];
+
+    public static IServiceCollection AddNexusCors(this IServiceCollection services)
     {
         services.AddCors(options =>
         {
-            options.AddPolicy(DevelopmentPolicyName, policy =>
+            options.AddPolicy(PolicyName, policy =>
             {
-                policy.WithOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:5173",
-                        "http://localhost:5174",
-                        "http://localhost:5170",
-                        "https://localhost:7013")
+                policy.WithOrigins(AllowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -25,13 +31,9 @@ public static class CorsExtensions
         return services;
     }
 
-    public static IApplicationBuilder UseDevelopmentCors(this IApplicationBuilder app)
+    public static IApplicationBuilder UseNexusCors(this IApplicationBuilder app)
     {
-        if (app.ApplicationServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment())
-        {
-            app.UseCors(DevelopmentPolicyName);
-        }
-
+        app.UseCors(PolicyName);
         return app;
     }
 }

@@ -14,6 +14,7 @@ public sealed class ProfessionalRepository : Common.Repository<ProfessionalEntit
     public override async Task<IReadOnlyList<ProfessionalEntity>> GetAllAsync()
     {
         return await Set
+            .IgnoreQueryFilters()
             .Include(p => p.Specialties)
             .ToListAsync();
     }
@@ -43,6 +44,7 @@ public sealed class ProfessionalRepository : Common.Repository<ProfessionalEntit
         CancellationToken cancellationToken = default)
     {
         return await Set
+            .IgnoreQueryFilters()
             .Include(p => p.Specialties)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }

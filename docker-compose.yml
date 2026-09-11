@@ -45,6 +45,8 @@ services:
       - Google__ClientSecret=${Google__ClientSecret}
       - Auth__FrontendSuccessUrl=${Auth__FrontendSuccessUrl}
       - Auth__FrontendLinkUrl=${Auth__FrontendLinkUrl}
+      # URL interna del chatbot en la red Docker (no localhost).
+      - Chatbot__BaseUrl=http://agente_python:8000
     networks:
       - odontologia_network
 
@@ -53,4 +55,5 @@ volumes:
 
 networks:
   odontologia_network:
+    name: odontologia_network
     driver: bridge
