@@ -16,6 +16,6 @@ namespace Application.Contracts.Services.Chatbot
     public interface ISupportTicketService : ICrudService<SupportTicketResponseDto, CreateSupportTicketRequestDto, UpdateSupportTicketRequestDto>
     {
         Task<ReplyTicketOutcome> ReplyToTicketAsync(Guid ticketId, string messageContent, string? messageRoleId = null, Guid? userId = null, CancellationToken cancellationToken = default);
-        Task<bool> ResolveTicketAsync(Guid ticketId, string? resolution = null, Guid? userId = null, CancellationToken cancellationToken = default);
+        Task<bool> ResolveTicketAsync(Guid ticketId, string? resolution = null, Guid? userId = null, bool returnToBot = true, CancellationToken cancellationToken = default);
     }
 }

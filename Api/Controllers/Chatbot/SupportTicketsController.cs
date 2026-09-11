@@ -46,9 +46,15 @@ public sealed class SupportTicketsController(ISupportTicketService service)
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Resolve(Guid id, [FromBody] ResolveTicketRequestDto? request, CancellationToken cancellationToken)
     {
-        var success = await Service.ResolveTicketAsync(id, request?.Resolution, GetUserId(), cancellationToken);
+        var returnToBot = request?.ReturnToBot ?? true;
+        var success = await Service.ResolveTicketAsync(id, request?.Resolution, GetUserId(), returnToBot, cancellationToken);
         return success
-            ? Ok(new { message = "Ticket resuelto y atenci�n devuelta al asistente virtual." })
+            ? Ok(new
+            {
+                message = returnToBot
+                    ? "Ticket resuelto y atencion devuelta al asistente virtual."
+                    : "Ticket resuelto y conversacion cerrada."
+            })
             : NotFound(new { message = "Ticket no encontrado." });
     }
 
