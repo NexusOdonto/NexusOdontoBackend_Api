@@ -3,6 +3,7 @@ using Application.Contracts.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Api.Extensions;
@@ -10,6 +11,26 @@ namespace Api.Extensions;
 public static class AuthenticationExtensions
 {
     public const string GoogleOAuthCookieScheme = "GoogleOAuth";
+
+    public static IServiceCollection AddNexusDataProtection(
+        this IServiceCollection services,
+        IHostEnvironment environment,
+        IConfiguration configuration)
+    {
+        var keysPath = configuration["DataProtection:KeysPath"];
+        if (string.IsNullOrWhiteSpace(keysPath))
+        {
+            keysPath = Path.Combine(environment.ContentRootPath, "dp-keys");
+        }
+
+        Directory.CreateDirectory(keysPath);
+
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+            .SetApplicationName("NexusOdonto");
+
+        return services;
+    }
 
     public static IServiceCollection AddJwtAuthentication(
         this IServiceCollection services,
@@ -54,7 +75,7 @@ public static class AuthenticationExtensions
                 options.Cookie.Name = "NexusOdonto.GoogleOAuth";
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
                 options.SlidingExpiration = false;
             });
@@ -66,7 +87,21 @@ public static class AuthenticationExtensions
                 options.SignInScheme = GoogleOAuthCookieScheme;
                 options.ClientId = googleSettings.ClientId;
                 options.ClientSecret = googleSettings.ClientSecret;
+                // Solo el middleware OAuth (no una acción MVC). Tras el ticket → RedirectUri (google/complete).
                 options.CallbackPath = "/api/auth/google/callback";
+                options.Events.OnRemoteFailure = context =>
+                {
+                    var frontend = context.HttpContext.RequestServices
+                        .GetService(typeof(AuthSettings)) as AuthSettings;
+                    var baseUrl = frontend?.FrontendSuccessUrl
+                        ?? "https://nexusodonto.chatcampuslands.com/auth/callback";
+                    var sep = baseUrl.Contains('?', StringComparison.Ordinal) ? '&' : '?';
+                    var message = Uri.EscapeDataString(
+                        context.Failure?.Message ?? "Google authentication failed.");
+                    context.Response.Redirect($"{baseUrl}{sep}error={message}");
+                    context.HandleResponse();
+                    return Task.CompletedTask;
+                };
             });
         }
 

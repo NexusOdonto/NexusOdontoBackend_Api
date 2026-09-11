@@ -39,11 +39,11 @@ namespace Infrastructure.ExternalServices
 
             _internalSecret = configuration["Chatbot:InternalSecret"]
                 ?? configuration["AGENT_INTERNAL_SECRET"]
-                ?? "CLAVE_SECRETA_ODONTO_2026";
+                ?? "TOKEN_SECRETO_INTERNO_NET_2026";
 
             var path = configuration["Chatbot:MessagePath"]
                 ?? configuration["CHATBOT_MESSAGE_PATH"]
-                ?? "/webhook/whatsapp";
+                ?? "/api/v1/agent/send-message";
             _messagePath = path.StartsWith('/') ? path : "/" + path;
 
             var timeoutSeconds = 30;

@@ -34,6 +34,28 @@ public sealed class ChatbotConversationsController(IChatbotConversationService s
     public async Task<ActionResult<IReadOnlyList<ChatbotMessageResponseDto>>> GetMessages(Guid id)
         => Ok(await service.GetMessagesAsync(id));
 
+    [HttpPost("{id:guid}/send-whatsapp")]
+    [RequirePermission("CHATBOT", PermissionAction.Edit)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> SendWhatsApp(Guid id, [FromBody] SendConversationWhatsAppRequestDto request, CancellationToken cancellationToken)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Content))
+            return BadRequest(new { message = "El contenido del mensaje es obligatorio." });
+
+        var outcome = await service.SendWhatsAppAsync(id, request.Content, request.MessageRoleId, cancellationToken);
+        return outcome switch
+        {
+            SendConversationWhatsAppOutcome.Success => Ok(new { message = "Mensaje enviado al paciente en WhatsApp con éxito." }),
+            SendConversationWhatsAppOutcome.DeliveryFailed => StatusCode(
+                StatusCodes.Status502BadGateway,
+                new { message = "No se pudo entregar el mensaje por WhatsApp (chatbot/Evolution). Intenta de nuevo." }),
+            _ => NotFound(new { message = "Conversación no encontrada o sin identificador de chat." }),
+        };
+    }
+
     [HttpPost]
     [RequirePermission("CHATBOT", PermissionAction.Create)]
     [ProducesResponseType(typeof(ChatbotConversationResponseDto), StatusCodes.Status201Created)]

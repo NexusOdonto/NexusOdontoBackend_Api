@@ -44,6 +44,14 @@ public sealed class PatientOnboardingService(
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
+            // Same defaults the chatbot uses when the form omits emergency contact.
+            var emergencyContact = string.IsNullOrWhiteSpace(request.EmergencyContact)
+                ? "Recepción Nexus"
+                : request.EmergencyContact.Trim();
+            var emergencyPhone = string.IsNullOrWhiteSpace(request.EmergencyPhone)
+                ? "+573246030217"
+                : request.EmergencyPhone.Trim();
+
             var person = new PersonEntity(
                 request.DocumentTypeId,
                 request.DocumentNumber.Trim(),
@@ -58,8 +66,8 @@ public sealed class PatientOnboardingService(
 
             var patient = new PatientEntity(
                 person.Id,
-                request.EmergencyContact,
-                request.EmergencyPhone);
+                emergencyContact,
+                emergencyPhone);
             await patientRepository.AddAsync(patient);
 
             var history = new ClinicalHistoryEntity(patient.Id);

@@ -30,6 +30,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
+      - APPLY_MIGRATIONS=${APPLY_MIGRATIONS:-false}
+      - RUN_SEEDERS=${RUN_SEEDERS:-false}
       # El host es "oracle-db": el nombre del servicio en la red de Docker.
       # Dentro del contenedor "localhost" seria el propio contenedor.
       - ConnectionStrings__OracleConnection=User Id=${ORACLE_APP_USER};Password=${ORACLE_APP_PASSWORD};Data Source=oracle-db:1521/${ORACLE_PDB}
@@ -42,13 +44,20 @@ services:
       - Google__ClientSecret=${Google__ClientSecret}
       - Auth__FrontendSuccessUrl=${Auth__FrontendSuccessUrl}
       - Auth__FrontendLinkUrl=${Auth__FrontendLinkUrl}
+      # Persist ASP.NET DataProtection keys across container recreates (OAuth cookies).
+      - DataProtection__KeysPath=/app/keys
       # URL interna del chatbot en la red Docker (no localhost).
       - Chatbot__BaseUrl=http://agente_python:8000
+      - Chatbot__InternalSecret=TOKEN_SECRETO_INTERNO_NET_2026
+      - Chatbot__MessagePath=/api/v1/agent/send-message
+    volumes:
+      - api_dp_keys:/app/keys
     networks:
       - odontologia_network
 
 volumes:
   oracle_data:
+  api_dp_keys:
 
 networks:
   odontologia_network:

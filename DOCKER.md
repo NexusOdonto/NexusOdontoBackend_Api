@@ -1,8 +1,9 @@
 # Ejecutar NexusOdonto con Docker
 
-Levanta la API y la base de datos Oracle en dos contenedores, con las tablas
-creadas y los catálogos poblados automáticamente. No necesitas instalar .NET,
-el SDK ni Oracle en tu máquina.
+Levanta la API y la base de datos Oracle en dos contenedores. No necesitas
+instalar .NET, el SDK ni Oracle en tu máquina. Las migraciones y los seeders
+son independientes: `APPLY_MIGRATIONS` y `RUN_SEEDERS` (ambos por defecto
+`false` en Compose).
 
 El chatbot (WhatsApp + Qdrant + memoria) vive en **otro Compose** en el mismo
 servidor; ambos stacks se unen por la red fija `odontologia_network`.
@@ -47,6 +48,18 @@ crear un `.env` en la raíz del proyecto con estas variables:
 | `Auth__FrontendSuccessUrl` | URL frontend tras login Google exitoso |
 | `Auth__FrontendLinkUrl` | URL frontend para vincular Google a loginId (cédula o código empleado) |
 | `ConnectionStrings__OracleConnection` | Solo para `dotnet run` fuera de Docker |
+| `APPLY_MIGRATIONS` | `true` aplica solo `MigrateAsync` al arranque; `false` (por defecto) lo omite |
+| `RUN_SEEDERS` | `true` ejecuta `SeedBotUserAsync` (datos iniciales, p. ej. AD001); `false` (por defecto en Compose) lo omite |
+
+`APPLY_MIGRATIONS` y `RUN_SEEDERS` son independientes. Con
+`APPLY_MIGRATIONS=false` la API puede iniciar aunque una migración Oracle
+esté rota (`ORA-02000`, etc.). Pon `true` solo después de corregir el SQL.
+
+Si las tablas ya existen pero están vacías (login 401 sin AD001), usa
+`RUN_SEEDERS=true` con `APPLY_MIGRATIONS=false` para poblar sin migrar.
+Cambiar `Program.cs` o el `.env` no basta en el VPS: hay que reconstruir la
+imagen (`docker compose up -d --build backend-api`); un `scp` del fuente no
+actualiza el DLL publicado.
 
 Los valores concretos los pide al equipo; no están en el repositorio a
 propósito. El `.gitignore` excluye `*.env`, así que no hay riesgo de subirlo.
@@ -147,10 +160,13 @@ Las señales de que terminó, en orden:
 
 ```
 odontologia_oracle  | DATABASE IS READY TO USE!
-odontologia_api     | Aplicando migraciones pendientes...
-odontologia_api     | Migraciones aplicadas.
 odontologia_api     | Now listening on: http://[::]:8080
 ```
+
+Si `APPLY_MIGRATIONS=true`, verás también `Aplicando migraciones pendientes...`
+antes de `Now listening`. Si `RUN_SEEDERS=true`, verás
+`Initial data seeders completed.` Con ambos en `false` (por defecto en
+Compose) esas líneas no aparecen (la API arranca igual).
 
 Los arranques siguientes tardan segundos, porque los datos quedan en un volumen.
 
@@ -279,7 +295,8 @@ No logró conectar con Oracle. Revisa el error concreto:
 docker compose logs backend-api | grep -E "ORA-|Exception"
 ```
 
-- `ORA-00942` → faltan las migraciones (no debería pasar; son automáticas)
+- `ORA-00942` → faltan las migraciones (pon `APPLY_MIGRATIONS=true` tras corregir el SQL)
+- tablas vacías / login 401 sin AD001 → `RUN_SEEDERS=true` con `APPLY_MIGRATIONS=false`, luego rebuild
 - `ORA-01017` → usuario o contraseña mal en el `.env`
 - Timeout → Oracle todavía no terminó de arrancar
 
@@ -324,9 +341,12 @@ solo para que **tú** puedas conectarte desde el host (o nginx).
 **El arranque está ordenado por un healthcheck.** La API no arranca hasta que
 Oracle acepta conexiones, no solo hasta que el contenedor existe.
 
-**Las migraciones se aplican solas**, únicamente cuando la app detecta que corre
-en contenedor (variable `DOTNET_RUNNING_IN_CONTAINER`). Fuera de Docker el
-comportamiento no cambia.
+**Migraciones y seeders son independientes.** `APPLY_MIGRATIONS=true` solo
+corre `MigrateAsync`; `RUN_SEEDERS=true` solo corre el seed de datos
+iniciales. Con ambos en `false` (por defecto en Compose) la API arranca sin
+ellos. Si las tablas existen pero están vacías, activa solo `RUN_SEEDERS=true`.
+Reactiva migraciones solo cuando el SQL Oracle esté correcto; tras cambiar
+flags o código, reconstruye con `docker compose up -d --build backend-api`.
 
 **El `.env` cumple dos funciones a la vez:** Docker Compose lo lee para
 sustituir las `${VARIABLES}` del YAML, y la API lo lee con DotNetEnv cuando
