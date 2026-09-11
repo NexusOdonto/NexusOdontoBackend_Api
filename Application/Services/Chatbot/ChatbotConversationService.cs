@@ -13,6 +13,8 @@ public sealed class ChatbotConversationService(
     IChatbotConversationRepository repository,
     IRepository<ChatbotMessageEntity> messageRepository,
     ICatalogRepository<ChatbotConversationStatusEntity> statusCatalog,
+    ICatalogRepository<ChatbotMessageRoleEntity> roleCatalog,
+    IChatbotClient chatbotClient,
     IUnitOfWork unitOfWork) : IChatbotConversationService
 {
     public async Task<IReadOnlyList<ChatbotConversationResponseDto>> GetAllAsync()
@@ -86,6 +88,49 @@ public sealed class ChatbotConversationService(
         if (entity is null) return false;
         await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
         return true;
+    }
+
+    public async Task<SendConversationWhatsAppOutcome> SendWhatsAppAsync(
+        Guid conversationId,
+        string messageContent,
+        string? messageRoleId = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(messageContent))
+            return SendConversationWhatsAppOutcome.NotFound;
+
+        var conversation = await repository.GetByIdAsync(conversationId);
+        if (conversation is null || string.IsNullOrWhiteSpace(conversation.ChatIdentifier))
+            return SendConversationWhatsAppOutcome.NotFound;
+
+        Guid roleId;
+        if (!string.IsNullOrWhiteSpace(messageRoleId) && Guid.TryParse(messageRoleId, out var parsedRoleId))
+        {
+            roleId = parsedRoleId;
+        }
+        else
+        {
+            roleId = await ServiceWrite.ResolveCatalogIdAsync(roleCatalog, "AGENTE_HUMANO", "HUMAN_AGENT", "ASESOR");
+        }
+
+        var trimmed = messageContent.Trim();
+
+        // Evolution first — never persist a false success if WhatsApp delivery fails.
+        var delivered = await chatbotClient.SendAgentMessageAsync(conversation.ChatIdentifier, trimmed, cancellationToken);
+        if (!delivered)
+            return SendConversationWhatsAppOutcome.DeliveryFailed;
+
+        await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
+        {
+            var msgEntity = new ChatbotMessageEntity(
+                conversation.Id,
+                roleId,
+                trimmed
+            );
+            await messageRepository.AddAsync(msgEntity);
+        });
+
+        return SendConversationWhatsAppOutcome.Success;
     }
 
     private static ChatbotConversationResponseDto Map(ChatbotConversationEntity e) => new()

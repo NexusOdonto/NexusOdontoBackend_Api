@@ -92,15 +92,15 @@ public sealed class SupportTicketService(
         return true;
     }
 
-    public async Task<bool> ReplyToTicketAsync(Guid ticketId, string messageContent, string? messageRoleId = null, Guid? userId = null, CancellationToken cancellationToken = default)
+    public async Task<ReplyTicketOutcome> ReplyToTicketAsync(Guid ticketId, string messageContent, string? messageRoleId = null, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(messageContent)) return false;
+        if (string.IsNullOrWhiteSpace(messageContent)) return ReplyTicketOutcome.NotFound;
 
         var ticket = await repository.GetByIdAsync(ticketId);
-        if (ticket is null || ticket.ChatbotConversationId == Guid.Empty) return false;
+        if (ticket is null || ticket.ChatbotConversationId == Guid.Empty) return ReplyTicketOutcome.NotFound;
 
         var conversation = await conversationRepository.GetByIdAsync(ticket.ChatbotConversationId);
-        if (conversation is null || string.IsNullOrWhiteSpace(conversation.ChatIdentifier)) return false;
+        if (conversation is null || string.IsNullOrWhiteSpace(conversation.ChatIdentifier)) return ReplyTicketOutcome.NotFound;
 
         Guid roleId;
         if (!string.IsNullOrWhiteSpace(messageRoleId) && Guid.TryParse(messageRoleId, out var parsedRoleId))
@@ -112,12 +112,19 @@ public sealed class SupportTicketService(
             roleId = await ServiceWrite.ResolveCatalogIdAsync(roleCatalog, "AGENTE_HUMANO", "HUMAN_AGENT", "ASESOR");
         }
 
+        var trimmed = messageContent.Trim();
+
+        // Send via FastAPI/Evolution first so the UI never gets a false success on WhatsApp failure.
+        var delivered = await chatbotClient.SendAgentMessageAsync(conversation.ChatIdentifier, trimmed, cancellationToken);
+        if (!delivered)
+            return ReplyTicketOutcome.DeliveryFailed;
+
         await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var msgEntity = new ChatbotMessageEntity(
                 conversation.Id,
                 roleId,
-                messageContent.Trim()
+                trimmed
             );
             await messageRepository.AddAsync(msgEntity);
 
@@ -129,8 +136,7 @@ public sealed class SupportTicketService(
             }
         });
 
-        // Pushes the message to the patient's WhatsApp via FastAPI Chatbot
-        return await chatbotClient.SendAgentMessageAsync(conversation.ChatIdentifier, messageContent.Trim(), cancellationToken);
+        return ReplyTicketOutcome.Success;
     }
 
     public async Task<bool> ResolveTicketAsync(Guid ticketId, string? resolution = null, Guid? userId = null, CancellationToken cancellationToken = default)

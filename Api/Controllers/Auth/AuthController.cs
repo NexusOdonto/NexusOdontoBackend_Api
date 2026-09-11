@@ -1,4 +1,5 @@
 ﻿using Application.Contracts.Services.People;
+using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Patients;
 using System.Security.Claims;
 using Application.Contracts.Repositories.Security;
@@ -37,9 +38,26 @@ public sealed class AuthController(
         return Ok(result);
     }
 
-        [AllowAnonymous]
+    [AllowAnonymous]
+    [HttpGet("register-options")]
+    [ProducesResponseType(typeof(RegisterOptionsResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRegisterOptions(
+        [FromServices] IDocumentTypeService documentTypeService,
+        [FromServices] ISexService sexService)
+    {
+        var documentTypes = await documentTypeService.GetAllAsync();
+        var sexes = await sexService.GetAllAsync();
+
+        return Ok(new RegisterOptionsResponseDto
+        {
+            DocumentTypes = documentTypes.Where(d => d.IsActive).ToList(),
+            Sexes = sexes.Where(s => s.IsActive).ToList()
+        });
+    }
+
+    [AllowAnonymous]
     [HttpPost("register")]
-    [ProducesResponseType(typeof(OnboardPatientResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register(
@@ -48,7 +66,17 @@ public sealed class AuthController(
         CancellationToken cancellationToken)
     {
         var result = await onboardingService.OnboardAsync(request, cancellationToken);
-        return Created(string.Empty, result);
+
+        var authResponse = await authService.SignInByExternalLoginAsync(
+            result.UserId,
+            cancellationToken);
+
+        if (authResponse is null)
+        {
+            return Created(string.Empty, result);
+        }
+
+        return Created(string.Empty, authResponse);
     }
 
     [AllowAnonymous]
@@ -86,17 +114,19 @@ public sealed class AuthController(
     [HttpGet("google/login")]
     public IActionResult GoogleLogin()
     {
+        // CallbackPath (/api/auth/google/callback) lo consume el middleware OAuth.
+        // Tras el ticket, redirige a google/complete (acción MVC) para vincular o emitir JWT.
         var properties = new AuthenticationProperties
         {
-            RedirectUri = Url.Action(nameof(GoogleCallback))
+            RedirectUri = Url.Action(nameof(GoogleComplete))
         };
 
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
     [AllowAnonymous]
-    [HttpGet("google/callback")]
-    public async Task<IActionResult> GoogleCallback(CancellationToken cancellationToken)
+    [HttpGet("google/complete")]
+    public async Task<IActionResult> GoogleComplete(CancellationToken cancellationToken)
     {
         var authenticateResult = await HttpContext.AuthenticateAsync("GoogleOAuth");
 

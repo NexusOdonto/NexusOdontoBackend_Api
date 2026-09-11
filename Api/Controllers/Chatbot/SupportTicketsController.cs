@@ -23,15 +23,21 @@ public sealed class SupportTicketsController(ISupportTicketService service)
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> Reply(Guid id, [FromBody] ReplyTicketRequestDto request, CancellationToken cancellationToken)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.Content))
             return BadRequest(new { message = "El contenido del mensaje es obligatorio." });
 
-        var success = await Service.ReplyToTicketAsync(id, request.Content, request.MessageRoleId, GetUserId(), cancellationToken);
-        return success
-            ? Ok(new { message = "Mensaje enviado al paciente en WhatsApp con �xito." })
-            : NotFound(new { message = "No se pudo enviar el mensaje o el ticket no existe." });
+        var outcome = await Service.ReplyToTicketAsync(id, request.Content, request.MessageRoleId, GetUserId(), cancellationToken);
+        return outcome switch
+        {
+            ReplyTicketOutcome.Success => Ok(new { message = "Mensaje enviado al paciente en WhatsApp con éxito." }),
+            ReplyTicketOutcome.DeliveryFailed => StatusCode(
+                StatusCodes.Status502BadGateway,
+                new { message = "No se pudo entregar el mensaje por WhatsApp (chatbot/Evolution). Intenta de nuevo." }),
+            _ => NotFound(new { message = "Ticket no encontrado o sin conversación asociada." }),
+        };
     }
 
     [HttpPost("{id:guid}/resolve")]

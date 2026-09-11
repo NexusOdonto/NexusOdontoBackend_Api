@@ -8,6 +8,7 @@ using Application.Contracts.Services;
 using Application.Contracts.Services.Notifications;
 using Infrastructure;
 using Infrastructure.Persistence.Context;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Microsoft.AspNetCore.SignalR;
@@ -43,6 +44,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var jwtSettings = ResolveJwtSettings(builder.Configuration);
 var googleSettings = ResolveGoogleSettings(builder.Configuration);
+builder.Services.AddNexusDataProtection(builder.Environment, builder.Configuration);
 builder.Services.AddJwtAuthentication(jwtSettings, googleSettings);
 
 builder.Services.AddSignalR(options =>
@@ -55,17 +57,50 @@ builder.Services.AddScoped<INotificationPublisherService, NotificationPublisherS
 builder.Services.AddResilientHttpClients();
 builder.Services.AddNexusCors();
 
+// Trust X-Forwarded-* from nginx so OAuth redirects and scheme/host match the public API URL.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost;
+    // Clear defaults so headers from the Docker/nginx proxy are accepted.
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
-// Always migrate then seed (Docker and local). Migrations and DatabaseInitializer are idempotent.
-await ApplyMigrationsAsync(app.Services);
-await DatabaseInitializer.SeedBotUserAsync(app.Services);
-// En contenedor la base arranca vacia: aplicar migraciones y seeders al iniciar
-// deja el stack listo con un solo "docker compose up".
-if (IsRunningInContainer() || app.Environment.IsDevelopment())
+// Migrations and seeders are independent. Defaults off so a broken Oracle
+// migration (e.g. ORA-02000) does not prevent Kestrel from starting; seeders
+// can still run when tables already exist but are empty.
+var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
+
+if (ShouldApplyMigrations())
 {
     await ApplyMigrationsAsync(app.Services);
 }
+else
+{
+    startupLogger.LogWarning(
+        "APPLY_MIGRATIONS is not true; skipping MigrateAsync so the API can start. " +
+        "Set APPLY_MIGRATIONS=true only after Oracle migration SQL is fixed.");
+}
+
+if (ShouldRunSeeders())
+{
+    await DatabaseInitializer.SeedBotUserAsync(app.Services);
+    startupLogger.LogInformation("Initial data seeders completed.");
+}
+else
+{
+    startupLogger.LogWarning(
+        "RUN_SEEDERS is not true; skipping SeedBotUserAsync. " +
+        "Set RUN_SEEDERS=true to populate initial data (e.g. AD001) without applying migrations.");
+}
+
+// Must run before HTTPS redirection / routing that depend on scheme or host.
+app.UseForwardedHeaders();
 
 app.UseGlobalExceptionMiddleware();
 
@@ -152,6 +187,18 @@ static void LoadEnvFile(string contentRoot)
 
 static bool IsRunningInContainer() =>
     Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+
+static bool ShouldApplyMigrations() =>
+    string.Equals(
+        Environment.GetEnvironmentVariable("APPLY_MIGRATIONS"),
+        "true",
+        StringComparison.OrdinalIgnoreCase);
+
+static bool ShouldRunSeeders() =>
+    string.Equals(
+        Environment.GetEnvironmentVariable("RUN_SEEDERS"),
+        "true",
+        StringComparison.OrdinalIgnoreCase);
 
 static async Task ApplyMigrationsAsync(IServiceProvider services)
 {

@@ -32,6 +32,9 @@ appsettings.Local.json
 *.env
 *.env.example
 
+# Local ASP.NET DataProtection keys (OAuth correlation cookies)
+**/dp-keys/
+
 
 # OS
 .DS_Store

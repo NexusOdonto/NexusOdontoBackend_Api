@@ -3,6 +3,13 @@ using Application.DTOs.Chatbot.ChatbotMessage;
 
 namespace Application.Contracts.Services.Chatbot
 {
+    public enum SendConversationWhatsAppOutcome
+    {
+        NotFound,
+        DeliveryFailed,
+        Success
+    }
+
     public interface IChatbotConversationService
     {
         Task<IReadOnlyList<ChatbotConversationResponseDto>> GetAllAsync();
@@ -11,5 +18,6 @@ namespace Application.Contracts.Services.Chatbot
         Task<ChatbotConversationResponseDto?> UpdateAsync(Guid id, UpdateChatbotConversationRequestDto request);
         Task<IReadOnlyList<ChatbotMessageResponseDto>> GetMessagesAsync(Guid conversationId);
         Task<bool> DeleteAsync(Guid id);
+        Task<SendConversationWhatsAppOutcome> SendWhatsAppAsync(Guid conversationId, string messageContent, string? messageRoleId = null, CancellationToken cancellationToken = default);
     }
 }
