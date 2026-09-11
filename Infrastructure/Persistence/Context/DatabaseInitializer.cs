@@ -384,7 +384,7 @@ public static class DatabaseInitializer
         }
         else if (roleCode == "PACIENTE")
         {
-            int[] patientModules = [1, 2, 7, 8];
+            int[] patientModules = [1, 2, 3, 7, 8];
             foreach (var m in patientModules)
             {
                 Add(m, 1);
