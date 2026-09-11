@@ -139,13 +139,20 @@ public sealed class SupportTicketService(
         return ReplyTicketOutcome.Success;
     }
 
-    public async Task<bool> ResolveTicketAsync(Guid ticketId, string? resolution = null, Guid? userId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> ResolveTicketAsync(
+        Guid ticketId,
+        string? resolution = null,
+        Guid? userId = null,
+        bool returnToBot = true,
+        CancellationToken cancellationToken = default)
     {
         var ticket = await repository.GetByIdAsync(ticketId);
         if (ticket is null) return false;
 
         var resolvedStatusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "RESOLVED", "RESUELTO", "CLOSED");
-        var activeConvStatusId = await ServiceWrite.ResolveCatalogIdAsync(conversationStatusCatalog, "ACTIVE", "ACTIVA");
+        var targetConvStatusId = returnToBot
+            ? await ServiceWrite.ResolveCatalogIdAsync(conversationStatusCatalog, "ACTIVE", "ACTIVA")
+            : await ServiceWrite.ResolveCatalogIdAsync(conversationStatusCatalog, "CLOSED", "CERRADA");
 
         string? chatIdentifier = null;
         if (ticket.ChatbotConversationId != Guid.Empty)
@@ -154,7 +161,8 @@ public sealed class SupportTicketService(
             if (conversation is not null)
             {
                 chatIdentifier = conversation.ChatIdentifier;
-                conversation.Update(activeConvStatusId, DateTime.UtcNow, DateTime.UtcNow, conversation.PatientId);
+                var closedAt = returnToBot ? (DateTime?)null : DateTime.UtcNow;
+                conversation.Update(targetConvStatusId, DateTime.UtcNow, closedAt, conversation.PatientId);
                 conversationRepository.Update(conversation);
             }
         }
@@ -176,9 +184,10 @@ public sealed class SupportTicketService(
             return Task.CompletedTask;
         });
 
-        if (!string.IsNullOrWhiteSpace(chatIdentifier))
+        // Only resume the bot when returning the case to automatic attention.
+        // Closing a case must leave the conversation CERRADA — resume would reopen it as ACTIVA.
+        if (returnToBot && !string.IsNullOrWhiteSpace(chatIdentifier))
         {
-            // Notifies FastAPI Chatbot to resume auto-responses
             await chatbotClient.ResumeConversationAsync(chatIdentifier, clearHistory: false, cancellationToken);
         }
 
