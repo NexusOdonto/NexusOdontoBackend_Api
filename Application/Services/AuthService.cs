@@ -26,7 +26,8 @@ public sealed class AuthService(
     IValidator<LoginRequestDto> loginValidator,
     IValidator<GoogleLinkRequestDto> googleLinkValidator,
     IValidator<RefreshTokenRequestDto> refreshTokenValidator,
-    JwtSettings jwtSettings) : IAuthService
+    JwtSettings jwtSettings,
+    ChatbotSettings chatbotSettings) : IAuthService
 {
     public const string GoogleProvider = "Google";
     public const string GoogleLinkTokenPurpose = "google-link";
@@ -36,6 +37,7 @@ public sealed class AuthService(
 
     public async Task<AuthResponseDto?> LoginAsync(
         LoginRequestDto request,
+        string? internalSecret = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -53,6 +55,11 @@ public sealed class AuthService(
             return null;
         }
 
+        if (IsBotServiceUser(user!) && !HasValidInternalSecret(internalSecret))
+        {
+            return null;
+        }
+
         return await SignInUserAsync(user!, cancellationToken);
     }
 
@@ -66,6 +73,12 @@ public sealed class AuthService(
             !user.IsActive ||
             user.PersonEntity is null ||
             !user.PersonEntity.IsActive)
+        {
+            return null;
+        }
+
+        // Interactive Google / register auto-sign-in must never mint a BOT_SERVICE JWT.
+        if (IsBotServiceUser(user))
         {
             return null;
         }
@@ -104,6 +117,11 @@ public sealed class AuthService(
         var user = await ResolveUserByLoginIdAsync(request.LoginId, cancellationToken);
 
         if (!IsValidForPasswordSignIn(user, request.Password))
+        {
+            return null;
+        }
+
+        if (IsBotServiceUser(user!))
         {
             return null;
         }
@@ -347,6 +365,24 @@ public sealed class AuthService(
                user.PersonEntity is not null &&
                user.PersonEntity.IsActive &&
                BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+    }
+
+    private static bool IsBotServiceUser(UserEntity user)
+    {
+        return user.UserRoles.Any(ur =>
+            ur.RoleId == ReservedServiceAccounts.BotServiceRoleId ||
+            string.Equals(ur.RoleEntity?.Code, "BOT_SERVICE", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool HasValidInternalSecret(string? providedSecret)
+    {
+        var expected = chatbotSettings.InternalSecret;
+        if (string.IsNullOrWhiteSpace(expected) || string.IsNullOrWhiteSpace(providedSecret))
+        {
+            return false;
+        }
+
+        return string.Equals(expected.Trim(), providedSecret.Trim(), StringComparison.Ordinal);
     }
 
     private async Task AttachNewSessionAsync(

@@ -28,7 +28,8 @@ public sealed class AuthController(
         [FromBody] LoginRequestDto request,
         CancellationToken cancellationToken)
     {
-        var result = await authService.LoginAsync(request, cancellationToken);
+        var internalSecret = Request.Headers["X-Internal-Secret"].FirstOrDefault();
+        var result = await authService.LoginAsync(request, internalSecret, cancellationToken);
 
         if (result is null)
         {
