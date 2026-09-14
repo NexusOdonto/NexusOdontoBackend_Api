@@ -151,7 +151,10 @@ public static class DatabaseInitializer
 
             foreach (var pInfo in personsToEnsure)
             {
-                var person = await context.Set<PersonEntity>().FirstOrDefaultAsync(p => p.Id == pInfo.Id || p.DocumentNumber == pInfo.DocNum || p.Email == pInfo.Email);
+                // Ignore soft-delete filter so inactive seed rows can be found and reactivated.
+                var person = await context.Set<PersonEntity>()
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(p => p.Id == pInfo.Id || p.DocumentNumber == pInfo.DocNum || p.Email == pInfo.Email);
                 if (person is null)
                 {
                     person = new PersonEntity(docTypeId, pInfo.DocNum, pInfo.First, pInfo.Last, email: pInfo.Email, address: "NexusOdonto Clinic");
@@ -159,11 +162,29 @@ public static class DatabaseInitializer
                     await context.Set<PersonEntity>().AddAsync(person);
                     await context.SaveChangesAsync();
                 }
-                else if (pInfo.Id == AdminUserSeeder.AdminPersonId && (person.FirstName != pInfo.First || person.Email != pInfo.Email))
+                else
                 {
-                    person.Update(pInfo.First, pInfo.Last, person.DateOfBirth, person.SexId, person.Phone, pInfo.Email, person.Address);
-                    context.Set<PersonEntity>().Update(person);
-                    await context.SaveChangesAsync();
+                    var changed = false;
+                    if (pInfo.Id == AdminUserSeeder.AdminPersonId && (person.FirstName != pInfo.First || person.Email != pInfo.Email))
+                    {
+                        person.Update(pInfo.First, pInfo.Last, person.DateOfBirth, person.SexId, person.Phone, pInfo.Email, person.Address);
+                        changed = true;
+                    }
+
+                    // Always reactivate the seed admin person if someone soft-deleted it.
+                    if (pInfo.Id == AdminUserSeeder.AdminPersonId && !person.IsActive)
+                    {
+                        person.IsActive = true;
+                        person.UpdatedAt = DateTime.UtcNow;
+                        changed = true;
+                        logger?.LogWarning("DatabaseInitializer: Reactivated seed admin person {PersonId}.", person.Id);
+                    }
+
+                    if (changed)
+                    {
+                        context.Set<PersonEntity>().Update(person);
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
 
@@ -183,7 +204,9 @@ public static class DatabaseInitializer
 
             foreach (var uInfo in usersToEnsure)
             {
-                var user = await context.Set<UserEntity>().FirstOrDefaultAsync(u => u.Id == uInfo.UserId || u.PersonId == uInfo.PersonId);
+                var user = await context.Set<UserEntity>()
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(u => u.Id == uInfo.UserId || u.PersonId == uInfo.PersonId);
                 if (user is null)
                 {
                     var hash = BCrypt.Net.BCrypt.HashPassword(uInfo.Password, 11);
@@ -194,10 +217,25 @@ public static class DatabaseInitializer
                 }
                 else
                 {
+                    var changed = false;
                     if (!BCrypt.Net.BCrypt.Verify(uInfo.Password, user.PasswordHash))
                     {
                         var newHash = BCrypt.Net.BCrypt.HashPassword(uInfo.Password, 11);
                         user.Update(newHash, user.LastAccessAt);
+                        changed = true;
+                    }
+
+                    // Reactivate seed admin (and keep other seed users active if deactivated).
+                    if (uInfo.UserId == AdminUserSeeder.AdminUserId && !user.IsActive)
+                    {
+                        user.IsActive = true;
+                        user.UpdatedAt = DateTime.UtcNow;
+                        changed = true;
+                        logger?.LogWarning("DatabaseInitializer: Reactivated seed admin user {UserId}.", user.Id);
+                    }
+
+                    if (changed)
+                    {
                         context.Set<UserEntity>().Update(user);
                         await context.SaveChangesAsync();
                     }
@@ -229,7 +267,9 @@ public static class DatabaseInitializer
 
             foreach (var eInfo in employeesToEnsure)
             {
-                var emp = await context.Set<EmployeeEntity>().FirstOrDefaultAsync(e => e.Id == eInfo.EmpId || e.PersonId == eInfo.PersonId);
+                var emp = await context.Set<EmployeeEntity>()
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(e => e.Id == eInfo.EmpId || e.PersonId == eInfo.PersonId || e.EmployeeCode == eInfo.EmployeeCode);
                 if (emp is null)
                 {
                     emp = new EmployeeEntity(eInfo.PersonId, eInfo.JobId, new DateOnly(2026, 1, 15), eInfo.EmployeeCode);
@@ -237,11 +277,28 @@ public static class DatabaseInitializer
                     await context.Set<EmployeeEntity>().AddAsync(emp);
                     await context.SaveChangesAsync();
                 }
-                else if (!string.Equals(emp.EmployeeCode, eInfo.EmployeeCode, StringComparison.Ordinal))
+                else
                 {
-                    emp.Update(eInfo.JobId, emp.HireDate, eInfo.EmployeeCode);
-                    context.Set<EmployeeEntity>().Update(emp);
-                    await context.SaveChangesAsync();
+                    var changed = false;
+                    if (!string.Equals(emp.EmployeeCode, eInfo.EmployeeCode, StringComparison.Ordinal))
+                    {
+                        emp.Update(eInfo.JobId, emp.HireDate, eInfo.EmployeeCode);
+                        changed = true;
+                    }
+
+                    if (eInfo.EmpId == EmployeeSeeder.AdminEmployeeId && !emp.IsActive)
+                    {
+                        emp.IsActive = true;
+                        emp.UpdatedAt = DateTime.UtcNow;
+                        changed = true;
+                        logger?.LogWarning("DatabaseInitializer: Reactivated seed admin employee AD001 ({EmployeeId}).", emp.Id);
+                    }
+
+                    if (changed)
+                    {
+                        context.Set<EmployeeEntity>().Update(emp);
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
 

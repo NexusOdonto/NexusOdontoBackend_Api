@@ -1,4 +1,5 @@
-﻿using Application.Contracts.Repositories.Common;
+﻿using Application.Common;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Users;
@@ -69,6 +70,11 @@ public sealed class UserService(
         var entity = await userRepository.GetByIdAsync(id);
         if (entity is null) return null;
 
+        if (SeedAdminGuard.IsProtectedUser(entity.Id) && !request.IsActive)
+        {
+            throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.IsActive = request.IsActive;
@@ -82,6 +88,11 @@ public sealed class UserService(
     {
         var entity = await userRepository.GetByIdAsync(id);
         if (entity is null) return false;
+
+        if (SeedAdminGuard.IsProtectedUser(entity.Id))
+        {
+            throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
+        }
 
         await ServiceWrite.InTransactionAsync(unitOfWork, () =>
         {
