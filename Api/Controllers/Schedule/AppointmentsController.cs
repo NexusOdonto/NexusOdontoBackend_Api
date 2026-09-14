@@ -1,4 +1,4 @@
-﻿using Api.Controllers.Common;
+using Api.Controllers.Common;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Appointments;
 using Microsoft.AspNetCore.Mvc;
@@ -26,4 +26,31 @@ public sealed class AppointmentsController(IAppointmentService service)
         }
         return await base.Create(request);
     }
+
+    [HttpGet("{id:guid}/clinical-context")]
+    public async Task<ActionResult<AppointmentClinicalContextDto>> GetClinicalContext(Guid id, CancellationToken cancellationToken)
+    {
+        var context = await Service.GetClinicalContextAsync(id, cancellationToken);
+        if (context is null)
+        {
+            return NotFound(new { message = $"No se encontró la cita con ID '{id}'." });
+        }
+        return Ok(context);
+    }
+
+    [HttpPost("{id:guid}/no-show")]
+    public async Task<ActionResult<AppointmentResponseDto>> MarkAsNoShow(Guid id, [FromBody] MarkNoShowDto? request, CancellationToken cancellationToken)
+    {
+        var result = await Service.MarkAsNoShowAsync(id, request?.Reason, cancellationToken);
+        if (result is null)
+        {
+            return NotFound(new { message = $"No se encontró la cita con ID '{id}'." });
+        }
+        return Ok(result);
+    }
+}
+
+public sealed class MarkNoShowDto
+{
+    public string? Reason { get; set; }
 }
