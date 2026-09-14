@@ -12,12 +12,31 @@ public static class AdminUserSeeder
 
     public static readonly Guid DentistPersonId = new("1b000000-0000-0000-0000-000000000003");
     public static readonly Guid DentistUserId = new("1b000000-0000-0000-0000-000000000004");
+    public static readonly Guid Dentist1PersonId = DentistPersonId;
+    public static readonly Guid Dentist1UserId = DentistUserId;
+
+    public static readonly Guid Dentist2PersonId = new("1b000000-0000-0000-0000-000000000010");
+    public static readonly Guid Dentist2UserId = new("1b000000-0000-0000-0000-000000000021");
+
+    public static readonly Guid Dentist3PersonId = new("1b000000-0000-0000-0000-000000000011");
+    public static readonly Guid Dentist3UserId = new("1b000000-0000-0000-0000-000000000022");
 
     public static readonly Guid ReceptionistPersonId = new("1b000000-0000-0000-0000-000000000005");
     public static readonly Guid ReceptionistUserId = new("1b000000-0000-0000-0000-000000000006");
 
     public static readonly Guid PatientPersonId = new("1b000000-0000-0000-0000-000000000007");
     public static readonly Guid PatientUserId = new("1b000000-0000-0000-0000-000000000008");
+    public static readonly Guid Patient1PersonId = PatientPersonId;
+    public static readonly Guid Patient1UserId = PatientUserId;
+
+    public static readonly Guid Patient2PersonId = new("1b000000-0000-0000-0000-000000000013");
+    public static readonly Guid Patient2UserId = new("1b000000-0000-0000-0000-000000000032");
+
+    public static readonly Guid Patient3PersonId = new("1b000000-0000-0000-0000-000000000014");
+    public static readonly Guid Patient3UserId = new("1b000000-0000-0000-0000-000000000033");
+
+    public static readonly Guid Patient4PersonId = new("1b000000-0000-0000-0000-000000000015");
+    public static readonly Guid Patient4UserId = new("1b000000-0000-0000-0000-000000000034");
 
     // BCrypt hashes (work factor 11)
     private const string AdminPasswordHash = "$2a$11$niKp.bG.Nj.pEEV1ZZY41.MEByC9NN514GjlTZfPuYt.EP/PEO9QG"; // Admin123!
@@ -208,6 +227,26 @@ public static class AdminUserSeeder
             },
             new
             {
+                Id = Dentist2UserId,
+                PersonId = Dentist2PersonId,
+                PasswordHash = DentistPasswordHash,
+                LastAccessAt = (DateTime?)null,
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            new
+            {
+                Id = Dentist3UserId,
+                PersonId = Dentist3PersonId,
+                PasswordHash = DentistPasswordHash,
+                LastAccessAt = (DateTime?)null,
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            new
+            {
                 Id = ReceptionistUserId,
                 PersonId = ReceptionistPersonId,
                 PasswordHash = ReceptionistPasswordHash,
@@ -220,6 +259,36 @@ public static class AdminUserSeeder
             {
                 Id = PatientUserId,
                 PersonId = PatientPersonId,
+                PasswordHash = PatientPasswordHash,
+                LastAccessAt = (DateTime?)null,
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            new
+            {
+                Id = Patient2UserId,
+                PersonId = Patient2PersonId,
+                PasswordHash = PatientPasswordHash,
+                LastAccessAt = (DateTime?)null,
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            new
+            {
+                Id = Patient3UserId,
+                PersonId = Patient3PersonId,
+                PasswordHash = PatientPasswordHash,
+                LastAccessAt = (DateTime?)null,
+                IsActive = true,
+                CreatedAt = seedCreatedAt,
+                UpdatedAt = (DateTime?)null
+            },
+            new
+            {
+                Id = Patient4UserId,
+                PersonId = Patient4PersonId,
                 PasswordHash = PatientPasswordHash,
                 LastAccessAt = (DateTime?)null,
                 IsActive = true,
@@ -242,6 +311,18 @@ public static class AdminUserSeeder
             },
             new
             {
+                UserId = Dentist2UserId,
+                RoleId = RoleSeeder.Dentist,
+                AssignedAt = seedCreatedAt
+            },
+            new
+            {
+                UserId = Dentist3UserId,
+                RoleId = RoleSeeder.Dentist,
+                AssignedAt = seedCreatedAt
+            },
+            new
+            {
                 UserId = ReceptionistUserId,
                 RoleId = RoleSeeder.Receptionist,
                 AssignedAt = seedCreatedAt
@@ -249,6 +330,24 @@ public static class AdminUserSeeder
             new
             {
                 UserId = PatientUserId,
+                RoleId = RoleSeeder.Patient,
+                AssignedAt = seedCreatedAt
+            },
+            new
+            {
+                UserId = Patient2UserId,
+                RoleId = RoleSeeder.Patient,
+                AssignedAt = seedCreatedAt
+            },
+            new
+            {
+                UserId = Patient3UserId,
+                RoleId = RoleSeeder.Patient,
+                AssignedAt = seedCreatedAt
+            },
+            new
+            {
+                UserId = Patient4UserId,
                 RoleId = RoleSeeder.Patient,
                 AssignedAt = seedCreatedAt
             });

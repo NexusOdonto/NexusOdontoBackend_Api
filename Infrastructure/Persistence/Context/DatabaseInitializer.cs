@@ -171,8 +171,13 @@ public static class DatabaseInitializer
             {
                 (AdminUserSeeder.AdminUserId, AdminUserSeeder.AdminPersonId, "Admin123!", RoleSeeder.Administrator),
                 (AdminUserSeeder.DentistUserId, AdminUserSeeder.DentistPersonId, "Doctor123!", RoleSeeder.Dentist),
+                (AdminUserSeeder.Dentist2UserId, AdminUserSeeder.Dentist2PersonId, "Doctor123!", RoleSeeder.Dentist),
+                (AdminUserSeeder.Dentist3UserId, AdminUserSeeder.Dentist3PersonId, "Doctor123!", RoleSeeder.Dentist),
                 (AdminUserSeeder.ReceptionistUserId, AdminUserSeeder.ReceptionistPersonId, "Recepcion123!", RoleSeeder.Receptionist),
                 (AdminUserSeeder.PatientUserId, AdminUserSeeder.PatientPersonId, "Paciente123!", RoleSeeder.Patient),
+                (AdminUserSeeder.Patient2UserId, AdminUserSeeder.Patient2PersonId, "Paciente123!", RoleSeeder.Patient),
+                (AdminUserSeeder.Patient3UserId, AdminUserSeeder.Patient3PersonId, "Paciente123!", RoleSeeder.Patient),
+                (AdminUserSeeder.Patient4UserId, AdminUserSeeder.Patient4PersonId, "Paciente123!", RoleSeeder.Patient),
                 (UserSeeder.BotUserId, UserSeeder.BotPersonId, "BotService2026!", RoleSeeder.BotService)
             };
 
@@ -216,8 +221,8 @@ public static class DatabaseInitializer
             {
                 (EmployeeSeeder.AdminEmployeeId, AdminUserSeeder.AdminPersonId, empJobAdmin, "AD001"),
                 (EmployeeSeeder.Dentist1EmployeeId, AdminUserSeeder.DentistPersonId, empJobDent, "OD001"),
-                (EmployeeSeeder.Dentist2EmployeeId, new Guid("1b000000-0000-0000-0000-000000000010"), empJobDent, "OD002"),
-                (EmployeeSeeder.Dentist3EmployeeId, new Guid("1b000000-0000-0000-0000-000000000011"), empJobDent, "OD003"),
+                (EmployeeSeeder.Dentist2EmployeeId, AdminUserSeeder.Dentist2PersonId, empJobDent, "OD002"),
+                (EmployeeSeeder.Dentist3EmployeeId, AdminUserSeeder.Dentist3PersonId, empJobDent, "OD003"),
                 (EmployeeSeeder.ReceptionistEmployeeId, AdminUserSeeder.ReceptionistPersonId, empJobRecep, "RC001"),
                 (EmployeeSeeder.BotEmployeeId, UserSeeder.BotPersonId, empJobAssist, "BOT001")
             };

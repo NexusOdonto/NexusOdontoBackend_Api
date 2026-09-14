@@ -188,13 +188,18 @@ Debe responder **401** con `{"message":"Invalid login ID or password."}`.
 
 Ejemplos de login dev (passwords sin cambio):
 
-| Rol | Login ID | Password |
-|---|---|---|
-| Admin | `AD001` | `Admin123!` |
-| Odontólogo | `OD001` | `Doctor123!` |
-| Recepcionista | `RC001` | `Recepcion123!` |
-| Paciente | `1076543210` | `Paciente123!` |
-| Bot Python | `BOT001` | `BotService2026!` |
+| Rol | Login ID | Password | Nombre |
+|---|---|---|---|
+| Admin | `AD001` | `Admin123!` | Carlos Administrator |
+| Odontólogo 1 | `OD001` | `Doctor123!` | Dra. Laura Gómez |
+| Odontólogo 2 | `OD002` | `Doctor123!` | Dr. Roberto Martínez |
+| Odontólogo 3 | `OD003` | `Doctor123!` | Dra. Ana Sofía Silva |
+| Recepcionista | `RC001` | `Recepcion123!` | María Rodríguez |
+| Paciente 1 | `1076543210` | `Paciente123!` | Andrés Pérez |
+| Paciente 2 | `1076543211` | `Paciente123!` | Camila López |
+| Paciente 3 | `1076543212` | `Paciente123!` | Felipe Torres |
+| Paciente 4 | `1076543213` | `Paciente123!` | Valentina Mendoza |
+| Bot Python | `BOT001` | `BotService2026!` | Chatbot Service |
 
 Un 401 es la señal de éxito: significa que la API consultó Oracle de verdad y
 no encontró ese usuario. Un **500** indicaría que no llegó a la base.
