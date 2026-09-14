@@ -1,3 +1,4 @@
+using Application.Common;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
@@ -48,6 +49,14 @@ public sealed class EmployeeService(
         var entity = await employeeRepository.GetByIdAsync(id);
         if (entity is null) return null;
 
+        if ((SeedAdminGuard.IsProtectedEmployee(entity.Id) ||
+             SeedAdminGuard.IsProtectedPerson(entity.PersonId) ||
+             string.Equals(entity.EmployeeCode, "AD001", StringComparison.OrdinalIgnoreCase))
+            && !request.IsActive)
+        {
+            throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.Update(request.JobTitleId, request.HireDate, entity.EmployeeCode);
@@ -61,6 +70,13 @@ public sealed class EmployeeService(
     {
         var entity = await employeeRepository.GetByIdAsync(id);
         if (entity is null) return false;
+
+        if (SeedAdminGuard.IsProtectedEmployee(entity.Id) ||
+            SeedAdminGuard.IsProtectedPerson(entity.PersonId) ||
+            string.Equals(entity.EmployeeCode, "AD001", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
+        }
 
         await ServiceWrite.InTransactionAsync(unitOfWork, () =>
         {

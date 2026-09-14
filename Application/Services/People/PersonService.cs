@@ -1,3 +1,4 @@
+using Application.Common;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
@@ -64,6 +65,11 @@ public sealed class PersonService(
             throw new ConflictException("A person with this document number already exists.");
         }
 
+        if (SeedAdminGuard.IsProtectedPerson(entity.Id) && !request.IsActive)
+        {
+            throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
+        }
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.DocumentTypeId = request.DocumentTypeId;
@@ -86,6 +92,11 @@ public sealed class PersonService(
     {
         var entity = await personRepository.GetByIdAsync(id);
         if (entity is null) return false;
+
+        if (SeedAdminGuard.IsProtectedPerson(entity.Id))
+        {
+            throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
+        }
 
         await ServiceWrite.InTransactionAsync(unitOfWork, () =>
         {
