@@ -4,6 +4,7 @@ using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;
 using Application.DTOs.Patients;
 using Application.Exceptions;
+using Application.Services.Security;
 using Domain.Entities.Clinical;
 using Domain.Entities.People;
 using Domain.Entities.Security;
@@ -31,6 +32,13 @@ public sealed class PatientOnboardingService(
         if (!validationResult.IsValid)
         {
             throw new Exceptions.ValidationException(validationResult.Errors);
+        }
+
+        if (ReservedServiceAccounts.IsReservedIdentifier(request.DocumentNumber) ||
+            ReservedServiceAccounts.IsReservedIdentifier(request.Email))
+        {
+            throw new BusinessRuleException(
+                "This document number or email is reserved for a system service account and cannot be registered.");
         }
 
         var existingPerson = await personRepository.GetByDocumentNumberAsync(

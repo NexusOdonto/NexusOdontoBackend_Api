@@ -6,6 +6,7 @@ public interface IAuthService
 {
     Task<AuthResponseDto?> LoginAsync(
         LoginRequestDto request,
+        string? internalSecret = null,
         CancellationToken cancellationToken = default);
 
     Task<AuthResponseDto?> SignInByExternalLoginAsync(

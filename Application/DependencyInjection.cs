@@ -42,6 +42,9 @@ public static class DependencyInjection
         var authSettings = configuration.GetSection("Auth").Get<AuthSettings>() ?? new AuthSettings();
         services.AddSingleton(authSettings);
 
+        var chatbotSettings = configuration.GetSection("Chatbot").Get<ChatbotSettings>() ?? new ChatbotSettings();
+        services.AddSingleton(chatbotSettings);
+
         var googleSettings = configuration.GetSection("Google").Get<GoogleSettings>() ?? new GoogleSettings();
         services.AddSingleton(googleSettings);
 
