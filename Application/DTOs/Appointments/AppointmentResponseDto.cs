@@ -16,4 +16,6 @@ public sealed class AppointmentResponseDto
     public DateTime CreatedAt { get; set; }
     public DateTime? CancelledAt { get; set; }
     public string? CancellationReason { get; set; }
+    public bool CanBeAttended { get; set; }
+    public string? AttendanceStatusMessage { get; set; }
 }

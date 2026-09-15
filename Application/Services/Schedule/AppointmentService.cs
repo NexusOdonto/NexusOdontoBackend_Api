@@ -1,9 +1,13 @@
-﻿using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Clinical;
+using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Schedule;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Appointments;
 using Application.Exceptions;
+using Domain.Entities.Catalogs;
+using Domain.Entities.Clinical;
+using Domain.Entities.Odontogram;
 using Domain.Entities.Schedule;
 
 namespace Application.Services.Schedule;
@@ -13,18 +17,80 @@ public sealed class AppointmentService(
     IPatientRepository patientRepository,
     IProfessionalRepository professionalRepository,
     IAvailabilityRepository availabilityRepository,
+    IClinicalHistoryRepository clinicalHistoryRepository,
+    IRepository<OdontogramEntity> odontogramRepository,
+    IRepository<ServiceEntity> serviceRepository,
     IUnitOfWork unitOfWork) : IAppointmentService
 {
+    public static readonly Guid StatusScheduled = new("10000000-0000-0000-0000-000000000001");
+    public static readonly Guid StatusConfirmed = new("10000000-0000-0000-0000-000000000002");
+    public static readonly Guid StatusInWaitingRoom = new("10000000-0000-0000-0000-000000000003");
+    public static readonly Guid StatusCompleted = new("10000000-0000-0000-0000-000000000004");
+    public static readonly Guid StatusCancelled = new("10000000-0000-0000-0000-000000000005");
+    public static readonly Guid StatusNoShow = new("10000000-0000-0000-0000-000000000006");
+
     public async Task<IReadOnlyList<AppointmentResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
-        return items.Select(Map).ToList();
+        var result = new List<AppointmentResponseDto>(items.Count);
+        bool anyUpdated = false;
+
+        foreach (var item in items)
+        {
+            var evaluation = EvaluateAttendanceWindow(item);
+            if (evaluation.IsExpired &&
+                item.AppointmentStatusId != StatusNoShow &&
+                item.AppointmentStatusId != StatusCompleted &&
+                item.AppointmentStatusId != StatusCancelled &&
+                item.CancelledAt == null)
+            {
+                item.Update(
+                    item.StartsAt,
+                    item.EndsAt,
+                    StatusNoShow,
+                    item.ReasonForVisit,
+                    item.Notes,
+                    item.CancelledAt,
+                    item.CancellationReason);
+                repository.Update(item);
+                anyUpdated = true;
+            }
+            result.Add(Map(item));
+        }
+
+        if (anyUpdated)
+        {
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        return result;
     }
 
     public async Task<AppointmentResponseDto?> GetByIdAsync(Guid id)
     {
         var entity = await repository.GetByIdAsync(id);
-        return entity is null ? null : Map(entity);
+        if (entity is null) return null;
+
+        var evaluation = EvaluateAttendanceWindow(entity);
+        if (evaluation.IsExpired &&
+            entity.AppointmentStatusId != StatusNoShow &&
+            entity.AppointmentStatusId != StatusCompleted &&
+            entity.AppointmentStatusId != StatusCancelled &&
+            entity.CancelledAt == null)
+        {
+            entity.Update(
+                entity.StartsAt,
+                entity.EndsAt,
+                StatusNoShow,
+                entity.ReasonForVisit,
+                entity.Notes,
+                entity.CancelledAt,
+                entity.CancellationReason);
+            repository.Update(entity);
+            await unitOfWork.SaveChangesAsync();
+        }
+
+        return Map(entity);
     }
 
     public async Task<AppointmentResponseDto> CreateAsync(CreateAppointmentDto request)
@@ -39,7 +105,7 @@ public sealed class AppointmentService(
             : request.ServiceId;
 
         var statusId = request.AppointmentStatusId == Guid.Empty
-            ? new Guid("17000000-0000-0000-0000-000000000001")
+            ? StatusScheduled
             : request.AppointmentStatusId;
 
         var originId = request.AppointmentOriginId == Guid.Empty
@@ -49,6 +115,12 @@ public sealed class AppointmentService(
         var startsAt = request.StartsAt == default ? DateTime.UtcNow.AddHours(1) : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
+        var nowUtc = DateTime.UtcNow;
+        if (startsAt < nowUtc.AddMinutes(-5))
+        {
+            throw new ValidationException("No se pueden programar citas en fechas u horas pasadas.");
+        }
+
         await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
 
         var overlapping = await repository.GetByProfessionalInRangeAsync(
@@ -56,7 +128,7 @@ public sealed class AppointmentService(
             startsAt,
             endsAt);
 
-        if (overlapping.Any(a => a.CancelledAt == null))
+        if (overlapping.Any(a => a.CancelledAt == null && a.AppointmentStatusId != StatusCancelled && a.AppointmentStatusId != StatusNoShow))
         {
             throw new ConflictException(
                 "The professional already has an appointment scheduled during the requested time range.");
@@ -72,7 +144,7 @@ public sealed class AppointmentService(
                 endsAt,
                 statusId,
                 originId,
-                string.IsNullOrWhiteSpace(request.ReasonForVisit) ? "Consulta dental programada via Chatbot" : request.ReasonForVisit,
+                string.IsNullOrWhiteSpace(request.ReasonForVisit) ? "Consulta dental programada" : request.ReasonForVisit,
                 request.Notes,
                 createdByUserId: request.CreatedByUserId);
 
@@ -102,7 +174,7 @@ public sealed class AppointmentService(
             startsAt,
             endsAt);
 
-        if (overlapping.Any(a => a.Id != id && a.CancelledAt == null))
+        if (overlapping.Any(a => a.Id != id && a.CancelledAt == null && a.AppointmentStatusId != StatusCancelled && a.AppointmentStatusId != StatusNoShow))
         {
             throw new ConflictException(
                 "The professional already has another appointment scheduled during the requested time range.");
@@ -137,6 +209,170 @@ public sealed class AppointmentService(
         if (entity is null) return false;
         await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
         return true;
+    }
+
+    public async Task<AppointmentClinicalContextDto?> GetClinicalContextAsync(Guid appointmentId, CancellationToken cancellationToken = default)
+    {
+        var appt = await repository.GetByIdAsync(appointmentId);
+        if (appt is null) return null;
+
+        var evaluation = EvaluateAttendanceWindow(appt);
+
+        // If expired, update status in DB
+        if (evaluation.IsExpired &&
+            appt.AppointmentStatusId != StatusNoShow &&
+            appt.AppointmentStatusId != StatusCompleted &&
+            appt.AppointmentStatusId != StatusCancelled &&
+            appt.CancelledAt == null)
+        {
+            appt.Update(
+                appt.StartsAt,
+                appt.EndsAt,
+                StatusNoShow,
+                appt.ReasonForVisit,
+                appt.Notes,
+                appt.CancelledAt,
+                appt.CancellationReason);
+            repository.Update(appt);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        // Get Patient with Person
+        var pat = await patientRepository.GetByIdWithPersonAsync(appt.PatientId, cancellationToken);
+        if (pat is null)
+        {
+            var allPats = await patientRepository.GetAllAsync();
+            pat = allPats.FirstOrDefault(p => p.Id == appt.PatientId);
+        }
+
+        // Ensure Clinical History exists
+        var clinicalHistory = await clinicalHistoryRepository.GetByPatientIdAsync(appt.PatientId, cancellationToken);
+        if (clinicalHistory is null)
+        {
+            clinicalHistory = new ClinicalHistoryEntity(appt.PatientId, DateTime.UtcNow, "Historia clínica inicial generada automáticamente.");
+            await clinicalHistoryRepository.AddAsync(clinicalHistory);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        // Get Doctor
+        var prof = await professionalRepository.GetByIdWithSpecialtiesAsync(appt.ProfessionalId, cancellationToken)
+                   ?? (await professionalRepository.GetAllAsync()).FirstOrDefault(p => p.Id == appt.ProfessionalId);
+
+        // Get Service
+        var service = await serviceRepository.GetByIdAsync(appt.ServiceId);
+
+        // Get latest Odontogram for patient
+        var allOdontograms = await odontogramRepository.GetAllAsync();
+        var latestOdontogram = allOdontograms
+            .Where(o => o.ClinicalHistoryId == clinicalHistory.Id)
+            .OrderByDescending(o => o.RecordedAt)
+            .FirstOrDefault();
+
+        var patientPerson = pat?.PersonEntity;
+        var employee = prof?.EmployeeEntity;
+        var doctorPerson = employee?.PersonEntity;
+
+        return new AppointmentClinicalContextDto
+        {
+            AppointmentId = appt.Id,
+            StartsAt = appt.StartsAt,
+            EndsAt = appt.EndsAt,
+            ServiceId = appt.ServiceId,
+            ServiceName = service?.Name,
+            ReasonForVisit = appt.ReasonForVisit,
+            AppointmentStatusId = appt.AppointmentStatusId,
+            CanBeAttended = evaluation.CanAttend,
+            AttendanceStatusMessage = evaluation.StatusMessage,
+            Patient = new PatientContextDto
+            {
+                PatientId = appt.PatientId,
+                PersonId = pat?.PersonId ?? Guid.Empty,
+                ClinicalHistoryId = clinicalHistory.Id,
+                FullName = patientPerson != null ? $"{patientPerson.FirstName} {patientPerson.LastName}".Trim() : "Paciente",
+                DocumentNumber = patientPerson?.DocumentNumber ?? string.Empty,
+                Email = patientPerson?.Email,
+                Phone = patientPerson?.Phone,
+                DateOfBirth = patientPerson?.DateOfBirth,
+                Address = patientPerson?.Address
+            },
+            Doctor = new DoctorContextDto
+            {
+                ProfessionalId = appt.ProfessionalId,
+                EmployeeId = prof?.EmployeeId ?? Guid.Empty,
+                PersonId = employee?.PersonId ?? Guid.Empty,
+                FullName = doctorPerson != null ? $"{doctorPerson.FirstName} {doctorPerson.LastName}".Trim() : "Doctor",
+                EmployeeCode = employee?.EmployeeCode ?? string.Empty,
+                ProfessionalLicense = prof?.ProfessionalLicense ?? string.Empty,
+                Specialties = prof?.Specialties.Select(s => s.Name).ToList() ?? []
+            },
+            LatestOdontogram = latestOdontogram is null ? null : new OdontogramBriefContextDto
+            {
+                OdontogramId = latestOdontogram.Id,
+                RecordedAt = latestOdontogram.RecordedAt,
+                Notes = latestOdontogram.Notes
+            }
+        };
+    }
+
+    public async Task<AppointmentResponseDto?> MarkAsNoShowAsync(Guid appointmentId, string? reason = null, CancellationToken cancellationToken = default)
+    {
+        var appt = await repository.GetByIdAsync(appointmentId);
+        if (appt is null) return null;
+
+        return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
+        {
+            var note = string.IsNullOrWhiteSpace(reason)
+                ? appt.Notes
+                : $"{appt.Notes} [No asistió: {reason}]".Trim();
+
+            appt.Update(
+                appt.StartsAt,
+                appt.EndsAt,
+                StatusNoShow,
+                appt.ReasonForVisit,
+                note,
+                appt.CancelledAt,
+                appt.CancellationReason);
+
+            repository.Update(appt);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return Map(appt);
+        });
+    }
+
+    public static (bool CanAttend, string StatusMessage, bool IsExpired) EvaluateAttendanceWindow(AppointmentEntity appointment)
+    {
+        if (appointment.CancelledAt != null || appointment.AppointmentStatusId == StatusCancelled)
+        {
+            return (false, "La cita se encuentra cancelada.", false);
+        }
+
+        if (appointment.AppointmentStatusId == StatusCompleted)
+        {
+            return (false, "La cita ya fue atendida.", false);
+        }
+
+        if (appointment.AppointmentStatusId == StatusNoShow)
+        {
+            return (false, "El paciente no asistió a la cita.", true);
+        }
+
+        var now = DateTime.UtcNow;
+
+        // Si falta más de 15 minutos para la cita
+        if (now < appointment.StartsAt.AddMinutes(-15))
+        {
+            return (false, "Aún no es la hora de la cita. Podrá atenderse a partir de 15 minutos antes de la hora programada.", false);
+        }
+
+        // Si ya pasaron más de 45 minutos desde la hora programada sin haberse atendido
+        if (now > appointment.StartsAt.AddMinutes(45))
+        {
+            return (false, "El horario de la cita ha vencido (No asistió).", true);
+        }
+
+        // Dentro del horario hábil de atención
+        return (true, "Cita en horario de atención.", false);
     }
 
     private async Task ValidateAvailabilityAsync(Guid professionalId, DateTime startsAt, DateTime endsAt)
@@ -227,21 +463,27 @@ public sealed class AppointmentService(
         throw new KeyNotFoundException($"No se encontró un profesional odontólogo activo correspondiente al ID '{inputId}'.");
     }
 
-    private static AppointmentResponseDto Map(AppointmentEntity e) => new()
+    private static AppointmentResponseDto Map(AppointmentEntity e)
     {
-        Id = e.Id,
-        PatientId = e.PatientId,
-        ProfessionalId = e.ProfessionalId,
-        ServiceId = e.ServiceId,
-        StartsAt = e.StartsAt,
-        EndsAt = e.EndsAt,
-        AppointmentStatusId = e.AppointmentStatusId,
-        AppointmentOriginId = e.AppointmentOriginId,
-        ReasonForVisit = e.ReasonForVisit,
-        Notes = e.Notes,
-        CreatedByUserId = e.CreatedByUserId,
-        CreatedAt = e.CreatedAt,
-        CancelledAt = e.CancelledAt,
-        CancellationReason = e.CancellationReason
-    };
+        var evaluation = EvaluateAttendanceWindow(e);
+        return new AppointmentResponseDto
+        {
+            Id = e.Id,
+            PatientId = e.PatientId,
+            ProfessionalId = e.ProfessionalId,
+            ServiceId = e.ServiceId,
+            StartsAt = e.StartsAt,
+            EndsAt = e.EndsAt,
+            AppointmentStatusId = e.AppointmentStatusId,
+            AppointmentOriginId = e.AppointmentOriginId,
+            ReasonForVisit = e.ReasonForVisit,
+            Notes = e.Notes,
+            CreatedByUserId = e.CreatedByUserId,
+            CreatedAt = e.CreatedAt,
+            CancelledAt = e.CancelledAt,
+            CancellationReason = e.CancellationReason,
+            CanBeAttended = evaluation.CanAttend,
+            AttendanceStatusMessage = evaluation.StatusMessage
+        };
+    }
 }
