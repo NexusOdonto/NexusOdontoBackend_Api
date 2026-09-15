@@ -36,6 +36,10 @@ public class ServiceConfiguration : IEntityTypeConfiguration<ServiceEntity>
             .HasColumnName("price")
             .HasPrecision(12, 2);
 
+        builder.Property(c => c.Category)
+            .HasColumnName("category")
+            .HasMaxLength(120);
+
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
             .HasDefaultValueSql("1")

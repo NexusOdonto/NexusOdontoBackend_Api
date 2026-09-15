@@ -21,6 +21,10 @@ namespace Application.Validators.Service
             RuleFor(x => x.Price)
                 .GreaterThanOrEqualTo(0).When(x => x.Price.HasValue)
                 .WithMessage("El precio no puede ser negativo.");
+
+            RuleFor(x => x.Category)
+                .MaximumLength(120).WithMessage("La categoría no puede exceder los 120 caracteres.")
+                .When(x => !string.IsNullOrWhiteSpace(x.Category));
         }
     }
 }

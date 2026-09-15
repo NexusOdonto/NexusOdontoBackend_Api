@@ -17,4 +17,11 @@ public abstract class BaseEntity : Entity
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
+
