@@ -6,6 +6,7 @@ public class ServiceEntity : CatalogEntity
 {
     public int DurationMinutes { get; set; }
     public decimal? Price { get; set; }
+    public string? Category { get; set; }
 
     private ServiceEntity()
     {
@@ -17,11 +18,15 @@ public class ServiceEntity : CatalogEntity
         string? description,
         int durationMinutes,
         decimal? price,
-        int? sortOrder = null)
+        string? category = null,
+        int? sortOrder = null,
+        bool isActive = true)
         : base(code, name, description, sortOrder)
     {
         DurationMinutes = durationMinutes;
         Price = price;
+        Category = category;
+        IsActive = isActive;
     }
 
     public void Update(
@@ -29,10 +34,14 @@ public class ServiceEntity : CatalogEntity
         string? description,
         int durationMinutes,
         decimal? price,
-        int? sortOrder)
+        string? category,
+        int? sortOrder,
+        bool isActive)
     {
         base.Update(name, description, sortOrder);
         DurationMinutes = durationMinutes;
         Price = price;
+        Category = category;
+        SetActive(isActive);
     }
 }

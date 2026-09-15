@@ -391,10 +391,12 @@ public sealed class OdontogramService(
                         Description = f.Note,
                         FindingTypeId = f.FindingTypeId,
                         DentalSurfaceId = f.DentalSurfaceId,
+                        DentalSurfaceCode = ds?.Code,
                         FindingTypeName = ft?.Name,
                         FindingTypeColorHex = ft?.ColorHex,
                         FindingStatusId = f.FindingStatusId,
                         FindingStatusCode = fs?.Code,
+                        Note = f.Note,
                         RegisteredAt = f.RegisteredAt
                     };
                 })
@@ -407,6 +409,7 @@ public sealed class OdontogramService(
                 ToothCode = tooth.ToothCode,
                 StateCode = ts?.Code ?? "SANO",
                 ToothStatusId = tooth.ToothStatusId,
+                ToothStatusCode = ts?.Code,
                 ToothStatusName = ts?.Name,
                 Note = tooth.Note,
                 Findings = toothFindings

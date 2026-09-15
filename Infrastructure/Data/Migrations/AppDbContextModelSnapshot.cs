@@ -1847,6 +1847,11 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("id");
 
+                    b.Property<string>("Category")
+                        .HasMaxLength(120)
+                        .HasColumnType("NVARCHAR2(120)")
+                        .HasColumnName("category");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -3494,6 +3499,7 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("clinical_history_id");
 
                     b.Property<string>("Notes")
+                        .HasMaxLength(2000)
                         .HasColumnType("NVARCHAR2(2000)")
                         .HasColumnName("notes");
 
@@ -4631,6 +4637,22 @@ namespace Infrastructure.Data.Migrations
                         },
                         new
                         {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000021"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$XIu0y.lHkWLbOkKZHjlxYerEkr/qEHhqR2qhIY8Q3FkXYbm1pOSN6",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000022"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$XIu0y.lHkWLbOkKZHjlxYerEkr/qEHhqR2qhIY8Q3FkXYbm1pOSN6",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
                             Id = new Guid("1b000000-0000-0000-0000-000000000006"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -4644,6 +4666,30 @@ namespace Infrastructure.Data.Migrations
                             IsActive = true,
                             PasswordHash = "$2a$11$wBnMjN.GsYVvbI4loTatCO8H12Ljz9RZbCzbayXngNgRU1WwvLJ1m",
                             PersonId = new Guid("1b000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$wBnMjN.GsYVvbI4loTatCO8H12Ljz9RZbCzbayXngNgRU1WwvLJ1m",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$wBnMjN.GsYVvbI4loTatCO8H12Ljz9RZbCzbayXngNgRU1WwvLJ1m",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("1b000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            PasswordHash = "$2a$11$wBnMjN.GsYVvbI4loTatCO8H12Ljz9RZbCzbayXngNgRU1WwvLJ1m",
+                            PersonId = new Guid("1b000000-0000-0000-0000-000000000015")
                         });
                 });
 
@@ -5405,6 +5451,18 @@ namespace Infrastructure.Data.Migrations
                         },
                         new
                         {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000021"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000002"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000022"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000002"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
                             UserId = new Guid("1b000000-0000-0000-0000-000000000006"),
                             RoleId = new Guid("13000000-0000-0000-0000-000000000003"),
                             AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -5412,6 +5470,24 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             UserId = new Guid("1b000000-0000-0000-0000-000000000008"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000005"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000032"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000005"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000033"),
+                            RoleId = new Guid("13000000-0000-0000-0000-000000000005"),
+                            AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            UserId = new Guid("1b000000-0000-0000-0000-000000000034"),
                             RoleId = new Guid("13000000-0000-0000-0000-000000000005"),
                             AssignedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
@@ -5775,6 +5851,11 @@ namespace Infrastructure.Data.Migrations
                         },
                         new
                         {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000006"),
+                            permission_id = new Guid("14000000-0000-0000-0008-000000000003")
+                        },
+                        new
+                        {
                             role_id = new Guid("13000000-0000-0000-0000-000000000002"),
                             permission_id = new Guid("14000000-0000-0000-0001-000000000001")
                         },
@@ -6067,6 +6148,11 @@ namespace Infrastructure.Data.Migrations
                         {
                             role_id = new Guid("13000000-0000-0000-0000-000000000005"),
                             permission_id = new Guid("14000000-0000-0000-0002-000000000003")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000005"),
+                            permission_id = new Guid("14000000-0000-0000-0003-000000000001")
                         },
                         new
                         {

@@ -12,5 +12,9 @@ public sealed class CreateServiceRequestDto
 
     public decimal? Price { get; set; }
 
+    public string? Category { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
     public int? SortOrder { get; set; }
 }

@@ -37,7 +37,9 @@ public sealed class ServiceService(
                 request.Description,
                 request.DurationMinutes,
                 request.Price,
-                request.SortOrder);
+                request.Category,
+                request.SortOrder,
+                request.IsActive);
             await repository.AddAsync(entity);
             await unitOfWork.SaveChangesAsync();
             await unitOfWork.CommitTransactionAsync();
@@ -74,7 +76,14 @@ public sealed class ServiceService(
                 }
             }
 
-            entity.Update(request.Name, request.Description, request.DurationMinutes, request.Price, request.SortOrder);
+            entity.Update(
+                request.Name,
+                request.Description,
+                request.DurationMinutes,
+                request.Price,
+                request.Category,
+                request.SortOrder,
+                request.IsActive);
             repository.Update(entity);
             await unitOfWork.SaveChangesAsync();
             await unitOfWork.CommitTransactionAsync();
@@ -142,6 +151,7 @@ public sealed class ServiceService(
         Description = e.Description,
         DurationMinutes = e.DurationMinutes,
         Price = e.Price,
+        Category = e.Category,
         IsActive = e.IsActive,
         SortOrder = e.SortOrder,
         CreatedAt = e.CreatedAt
