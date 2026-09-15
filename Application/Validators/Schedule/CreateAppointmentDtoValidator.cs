@@ -10,8 +10,11 @@ namespace Application.Validators.Schedule
             RuleFor(x => x.PatientId)
                 .NotEmpty().WithMessage("Debe indicar un paciente válido.");
 
-            RuleFor(x => x.ProfessionalId)
-                .NotEmpty().WithMessage("Debe indicar un profesional válido.");
+            When(x => !x.AutoAssignProfessional, () =>
+            {
+                RuleFor(x => x.ProfessionalId)
+                    .NotEmpty().WithMessage("Debe indicar un profesional válido.");
+            });
 
             RuleFor(x => x.StartsAt)
                 .NotEmpty().WithMessage("La fecha y hora de inicio son obligatorias.");

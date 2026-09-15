@@ -98,7 +98,6 @@ public sealed class AppointmentService(
         ArgumentNullException.ThrowIfNull(request);
 
         var patientId = await ResolvePatientIdAsync(request.PatientId);
-        var professionalId = await ResolveProfessionalIdAsync(request.ProfessionalId);
 
         var serviceId = request.ServiceId == Guid.Empty
             ? new Guid("30000000-0000-0000-0000-000000000001")
@@ -121,18 +120,9 @@ public sealed class AppointmentService(
             throw new ValidationException("No se pueden programar citas en fechas u horas pasadas.");
         }
 
-        await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
-
-        var overlapping = await repository.GetByProfessionalInRangeAsync(
-            professionalId,
-            startsAt,
-            endsAt);
-
-        if (overlapping.Any(a => a.CancelledAt == null && a.AppointmentStatusId != StatusCancelled && a.AppointmentStatusId != StatusNoShow))
-        {
-            throw new ConflictException(
-                "The professional already has an appointment scheduled during the requested time range.");
-        }
+        var professionalId = request.AutoAssignProfessional
+            ? await ResolveAvailableProfessionalAsync(request.ProfessionalId, startsAt, endsAt)
+            : await ResolveAndValidateSpecificProfessionalAsync(request.ProfessionalId, startsAt, endsAt);
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
@@ -375,13 +365,115 @@ public sealed class AppointmentService(
         return (true, "Cita en horario de atención.", false);
     }
 
-    private async Task ValidateAvailabilityAsync(Guid professionalId, DateTime startsAt, DateTime endsAt)
+    private async Task<Guid> ResolveAndValidateSpecificProfessionalAsync(
+        Guid professionalId,
+        DateTime startsAt,
+        DateTime endsAt)
+    {
+        var resolvedId = await ResolveProfessionalIdAsync(professionalId);
+        await ValidateAvailabilityAsync(resolvedId, startsAt, endsAt);
+
+        if (await HasActiveOverlapAsync(resolvedId, startsAt, endsAt))
+        {
+            throw new ConflictException(
+                "The professional already has an appointment scheduled during the requested time range.");
+        }
+
+        return resolvedId;
+    }
+
+    /// <summary>
+    /// Tries the preferred professional first (if provided), then any other active dentist free in the slot.
+    /// </summary>
+    private async Task<Guid> ResolveAvailableProfessionalAsync(
+        Guid preferredProfessionalId,
+        DateTime startsAt,
+        DateTime endsAt)
+    {
+        var candidates = new List<Guid>();
+
+        if (preferredProfessionalId != Guid.Empty)
+        {
+            try
+            {
+                candidates.Add(await ResolveProfessionalIdAsync(preferredProfessionalId));
+            }
+            catch (KeyNotFoundException)
+            {
+                // Preferred id may be stale; continue with other active professionals.
+            }
+        }
+
+        var allProfessionals = await professionalRepository.GetAllAsync();
+        foreach (var professional in allProfessionals
+                     .Where(p => p.IsActive)
+                     .OrderBy(p => p.Id))
+        {
+            if (!candidates.Contains(professional.Id))
+            {
+                candidates.Add(professional.Id);
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            throw new ConflictException(
+                "No hay odontólogos activos disponibles para asignar la cita. Por favor selecciona otra hora.");
+        }
+
+        foreach (var candidateId in candidates)
+        {
+            if (await IsSlotFreeForProfessionalAsync(candidateId, startsAt, endsAt))
+            {
+                return candidateId;
+            }
+        }
+
+        throw new ConflictException(
+            "No hay odontólogos disponibles en ese horario. Por favor selecciona otra hora.");
+    }
+
+    private async Task<bool> IsSlotFreeForProfessionalAsync(
+        Guid professionalId,
+        DateTime startsAt,
+        DateTime endsAt)
+    {
+        if (!await IsWithinActiveAvailabilityAsync(professionalId, startsAt, endsAt))
+        {
+            return false;
+        }
+
+        return !await HasActiveOverlapAsync(professionalId, startsAt, endsAt);
+    }
+
+    private async Task<bool> HasActiveOverlapAsync(Guid professionalId, DateTime startsAt, DateTime endsAt)
+    {
+        var overlapping = await repository.GetByProfessionalInRangeAsync(
+            professionalId,
+            startsAt,
+            endsAt);
+
+        return overlapping.Any(a =>
+            a.CancelledAt == null &&
+            a.AppointmentStatusId != StatusCancelled &&
+            a.AppointmentStatusId != StatusNoShow);
+    }
+
+    private async Task<bool> IsWithinActiveAvailabilityAsync(
+        Guid professionalId,
+        DateTime startsAt,
+        DateTime endsAt)
     {
         var availabilities = await availabilityRepository.GetByProfessionalAsync(professionalId);
         var activeAvailabilities = availabilities.Where(a => a.IsActive).ToList();
 
-        if (activeAvailabilities.Count == 0 ||
-            !activeAvailabilities.Any(a => IsWithinAvailability(startsAt, endsAt, a)))
+        return activeAvailabilities.Count > 0 &&
+               activeAvailabilities.Any(a => IsWithinAvailability(startsAt, endsAt, a));
+    }
+
+    private async Task ValidateAvailabilityAsync(Guid professionalId, DateTime startsAt, DateTime endsAt)
+    {
+        if (!await IsWithinActiveAvailabilityAsync(professionalId, startsAt, endsAt))
         {
             throw new ConflictException(
                 "The appointment time is outside the professional's active availability.");
