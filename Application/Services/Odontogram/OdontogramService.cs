@@ -52,6 +52,7 @@ public sealed class OdontogramService(
         ["RESTAURACION"] = "RESTAURACION",
         ["RES"] = "RESTAURACION",
         ["OBT"] = "RESTAURACION",
+        ["OBTURACION"] = "RESTAURACION",
         ["FILLING"] = "RESTAURACION",
         ["FRACTURE"] = "FRACTURA",
         ["FRACTURA"] = "FRACTURA",
@@ -59,16 +60,24 @@ public sealed class OdontogramService(
         ["CROWN"] = "PROTESIS",
         ["CORONA"] = "PROTESIS",
         ["PROTESIS"] = "PROTESIS",
+        ["BRIDGE"] = "PROTESIS",
+        ["PUENTE"] = "PROTESIS",
         ["SEALANT"] = "SELLANTE",
         ["SELLANTE"] = "SELLANTE",
         ["SEL"] = "SELLANTE",
         ["SEA"] = "SELLANTE",
         ["ENDODONTIC"] = "RESTAURACION",
+        ["ENDODONCIA"] = "RESTAURACION",
         ["END"] = "RESTAURACION",
         ["IMPLANT"] = "PROTESIS",
+        ["IMPLANTE"] = "PROTESIS",
         ["IMP"] = "PROTESIS",
         ["EXTRACTION"] = "FRACTURA",
+        ["EXTRACCION"] = "FRACTURA",
         ["EXT"] = "FRACTURA",
+        ["MOBILITY"] = "FRACTURA",
+        ["MOVILIDAD"] = "FRACTURA",
+        ["MOB"] = "FRACTURA",
     };
 
     private static readonly Dictionary<string, string> ToothStateAliases = new(StringComparer.OrdinalIgnoreCase)
@@ -136,6 +145,12 @@ public sealed class OdontogramService(
         return true;
     }
 
+    /// <summary>
+    /// Oracle NVARCHAR2(2000) on odontograms.notes. The UI historically embedded a full
+    /// ODONTOGRAM_STATE JSON blob here; teeth/findings are now persisted relationally.
+    /// </summary>
+    private const int NotesMaxLength = 2000;
+
     public async Task<FullOdontogramResponseDto> SaveFullOdontogramAsync(
         SaveFullOdontogramRequestDto request,
         CancellationToken cancellationToken = default)
@@ -146,6 +161,8 @@ public sealed class OdontogramService(
         {
             throw new ValidationException("Se requiere ProfessionalId para registrar el odontograma.");
         }
+
+        var normalizedNotes = NormalizeOdontogramNotes(request.Notes);
 
         Guid clinicalHistoryId;
         if (request.ClinicalHistoryId.HasValue && request.ClinicalHistoryId.Value != Guid.Empty)
@@ -204,13 +221,13 @@ public sealed class OdontogramService(
                     clinicalHistoryId,
                     request.ProfessionalId.Value,
                     request.ClinicalAttentionId,
-                    request.Notes);
+                    normalizedNotes);
                 await repository.AddAsync(odontogram);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             else
             {
-                odontogram.Update(request.Notes, request.ClinicalAttentionId);
+                odontogram.Update(normalizedNotes, request.ClinicalAttentionId);
                 repository.Update(odontogram);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
@@ -408,6 +425,33 @@ public sealed class OdontogramService(
         };
     }
 
+    /// <summary>
+    /// Drops legacy ODONTOGRAM_STATE JSON (now stored as teeth/findings) and truncates
+    /// to Oracle odontograms.notes NVARCHAR2(2000) so SaveFull never hits ORA-12899.
+    /// </summary>
+    private static string? NormalizeOdontogramNotes(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return null;
+
+        var cleaned = notes;
+        const string stateMarker = "ODONTOGRAM_STATE:";
+        var stateIdx = cleaned.IndexOf(stateMarker, StringComparison.OrdinalIgnoreCase);
+        if (stateIdx >= 0)
+        {
+            cleaned = cleaned[..stateIdx].TrimEnd();
+        }
+
+        cleaned = cleaned.Trim();
+        if (cleaned.Length == 0)
+            return null;
+
+        if (cleaned.Length <= NotesMaxLength)
+            return cleaned;
+
+        return cleaned[..NotesMaxLength];
+    }
+
     private static string? ResolveToothCode(OdontogramToothItemDto toothDto)
     {
         if (toothDto.FdiNumber is int fdi && fdi > 0)
@@ -473,7 +517,36 @@ public sealed class OdontogramService(
             }
         }
 
-        return typeByCode.GetValueOrDefault("CARIES")?.Id;
+        // Prefer description suffix ("Cara oclusal: crown") over forcing CARIES.
+        var note = findingDto.Description ?? findingDto.Note;
+        if (!string.IsNullOrWhiteSpace(note))
+        {
+            var fromDescription = TryResolveFindingTypeFromDescription(note, typeByCode);
+            if (fromDescription is not null)
+                return fromDescription;
+        }
+
+        // Unknown code: skip rather than silently persist as caries.
+        return null;
+    }
+
+    private static Guid? TryResolveFindingTypeFromDescription(
+        string description,
+        IReadOnlyDictionary<string, FindingTypeEntity> typeByCode)
+    {
+        var text = description.Trim();
+        var colonIdx = text.LastIndexOf(':');
+        var token = colonIdx >= 0 ? text[(colonIdx + 1)..].Trim() : text;
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
+        if (FindingTypeAliases.TryGetValue(token, out var aliased)
+            && typeByCode.TryGetValue(aliased, out var byAlias))
+        {
+            return byAlias.Id;
+        }
+
+        return null;
     }
 
     private static Guid? ResolveSurfaceId(
