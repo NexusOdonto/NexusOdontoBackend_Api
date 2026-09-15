@@ -111,11 +111,11 @@ public sealed class AppointmentService(
             ? new Guid("19000000-0000-0000-0000-000000000002")
             : request.AppointmentOriginId;
 
-        var startsAt = request.StartsAt == default ? DateTime.UtcNow.AddHours(1) : request.StartsAt;
+        var startsAt = request.StartsAt == default ? GetNowColombia().AddHours(1) : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
-        var nowUtc = DateTime.UtcNow;
-        if (startsAt < nowUtc.AddMinutes(-5))
+        var nowColombia = GetNowColombia();
+        if (startsAt < nowColombia.AddMinutes(-10))
         {
             throw new ValidationException("No se pueden programar citas en fechas u horas pasadas.");
         }
@@ -347,17 +347,7 @@ public sealed class AppointmentService(
             return (false, "El paciente no asistió a la cita.", true);
         }
 
-        var nowUtc = DateTime.UtcNow;
-        DateTime nowColombia;
-        try
-        {
-            var tzId = Environment.OSVersion.Platform == PlatformID.Win32NT ? "SA Pacific Standard Time" : "America/Bogota";
-            nowColombia = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, TimeZoneInfo.FindSystemTimeZoneById(tzId));
-        }
-        catch
-        {
-            nowColombia = nowUtc.AddHours(-5);
-        }
+        var nowColombia = GetNowColombia();
 
         // Si la cita es de un día anterior al actual en Colombia y no fue atendida:
         if (appointment.StartsAt.Date < nowColombia.Date)
@@ -366,20 +356,34 @@ public sealed class AppointmentService(
         }
 
         // Si ya pasaron más de 45 minutos desde la hora programada sin haberse atendido
-        bool isPast = nowColombia > appointment.StartsAt.AddMinutes(45) || nowUtc > appointment.StartsAt.AddMinutes(45);
+        bool isPast = nowColombia > appointment.StartsAt.AddMinutes(45);
         if (isPast)
         {
             return (false, "El horario de la cita ha vencido (No asistió).", true);
         }
 
         // Si falta más de 15 minutos para la cita
-        if (nowColombia < appointment.StartsAt.AddMinutes(-15) && nowUtc < appointment.StartsAt.AddMinutes(-15))
+        if (nowColombia < appointment.StartsAt.AddMinutes(-15))
         {
             return (false, "Aún no es la hora de la cita. Podrá atenderse a partir de 15 minutos antes de la hora programada.", false);
         }
 
         // Dentro del horario hábil de atención
         return (true, "Cita en horario de atención.", false);
+    }
+
+    public static DateTime GetNowColombia()
+    {
+        var nowUtc = DateTime.UtcNow;
+        try
+        {
+            var tzId = Environment.OSVersion.Platform == PlatformID.Win32NT ? "SA Pacific Standard Time" : "America/Bogota";
+            return TimeZoneInfo.ConvertTimeFromUtc(nowUtc, TimeZoneInfo.FindSystemTimeZoneById(tzId));
+        }
+        catch
+        {
+            return nowUtc.AddHours(-5);
+        }
     }
 
     private async Task<Guid> ResolveAndValidateSpecificProfessionalAsync(
