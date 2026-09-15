@@ -13,14 +13,22 @@ public sealed class OdontogramsController(IOdontogramService service)
     protected override string PermissionModule => "ODONTOGRAM";
 
     [HttpPost("full")]
-    public async Task<ActionResult<FullOdontogramResponseDto>> SaveFull([FromBody] SaveFullOdontogramRequestDto request, CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<FullOdontogramResponseDto>> SaveFull(
+        [FromBody] SaveFullOdontogramRequestDto request,
+        CancellationToken cancellationToken)
     {
         var result = await Service.SaveFullOdontogramAsync(request, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("patient/{patientId:guid}/latest")]
-    public async Task<ActionResult<FullOdontogramResponseDto>> GetLatestByPatient(Guid patientId, CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<FullOdontogramResponseDto>> GetLatestByPatient(
+        Guid patientId,
+        CancellationToken cancellationToken)
     {
         var result = await Service.GetLatestByPatientIdAsync(patientId, cancellationToken);
         if (result is null)
@@ -31,7 +39,11 @@ public sealed class OdontogramsController(IOdontogramService service)
     }
 
     [HttpGet("{id:guid}/full")]
-    public async Task<ActionResult<FullOdontogramResponseDto>> GetFullById(Guid id, CancellationToken cancellationToken)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<FullOdontogramResponseDto>> GetFullById(
+        Guid id,
+        CancellationToken cancellationToken)
     {
         var result = await Service.GetFullByIdAsync(id, cancellationToken);
         if (result is null)

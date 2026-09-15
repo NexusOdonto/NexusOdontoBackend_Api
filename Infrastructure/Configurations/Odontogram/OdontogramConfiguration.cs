@@ -32,6 +32,7 @@ public class OdontogramConfiguration : IEntityTypeConfiguration<Domain.Entities.
             .IsRequired();
 
         builder.Property(c => c.Notes)
-            .HasColumnName("notes");
+            .HasColumnName("notes")
+            .HasMaxLength(2000);
     }
 }

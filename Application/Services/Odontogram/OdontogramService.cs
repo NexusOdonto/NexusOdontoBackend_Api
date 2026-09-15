@@ -1,6 +1,5 @@
 using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Repositories.Common;
-using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.Odontogram;
 using Application.DTOs.Odontogram.FullOdontogram;
 using Application.DTOs.Odontogram.Odontogram;
@@ -22,6 +21,81 @@ public sealed class OdontogramService(
     IRepository<FindingStatusEntity> findingStatusRepository,
     IUnitOfWork unitOfWork) : IOdontogramService
 {
+    private static readonly Dictionary<string, string> SurfaceShortToCode = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["M"] = "MESIAL",
+        ["D"] = "DISTAL",
+        ["O"] = "OCLUSAL",
+        ["I"] = "INCISAL",
+        ["V"] = "VESTIBULAR",
+        ["B"] = "VESTIBULAR",
+        ["P"] = "PALATINO",
+        ["L"] = "LINGUAL",
+    };
+
+    private static readonly Dictionary<string, string> SurfaceCodeToShort = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["MESIAL"] = "M",
+        ["DISTAL"] = "D",
+        ["OCLUSAL"] = "O",
+        ["INCISAL"] = "I",
+        ["VESTIBULAR"] = "V",
+        ["PALATINO"] = "P",
+        ["LINGUAL"] = "L",
+    };
+
+    private static readonly Dictionary<string, string> FindingTypeAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["CARIES"] = "CARIES",
+        ["CAR"] = "CARIES",
+        ["RESTORATION"] = "RESTAURACION",
+        ["RESTAURACION"] = "RESTAURACION",
+        ["RES"] = "RESTAURACION",
+        ["OBT"] = "RESTAURACION",
+        ["OBTURACION"] = "RESTAURACION",
+        ["FILLING"] = "RESTAURACION",
+        ["FRACTURE"] = "FRACTURA",
+        ["FRACTURA"] = "FRACTURA",
+        ["FRA"] = "FRACTURA",
+        ["CROWN"] = "PROTESIS",
+        ["CORONA"] = "PROTESIS",
+        ["PROTESIS"] = "PROTESIS",
+        ["BRIDGE"] = "PROTESIS",
+        ["PUENTE"] = "PROTESIS",
+        ["SEALANT"] = "SELLANTE",
+        ["SELLANTE"] = "SELLANTE",
+        ["SEL"] = "SELLANTE",
+        ["SEA"] = "SELLANTE",
+        ["ENDODONTIC"] = "RESTAURACION",
+        ["ENDODONCIA"] = "RESTAURACION",
+        ["END"] = "RESTAURACION",
+        ["IMPLANT"] = "PROTESIS",
+        ["IMPLANTE"] = "PROTESIS",
+        ["IMP"] = "PROTESIS",
+        ["EXTRACTION"] = "FRACTURA",
+        ["EXTRACCION"] = "FRACTURA",
+        ["EXT"] = "FRACTURA",
+        ["MOBILITY"] = "FRACTURA",
+        ["MOVILIDAD"] = "FRACTURA",
+        ["MOB"] = "FRACTURA",
+    };
+
+    private static readonly Dictionary<string, string> ToothStateAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["SANO"] = "SANO",
+        ["HEALTHY"] = "SANO",
+        ["AUSENTE"] = "AUSENTE",
+        ["MISSING"] = "AUSENTE",
+        ["EXTRAIDO"] = "EXTRAIDO",
+        ["EXTRACTED"] = "EXTRAIDO",
+        ["INCLUIDO"] = "SANO",
+        ["UNERUPTED"] = "SANO",
+        ["IMPLANTE"] = "IMPLANTE",
+        ["IMPLANT"] = "IMPLANTE",
+        ["CORONA"] = "CORONA",
+        ["CROWN"] = "CORONA",
+    };
+
     public async Task<IReadOnlyList<OdontogramResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
@@ -71,11 +145,24 @@ public sealed class OdontogramService(
         return true;
     }
 
+    /// <summary>
+    /// Oracle NVARCHAR2(2000) on odontograms.notes. The UI historically embedded a full
+    /// ODONTOGRAM_STATE JSON blob here; teeth/findings are now persisted relationally.
+    /// </summary>
+    private const int NotesMaxLength = 2000;
+
     public async Task<FullOdontogramResponseDto> SaveFullOdontogramAsync(
         SaveFullOdontogramRequestDto request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        if (!request.ProfessionalId.HasValue || request.ProfessionalId.Value == Guid.Empty)
+        {
+            throw new ValidationException("Se requiere ProfessionalId para registrar el odontograma.");
+        }
+
+        var normalizedNotes = NormalizeOdontogramNotes(request.Notes);
 
         Guid clinicalHistoryId;
         if (request.ClinicalHistoryId.HasValue && request.ClinicalHistoryId.Value != Guid.Empty)
@@ -87,7 +174,10 @@ public sealed class OdontogramService(
             var history = await clinicalHistoryRepository.GetByPatientIdAsync(request.PatientId.Value, cancellationToken);
             if (history is null)
             {
-                history = new ClinicalHistoryEntity(request.PatientId.Value, DateTime.UtcNow, "Historia clínica inicial generada automáticamente para odontograma.");
+                history = new ClinicalHistoryEntity(
+                    request.PatientId.Value,
+                    DateTime.UtcNow,
+                    "Historia clínica inicial generada automáticamente para odontograma.");
                 await clinicalHistoryRepository.AddAsync(history);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
@@ -97,6 +187,24 @@ public sealed class OdontogramService(
         {
             throw new ValidationException("Debe indicar PatientId o ClinicalHistoryId para registrar el odontograma.");
         }
+
+        var toothStatuses = await toothStatusRepository.GetAllAsync();
+        var statusByCode = toothStatuses.ToDictionary(s => s.Code, StringComparer.OrdinalIgnoreCase);
+        var defaultToothStatus = statusByCode.GetValueOrDefault("SANO")
+            ?? toothStatuses.FirstOrDefault()
+            ?? throw new ValidationException("No hay estados de pieza dental configurados en el catálogo.");
+
+        var findingTypes = await findingTypeRepository.GetAllAsync();
+        var typeByCode = findingTypes.ToDictionary(t => t.Code, StringComparer.OrdinalIgnoreCase);
+
+        var surfaces = await dentalSurfaceRepository.GetAllAsync();
+        var surfaceByCode = surfaces.ToDictionary(s => s.Code, StringComparer.OrdinalIgnoreCase);
+
+        var findingStatuses = await findingStatusRepository.GetAllAsync();
+        var defaultFindingStatus = findingStatuses.FirstOrDefault(s =>
+                string.Equals(s.Code, "ACTIVO", StringComparison.OrdinalIgnoreCase))
+            ?? findingStatuses.FirstOrDefault()
+            ?? throw new ValidationException("No hay estados de hallazgo configurados en el catálogo.");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
@@ -111,34 +219,35 @@ public sealed class OdontogramService(
             {
                 odontogram = new OdontogramEntity(
                     clinicalHistoryId,
-                    request.ProfessionalId,
+                    request.ProfessionalId.Value,
                     request.ClinicalAttentionId,
-                    request.Notes);
+                    normalizedNotes);
                 await repository.AddAsync(odontogram);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
             else
             {
-                odontogram.Update(request.Notes, request.ClinicalAttentionId);
+                odontogram.Update(normalizedNotes, request.ClinicalAttentionId);
                 repository.Update(odontogram);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
 
             var allTeeth = await odontogramToothRepository.GetAllAsync();
             var existingTeeth = allTeeth.Where(t => t.OdontogramId == odontogram.Id).ToList();
-
-            var defaultToothStatus = new Guid("1a000000-0000-0000-0000-000000000001"); // SANO
-            var defaultFindingStatus = new Guid("1d000000-0000-0000-0000-000000000001"); // ACTIVO
-
             var toothEntityByCode = new Dictionary<string, OdontogramToothEntity>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var toothDto in request.Teeth)
             {
-                var statusId = toothDto.ToothStatusId == Guid.Empty ? defaultToothStatus : toothDto.ToothStatusId;
-                var tooth = existingTeeth.FirstOrDefault(t => string.Equals(t.ToothCode, toothDto.ToothCode, StringComparison.OrdinalIgnoreCase));
+                var toothCode = ResolveToothCode(toothDto);
+                if (string.IsNullOrWhiteSpace(toothCode)) continue;
+
+                var statusId = ResolveToothStatusId(toothDto, statusByCode, defaultToothStatus.Id);
+                var tooth = existingTeeth.FirstOrDefault(t =>
+                    string.Equals(t.ToothCode, toothCode, StringComparison.OrdinalIgnoreCase));
+
                 if (tooth is null)
                 {
-                    tooth = new OdontogramToothEntity(odontogram.Id, toothDto.ToothCode.Trim(), statusId, toothDto.Note);
+                    tooth = new OdontogramToothEntity(odontogram.Id, toothCode, statusId, toothDto.Note);
                     await odontogramToothRepository.AddAsync(tooth);
                 }
                 else
@@ -146,46 +255,56 @@ public sealed class OdontogramService(
                     tooth.Update(statusId, toothDto.Note);
                     odontogramToothRepository.Update(tooth);
                 }
-                toothEntityByCode[toothDto.ToothCode.Trim()] = tooth;
+
+                toothEntityByCode[toothCode] = tooth;
             }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            foreach (var existing in existingTeeth)
+            var allFindings = await dentalFindingRepository.GetAllAsync();
+            var existingFindings = allFindings
+                .Where(f => toothEntityByCode.Values.Any(t => t.Id == f.OdontogramToothId)
+                            || existingTeeth.Any(t => t.Id == f.OdontogramToothId))
+                .ToList();
+
+            foreach (var finding in existingFindings)
             {
-                if (!toothEntityByCode.ContainsKey(existing.ToothCode))
-                {
-                    toothEntityByCode[existing.ToothCode] = existing;
-                }
+                dentalFindingRepository.Remove(finding);
             }
 
-            if (request.Findings.Count > 0)
+            if (existingFindings.Count > 0)
             {
-                foreach (var findingDto in request.Findings)
-                {
-                    if (string.IsNullOrWhiteSpace(findingDto.ToothCode)) continue;
-
-                    if (!toothEntityByCode.TryGetValue(findingDto.ToothCode.Trim(), out var toothEntity))
-                    {
-                        toothEntity = new OdontogramToothEntity(odontogram.Id, findingDto.ToothCode.Trim(), defaultToothStatus);
-                        await odontogramToothRepository.AddAsync(toothEntity);
-                        await unitOfWork.SaveChangesAsync(cancellationToken);
-                        toothEntityByCode[findingDto.ToothCode.Trim()] = toothEntity;
-                    }
-
-                    var findingStatusId = findingDto.FindingStatusId == Guid.Empty ? defaultFindingStatus : findingDto.FindingStatusId;
-                    var finding = new DentalFindingEntity(
-                        toothEntity.Id,
-                        findingDto.FindingTypeId,
-                        findingStatusId,
-                        findingDto.DentalSurfaceId == Guid.Empty ? null : findingDto.DentalSurfaceId,
-                        findingDto.Note);
-                    await dentalFindingRepository.AddAsync(finding);
-                }
-
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
 
+            foreach (var toothDto in request.Teeth)
+            {
+                var toothCode = ResolveToothCode(toothDto);
+                if (string.IsNullOrWhiteSpace(toothCode)) continue;
+                if (!toothEntityByCode.TryGetValue(toothCode, out var toothEntity)) continue;
+
+                foreach (var findingDto in toothDto.Findings ?? [])
+                {
+                    var findingTypeId = ResolveFindingTypeId(findingDto, typeByCode);
+                    if (findingTypeId is null) continue;
+
+                    var surfaceId = ResolveSurfaceId(findingDto, surfaceByCode);
+                    var findingStatusId = findingDto.FindingStatusId is { } fs && fs != Guid.Empty
+                        ? fs
+                        : defaultFindingStatus.Id;
+
+                    var note = findingDto.Description ?? findingDto.Note;
+                    var finding = new DentalFindingEntity(
+                        toothEntity.Id,
+                        findingTypeId.Value,
+                        findingStatusId,
+                        surfaceId,
+                        note);
+                    await dentalFindingRepository.AddAsync(finding);
+                }
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return await BuildFullOdontogramResponseAsync(odontogram, cancellationToken);
         });
     }
@@ -195,10 +314,7 @@ public sealed class OdontogramService(
         CancellationToken cancellationToken = default)
     {
         var history = await clinicalHistoryRepository.GetByPatientIdAsync(patientId, cancellationToken);
-        if (history is null)
-        {
-            return null;
-        }
+        if (history is null) return null;
 
         var allOdontos = await repository.GetAllAsync();
         var latest = allOdontos
@@ -206,10 +322,7 @@ public sealed class OdontogramService(
             .OrderByDescending(o => o.RecordedAt)
             .FirstOrDefault();
 
-        if (latest is null)
-        {
-            return null;
-        }
+        if (latest is null) return null;
 
         return await BuildFullOdontogramResponseAsync(latest, cancellationToken);
     }
@@ -219,10 +332,7 @@ public sealed class OdontogramService(
         CancellationToken cancellationToken = default)
     {
         var entity = await repository.GetByIdAsync(id);
-        if (entity is null)
-        {
-            return null;
-        }
+        if (entity is null) return null;
 
         return await BuildFullOdontogramResponseAsync(entity, cancellationToken);
     }
@@ -231,6 +341,8 @@ public sealed class OdontogramService(
         OdontogramEntity odontogram,
         CancellationToken cancellationToken)
     {
+        _ = cancellationToken;
+
         var allTeeth = await odontogramToothRepository.GetAllAsync();
         var teeth = allTeeth.Where(t => t.OdontogramId == odontogram.Id).ToList();
         var toothIds = teeth.Select(t => t.Id).ToHashSet();
@@ -255,6 +367,8 @@ public sealed class OdontogramService(
         foreach (var tooth in teeth)
         {
             statusById.TryGetValue(tooth.ToothStatusId, out var ts);
+            _ = int.TryParse(tooth.ToothCode, out var fdiNumber);
+
             var toothFindings = findings
                 .Where(f => f.OdontogramToothId == tooth.Id)
                 .Select(f =>
@@ -263,18 +377,24 @@ public sealed class OdontogramService(
                     surfaceById.TryGetValue(f.DentalSurfaceId ?? Guid.Empty, out var ds);
                     findingStatusById.TryGetValue(f.FindingStatusId, out var fs);
 
+                    string? shortSurface = null;
+                    if (ds is not null)
+                    {
+                        shortSurface = SurfaceCodeToShort.GetValueOrDefault(ds.Code) ?? ds.Code;
+                    }
+
                     return new FullDentalFindingResponseDto
                     {
                         Id = f.Id,
-                        DentalSurfaceId = f.DentalSurfaceId,
-                        DentalSurfaceCode = ds?.Code,
-                        FindingTypeId = f.FindingTypeId,
                         FindingTypeCode = ft?.Code,
+                        SurfaceCode = shortSurface,
+                        Description = f.Note,
+                        FindingTypeId = f.FindingTypeId,
+                        DentalSurfaceId = f.DentalSurfaceId,
                         FindingTypeName = ft?.Name,
                         FindingTypeColorHex = ft?.ColorHex,
                         FindingStatusId = f.FindingStatusId,
                         FindingStatusCode = fs?.Code,
-                        Note = f.Note,
                         RegisteredAt = f.RegisteredAt
                     };
                 })
@@ -283,9 +403,10 @@ public sealed class OdontogramService(
             teethResponse.Add(new FullOdontogramToothResponseDto
             {
                 Id = tooth.Id,
+                FdiNumber = fdiNumber,
                 ToothCode = tooth.ToothCode,
+                StateCode = ts?.Code ?? "SANO",
                 ToothStatusId = tooth.ToothStatusId,
-                ToothStatusCode = ts?.Code,
                 ToothStatusName = ts?.Name,
                 Note = tooth.Note,
                 Findings = toothFindings
@@ -302,6 +423,154 @@ public sealed class OdontogramService(
             Notes = odontogram.Notes,
             Teeth = teethResponse
         };
+    }
+
+    /// <summary>
+    /// Drops legacy ODONTOGRAM_STATE JSON (now stored as teeth/findings) and truncates
+    /// to Oracle odontograms.notes NVARCHAR2(2000) so SaveFull never hits ORA-12899.
+    /// </summary>
+    private static string? NormalizeOdontogramNotes(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return null;
+
+        var cleaned = notes;
+        const string stateMarker = "ODONTOGRAM_STATE:";
+        var stateIdx = cleaned.IndexOf(stateMarker, StringComparison.OrdinalIgnoreCase);
+        if (stateIdx >= 0)
+        {
+            cleaned = cleaned[..stateIdx].TrimEnd();
+        }
+
+        cleaned = cleaned.Trim();
+        if (cleaned.Length == 0)
+            return null;
+
+        if (cleaned.Length <= NotesMaxLength)
+            return cleaned;
+
+        return cleaned[..NotesMaxLength];
+    }
+
+    private static string? ResolveToothCode(OdontogramToothItemDto toothDto)
+    {
+        if (toothDto.FdiNumber is int fdi && fdi > 0)
+            return fdi.ToString();
+
+        if (!string.IsNullOrWhiteSpace(toothDto.ToothCode))
+            return toothDto.ToothCode.Trim();
+
+        return null;
+    }
+
+    private static Guid ResolveToothStatusId(
+        OdontogramToothItemDto toothDto,
+        IReadOnlyDictionary<string, ToothStatusEntity> statusByCode,
+        Guid defaultStatusId)
+    {
+        if (toothDto.ToothStatusId is { } id && id != Guid.Empty)
+            return id;
+
+        if (!string.IsNullOrWhiteSpace(toothDto.StateCode))
+        {
+            var raw = toothDto.StateCode.Trim();
+            if (ToothStateAliases.TryGetValue(raw, out var aliased)
+                && statusByCode.TryGetValue(aliased, out var byAlias))
+            {
+                return byAlias.Id;
+            }
+
+            if (statusByCode.TryGetValue(raw, out var byCode))
+                return byCode.Id;
+        }
+
+        return defaultStatusId;
+    }
+
+    private static Guid? ResolveFindingTypeId(
+        DentalFindingItemDto findingDto,
+        IReadOnlyDictionary<string, FindingTypeEntity> typeByCode)
+    {
+        if (findingDto.FindingTypeId is { } id && id != Guid.Empty)
+            return id;
+
+        if (string.IsNullOrWhiteSpace(findingDto.FindingTypeCode))
+            return null;
+
+        var raw = findingDto.FindingTypeCode.Trim();
+
+        if (FindingTypeAliases.TryGetValue(raw, out var aliased)
+            && typeByCode.TryGetValue(aliased, out var byAlias))
+        {
+            return byAlias.Id;
+        }
+
+        if (typeByCode.TryGetValue(raw, out var byCode))
+            return byCode.Id;
+
+        foreach (var (alias, catalogCode) in FindingTypeAliases)
+        {
+            if (raw.Contains(alias, StringComparison.OrdinalIgnoreCase)
+                && typeByCode.TryGetValue(catalogCode, out var fuzzy))
+            {
+                return fuzzy.Id;
+            }
+        }
+
+        // Prefer description suffix ("Cara oclusal: crown") over forcing CARIES.
+        var note = findingDto.Description ?? findingDto.Note;
+        if (!string.IsNullOrWhiteSpace(note))
+        {
+            var fromDescription = TryResolveFindingTypeFromDescription(note, typeByCode);
+            if (fromDescription is not null)
+                return fromDescription;
+        }
+
+        // Unknown code: skip rather than silently persist as caries.
+        return null;
+    }
+
+    private static Guid? TryResolveFindingTypeFromDescription(
+        string description,
+        IReadOnlyDictionary<string, FindingTypeEntity> typeByCode)
+    {
+        var text = description.Trim();
+        var colonIdx = text.LastIndexOf(':');
+        var token = colonIdx >= 0 ? text[(colonIdx + 1)..].Trim() : text;
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
+
+        if (FindingTypeAliases.TryGetValue(token, out var aliased)
+            && typeByCode.TryGetValue(aliased, out var byAlias))
+        {
+            return byAlias.Id;
+        }
+
+        return null;
+    }
+
+    private static Guid? ResolveSurfaceId(
+        DentalFindingItemDto findingDto,
+        IReadOnlyDictionary<string, DentalSurfaceEntity> surfaceByCode)
+    {
+        if (findingDto.DentalSurfaceId is { } id && id != Guid.Empty)
+            return id;
+
+        if (string.IsNullOrWhiteSpace(findingDto.SurfaceCode))
+            return null;
+
+        var raw = findingDto.SurfaceCode.Trim();
+
+        if (SurfaceShortToCode.TryGetValue(raw, out var fullCode)
+            && surfaceByCode.TryGetValue(fullCode, out var byShort))
+        {
+            return byShort.Id;
+        }
+
+        if (surfaceByCode.TryGetValue(raw, out var byCode))
+            return byCode.Id;
+
+        return null;
     }
 
     private static OdontogramResponseDto Map(OdontogramEntity e) => new()

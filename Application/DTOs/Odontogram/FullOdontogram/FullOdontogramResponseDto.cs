@@ -15,7 +15,9 @@ public sealed class FullOdontogramResponseDto
 public sealed class FullOdontogramToothResponseDto
 {
     public Guid Id { get; set; }
+    public int FdiNumber { get; set; }
     public string ToothCode { get; set; } = null!;
+    public string StateCode { get; set; } = null!;
     public Guid ToothStatusId { get; set; }
     public string? ToothStatusCode { get; set; }
     public string? ToothStatusName { get; set; }
@@ -26,10 +28,12 @@ public sealed class FullOdontogramToothResponseDto
 public sealed class FullDentalFindingResponseDto
 {
     public Guid Id { get; set; }
+    public string? FindingTypeCode { get; set; }
+    public string? SurfaceCode { get; set; }
+    public string? Description { get; set; }
+    public Guid FindingTypeId { get; set; }
     public Guid? DentalSurfaceId { get; set; }
     public string? DentalSurfaceCode { get; set; }
-    public Guid FindingTypeId { get; set; }
-    public string? FindingTypeCode { get; set; }
     public string? FindingTypeName { get; set; }
     public string? FindingTypeColorHex { get; set; }
     public Guid FindingStatusId { get; set; }
