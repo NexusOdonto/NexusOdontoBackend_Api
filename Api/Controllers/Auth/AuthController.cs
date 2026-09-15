@@ -1,4 +1,4 @@
-﻿using Application.Contracts.Services.People;
+using Application.Contracts.Services.People;
 using Application.Contracts.Services.Catalogs;
 using Application.DTOs.Patients;
 using System.Security.Claims;
@@ -250,6 +250,37 @@ public sealed class AuthController(
         }
 
         return Ok(profile);
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
+
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (string.IsNullOrWhiteSpace(request?.NewPassword) || request.NewPassword.Length < 8)
+        {
+            return BadRequest(new { message = "La nueva contraseña debe tener al menos 8 caracteres." });
+        }
+
+        var success = await authService.ChangePasswordAsync(userId, request.NewPassword, cancellationToken);
+        if (!success)
+        {
+            return BadRequest(new { message = "No se pudo actualizar la contraseña. Usuario no encontrado o inactivo." });
+        }
+
+        return Ok(new { success = true, message = "Contraseña actualizada exitosamente." });
     }
 
     private string BuildFrontendSuccessUrl(string token, string refreshToken)

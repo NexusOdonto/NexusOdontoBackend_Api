@@ -32,4 +32,9 @@ public interface IAuthService
     Task<bool> LogoutAsync(
         RefreshTokenRequestDto request,
         CancellationToken cancellationToken = default);
+
+    Task<bool> ChangePasswordAsync(
+        Guid userId,
+        string newPassword,
+        CancellationToken cancellationToken = default);
 }

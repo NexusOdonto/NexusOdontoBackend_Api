@@ -347,18 +347,35 @@ public sealed class AppointmentService(
             return (false, "El paciente no asistió a la cita.", true);
         }
 
-        var now = DateTime.UtcNow;
-
-        // Si falta más de 15 minutos para la cita
-        if (now < appointment.StartsAt.AddMinutes(-15))
+        var nowUtc = DateTime.UtcNow;
+        DateTime nowColombia;
+        try
         {
-            return (false, "Aún no es la hora de la cita. Podrá atenderse a partir de 15 minutos antes de la hora programada.", false);
+            var tzId = Environment.OSVersion.Platform == PlatformID.Win32NT ? "SA Pacific Standard Time" : "America/Bogota";
+            nowColombia = TimeZoneInfo.ConvertTimeFromUtc(nowUtc, TimeZoneInfo.FindSystemTimeZoneById(tzId));
+        }
+        catch
+        {
+            nowColombia = nowUtc.AddHours(-5);
+        }
+
+        // Si la cita es de un día anterior al actual en Colombia y no fue atendida:
+        if (appointment.StartsAt.Date < nowColombia.Date)
+        {
+            return (false, "El horario de la cita ha vencido (No asistió).", true);
         }
 
         // Si ya pasaron más de 45 minutos desde la hora programada sin haberse atendido
-        if (now > appointment.StartsAt.AddMinutes(45))
+        bool isPast = nowColombia > appointment.StartsAt.AddMinutes(45) || nowUtc > appointment.StartsAt.AddMinutes(45);
+        if (isPast)
         {
             return (false, "El horario de la cita ha vencido (No asistió).", true);
+        }
+
+        // Si falta más de 15 minutos para la cita
+        if (nowColombia < appointment.StartsAt.AddMinutes(-15) && nowUtc < appointment.StartsAt.AddMinutes(-15))
+        {
+            return (false, "Aún no es la hora de la cita. Podrá atenderse a partir de 15 minutos antes de la hora programada.", false);
         }
 
         // Dentro del horario hábil de atención
@@ -558,6 +575,12 @@ public sealed class AppointmentService(
     private static AppointmentResponseDto Map(AppointmentEntity e)
     {
         var evaluation = EvaluateAttendanceWindow(e);
+        var effectiveStatusId = (evaluation.IsExpired &&
+            e.AppointmentStatusId != StatusNoShow &&
+            e.AppointmentStatusId != StatusCompleted &&
+            e.AppointmentStatusId != StatusCancelled &&
+            e.CancelledAt == null) ? StatusNoShow : e.AppointmentStatusId;
+
         return new AppointmentResponseDto
         {
             Id = e.Id,
@@ -566,7 +589,7 @@ public sealed class AppointmentService(
             ServiceId = e.ServiceId,
             StartsAt = e.StartsAt,
             EndsAt = e.EndsAt,
-            AppointmentStatusId = e.AppointmentStatusId,
+            AppointmentStatusId = effectiveStatusId,
             AppointmentOriginId = e.AppointmentOriginId,
             ReasonForVisit = e.ReasonForVisit,
             Notes = e.Notes,
@@ -575,7 +598,31 @@ public sealed class AppointmentService(
             CancelledAt = e.CancelledAt,
             CancellationReason = e.CancellationReason,
             CanBeAttended = evaluation.CanAttend,
-            AttendanceStatusMessage = evaluation.StatusMessage
+            AttendanceStatusMessage = evaluation.StatusMessage,
+            StatusName = GetStatusName(effectiveStatusId),
+            StatusCode = GetStatusCode(effectiveStatusId)
         };
     }
+
+    private static string GetStatusName(Guid statusId) => statusId switch
+    {
+        var id when id == StatusScheduled => "Pendiente",
+        var id when id == StatusConfirmed => "Confirmada",
+        var id when id == StatusInWaitingRoom => "En Atención",
+        var id when id == StatusCompleted => "Completada",
+        var id when id == StatusCancelled => "Cancelada",
+        var id when id == StatusNoShow => "No Asistió",
+        _ => "Pendiente"
+    };
+
+    private static string GetStatusCode(Guid statusId) => statusId switch
+    {
+        var id when id == StatusScheduled => "AGENDADA",
+        var id when id == StatusConfirmed => "CONFIRMADA",
+        var id when id == StatusInWaitingRoom => "EN_SALA",
+        var id when id == StatusCompleted => "ATENDIDA",
+        var id when id == StatusCancelled => "CANCELADA",
+        var id when id == StatusNoShow => "NO_ASISTIO",
+        _ => "AGENDADA"
+    };
 }

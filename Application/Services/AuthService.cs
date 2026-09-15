@@ -320,6 +320,26 @@ public sealed class AuthService(
         };
     }
 
+    public async Task<bool> ChangePasswordAsync(
+        Guid userId,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId);
+        if (user is null || !user.IsActive)
+        {
+            return false;
+        }
+
+        var newHash = BCrypt.Net.BCrypt.HashPassword(newPassword, 11);
+        user.PasswordHash = newHash;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        userRepository.Update(user);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private async Task<AuthResponseDto> SignInUserAsync(
         UserEntity user,
         CancellationToken cancellationToken)
@@ -469,6 +489,10 @@ public sealed class AuthService(
             Name = person is null
                 ? string.Empty
                 : $"{person.FirstName} {person.LastName}".Trim(),
+            FirstName = person?.FirstName ?? string.Empty,
+            LastName = person?.LastName ?? string.Empty,
+            DocumentNumber = person?.DocumentNumber ?? string.Empty,
+            Phone = person?.Phone,
             Email = person?.Email ?? string.Empty,
             RoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList()
         };

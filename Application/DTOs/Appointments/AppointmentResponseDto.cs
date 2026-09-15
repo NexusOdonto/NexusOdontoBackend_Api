@@ -18,4 +18,6 @@ public sealed class AppointmentResponseDto
     public string? CancellationReason { get; set; }
     public bool CanBeAttended { get; set; }
     public string? AttendanceStatusMessage { get; set; }
+    public string? StatusName { get; set; }
+    public string? StatusCode { get; set; }
 }
