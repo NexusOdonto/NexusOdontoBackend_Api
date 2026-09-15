@@ -19,6 +19,7 @@ namespace Application.Services;
 
 public sealed class AuthService(
     IUserRepository userRepository,
+    IPersonRepository personRepository,
     IUserExternalLoginRepository externalLoginRepository,
     ISessionRepository sessionRepository,
     IRepository<AuditEventEntity> auditEventRepository,
@@ -26,6 +27,7 @@ public sealed class AuthService(
     IValidator<LoginRequestDto> loginValidator,
     IValidator<GoogleLinkRequestDto> googleLinkValidator,
     IValidator<RefreshTokenRequestDto> refreshTokenValidator,
+    IValidator<UpdateProfileRequestDto> updateProfileValidator,
     JwtSettings jwtSettings,
     ChatbotSettings chatbotSettings) : IAuthService
 {
@@ -312,6 +314,64 @@ public sealed class AuthService(
         {
             return null;
         }
+
+        return new AuthProfileDto
+        {
+            User = MapToResponse(user),
+            Permissions = PermissionChecker.GetEffectivePermissions(user)
+        };
+    }
+
+    public async Task<AuthProfileDto?> UpdateProfileAsync(
+        Guid userId,
+        UpdateProfileRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var validationResult = await updateProfileValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            throw new Exceptions.ValidationException(validationResult.Errors);
+        }
+
+        var user = await userRepository.GetByIdWithRolesAsync(userId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            return null;
+        }
+
+        var person = user.PersonEntity;
+        if (person is null || !person.IsActive)
+        {
+            return null;
+        }
+
+        var documentNumber = string.IsNullOrWhiteSpace(request.DocumentNumber)
+            ? person.DocumentNumber
+            : request.DocumentNumber.Trim();
+
+        if (!string.Equals(documentNumber, person.DocumentNumber, StringComparison.OrdinalIgnoreCase))
+        {
+            var existingPerson = await personRepository.GetByDocumentNumberAsync(documentNumber);
+            if (existingPerson is not null && existingPerson.Id != person.Id)
+            {
+                throw new ConflictException("A person with this document number already exists.");
+            }
+        }
+
+        person.DocumentNumber = documentNumber;
+        person.Update(
+            request.FirstName.Trim(),
+            request.LastName.Trim(),
+            person.DateOfBirth,
+            person.SexId,
+            string.IsNullOrWhiteSpace(request.Phone) ? person.Phone : request.Phone.Trim(),
+            string.IsNullOrWhiteSpace(request.Email) ? person.Email : request.Email.Trim(),
+            string.IsNullOrWhiteSpace(request.Address) ? person.Address : request.Address.Trim());
+
+        personRepository.Update(person);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthProfileDto
         {

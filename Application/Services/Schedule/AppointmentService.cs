@@ -111,14 +111,12 @@ public sealed class AppointmentService(
             ? new Guid("19000000-0000-0000-0000-000000000002")
             : request.AppointmentOriginId;
 
-        var startsAt = request.StartsAt == default ? GetNowColombia().AddHours(1) : request.StartsAt;
+        // StartsAt/EndsAt are clinic wall-clock times (Colombia), not UTC.
+        var nowColombia = GetColombiaNow();
+        var startsAt = request.StartsAt == default ? nowColombia.AddHours(1) : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
-        var nowColombia = GetNowColombia();
-        if (startsAt < nowColombia.AddMinutes(-10))
-        {
-            throw new ValidationException("No se pueden programar citas en fechas u horas pasadas.");
-        }
+        ValidateAppointmentSchedule(startsAt, nowColombia);
 
         var professionalId = request.AutoAssignProfessional
             ? await ResolveAvailableProfessionalAsync(request.ProfessionalId, startsAt, endsAt)
@@ -156,6 +154,11 @@ public sealed class AppointmentService(
 
         var startsAt = request.StartsAt == default ? entity.StartsAt : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
+
+        if (startsAt != entity.StartsAt || endsAt != entity.EndsAt)
+        {
+            ValidateAppointmentSchedule(startsAt, GetColombiaNow());
+        }
 
         await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
 
@@ -347,7 +350,7 @@ public sealed class AppointmentService(
             return (false, "El paciente no asistió a la cita.", true);
         }
 
-        var nowColombia = GetNowColombia();
+        var nowColombia = GetColombiaNow();
 
         // Si la cita es de un día anterior al actual en Colombia y no fue atendida:
         if (appointment.StartsAt.Date < nowColombia.Date)
@@ -356,8 +359,8 @@ public sealed class AppointmentService(
         }
 
         // Si ya pasaron más de 45 minutos desde la hora programada sin haberse atendido
-        bool isPast = nowColombia > appointment.StartsAt.AddMinutes(45);
-        if (isPast)
+        // (StartsAt is clinic wall-clock Colombia time — compare only against Colombia "now")
+        if (nowColombia > appointment.StartsAt.AddMinutes(45))
         {
             return (false, "El horario de la cita ha vencido (No asistió).", true);
         }
@@ -372,17 +375,55 @@ public sealed class AppointmentService(
         return (true, "Cita en horario de atención.", false);
     }
 
-    public static DateTime GetNowColombia()
+    /// <summary>
+    /// Clinic operates in Colombia (UTC-5). Appointment StartsAt/EndsAt are stored and sent as
+    /// local wall-clock values without offset, so schedule rules must use Colombia "now".
+    /// </summary>
+    public static DateTime GetColombiaNow()
     {
         var nowUtc = DateTime.UtcNow;
         try
         {
-            var tzId = Environment.OSVersion.Platform == PlatformID.Win32NT ? "SA Pacific Standard Time" : "America/Bogota";
+            var tzId = OperatingSystem.IsWindows()
+                ? "SA Pacific Standard Time"
+                : "America/Bogota";
             return TimeZoneInfo.ConvertTimeFromUtc(nowUtc, TimeZoneInfo.FindSystemTimeZoneById(tzId));
         }
         catch
         {
             return nowUtc.AddHours(-5);
+        }
+    }
+
+    /// <summary>
+    /// Past-date check (Colombia local) and clinic business hours are separate validations.
+    /// </summary>
+    public static void ValidateAppointmentSchedule(DateTime startsAt, DateTime? nowColombia = null)
+    {
+        var now = nowColombia ?? GetColombiaNow();
+
+        // Small grace for clock skew; compare wall-clock Colombia times only.
+        if (startsAt < now.AddMinutes(-5))
+        {
+            throw new ValidationException("No se pueden programar citas en fechas u horas pasadas.");
+        }
+
+        var startTime = TimeOnly.FromDateTime(startsAt);
+        var morningOpen = new TimeOnly(8, 0);
+        var lunchStart = new TimeOnly(12, 0);
+        var afternoonOpen = new TimeOnly(14, 0);
+        var lastStart = new TimeOnly(16, 30);
+
+        if (startTime >= lunchStart && startTime < afternoonOpen)
+        {
+            throw new ValidationException(
+                "El horario de 12:00 a 14:00 corresponde al receso de almuerzo clínico. La jornada es 08:00-12:00 | 14:00-17:00 (última cita 16:30).");
+        }
+
+        if (startTime < morningOpen || startTime > lastStart)
+        {
+            throw new ValidationException(
+                "La cita está fuera de la jornada de atención (08:00-12:00 | 14:00-17:00, última cita 16:30).");
         }
     }
 

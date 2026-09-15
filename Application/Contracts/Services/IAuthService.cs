@@ -25,6 +25,11 @@ public interface IAuthService
         Guid userId,
         CancellationToken cancellationToken = default);
 
+    Task<AuthProfileDto?> UpdateProfileAsync(
+        Guid userId,
+        UpdateProfileRequestDto request,
+        CancellationToken cancellationToken = default);
+
     Task<AuthResponseDto?> RefreshAsync(
         RefreshTokenRequestDto request,
         CancellationToken cancellationToken = default);
