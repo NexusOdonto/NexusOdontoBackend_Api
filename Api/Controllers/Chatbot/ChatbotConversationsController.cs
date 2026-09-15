@@ -1,4 +1,4 @@
-﻿using Api.Filters;
+using Api.Filters;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Chatbot.ChatbotConversation;
 using Application.DTOs.Chatbot.ChatbotMessage;
@@ -55,7 +55,6 @@ public sealed class ChatbotConversationsController(IChatbotConversationService s
             _ => NotFound(new { message = "Conversación no encontrada o sin identificador de chat." }),
         };
     }
-
     [HttpPost]
     [RequirePermission("CHATBOT", PermissionAction.Create)]
     [ProducesResponseType(typeof(ChatbotConversationResponseDto), StatusCodes.Status201Created)]

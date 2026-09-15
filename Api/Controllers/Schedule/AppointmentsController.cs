@@ -26,7 +26,6 @@ public sealed class AppointmentsController(IAppointmentService service)
         }
         return await base.Create(request);
     }
-
     [HttpGet("{id:guid}/clinical-context")]
     public async Task<ActionResult<AppointmentClinicalContextDto>> GetClinicalContext(Guid id, CancellationToken cancellationToken)
     {

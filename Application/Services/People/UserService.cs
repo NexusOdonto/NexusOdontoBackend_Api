@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Common;
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.People;

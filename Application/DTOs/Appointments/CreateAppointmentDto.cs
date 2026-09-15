@@ -1,4 +1,4 @@
-﻿namespace Application.DTOs.Appointments
+namespace Application.DTOs.Appointments
 {
     public class CreateAppointmentDto
     {

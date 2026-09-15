@@ -39,6 +39,7 @@ public sealed class AuthController(
         return Ok(result);
     }
 
+
     [AllowAnonymous]
     [HttpGet("register-options")]
     [ProducesResponseType(typeof(RegisterOptionsResponseDto), StatusCodes.Status200OK)]
