@@ -17,4 +17,6 @@ public interface IUserExternalLoginRepository
     Task AddAsync(
         UserExternalLoginEntity entity,
         CancellationToken cancellationToken = default);
+
+    void Remove(UserExternalLoginEntity entity);
 }

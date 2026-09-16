@@ -149,6 +149,36 @@ public sealed class AuthService(
         return await SignInUserAsync(user, cancellationToken);
     }
 
+    public async Task UnlinkGoogleAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.GetByIdAsync(userId);
+        if (user is null || !user.IsActive)
+        {
+            throw new UnauthorizedAccessException("User is inactive or not found.");
+        }
+
+        var googleLogin = await externalLoginRepository.GetByUserAndProviderAsync(
+            userId,
+            GoogleProvider,
+            cancellationToken);
+
+        if (googleLogin is null)
+        {
+            throw new NotFoundException("This account does not have a linked Google account.");
+        }
+
+        if (!HasPasswordLogin(user))
+        {
+            throw new BusinessRuleException(
+                "Set a password before unlinking Google. Unlinking would leave this account with no way to sign in.");
+        }
+
+        externalLoginRepository.Remove(googleLogin);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
     public string CreateGoogleLinkToken(string googleSub, string? googleEmail)
     {
         ValidateJwtSettings();
@@ -436,6 +466,15 @@ public sealed class AuthService(
         return await userRepository.GetByDocumentNumberWithRolesAsync(
             normalized,
             cancellationToken);
+    }
+
+    private static bool HasPasswordLogin(UserEntity user)
+    {
+        var hash = user.PasswordHash;
+        return !string.IsNullOrWhiteSpace(hash) &&
+               (hash.StartsWith("$2a$", StringComparison.Ordinal) ||
+                hash.StartsWith("$2b$", StringComparison.Ordinal) ||
+                hash.StartsWith("$2y$", StringComparison.Ordinal));
     }
 
     private static bool IsValidForPasswordSignIn(UserEntity? user, string password)

@@ -17,6 +17,10 @@ public interface IAuthService
         GoogleLinkRequestDto request,
         CancellationToken cancellationToken = default);
 
+    Task UnlinkGoogleAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     string CreateGoogleLinkToken(string googleSub, string? googleEmail);
 
     GoogleLinkTokenClaims? ValidateGoogleLinkToken(string linkToken);

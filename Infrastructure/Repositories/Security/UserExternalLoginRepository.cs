@@ -35,4 +35,9 @@ public sealed class UserExternalLoginRepository(AppDbContext context) : IUserExt
     {
         await context.Set<UserExternalLoginEntity>().AddAsync(entity, cancellationToken);
     }
+
+    public void Remove(UserExternalLoginEntity entity)
+    {
+        context.Set<UserExternalLoginEntity>().Remove(entity);
+    }
 }
