@@ -42,3 +42,7 @@ Thumbs.db
 proyecto.md
 .artifacts/
 _jwt_tmp/
+testsprite_tests/tmp/
+testsprite_tests/tmp/config.json
+_testsprite_proxy.js
+testsprite_tests/
