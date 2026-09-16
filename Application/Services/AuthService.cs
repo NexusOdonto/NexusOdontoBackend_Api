@@ -172,7 +172,7 @@ public sealed class AuthService(
         if (!HasPasswordLogin(user))
         {
             throw new BusinessRuleException(
-                "Set a password before unlinking Google. Unlinking would leave this account with no way to sign in.");
+                "Define una contraseña antes de desvincular Google. Si no, la cuenta se quedaría sin forma de iniciar sesión.");
         }
 
         externalLoginRepository.Remove(googleLogin);
@@ -345,11 +345,7 @@ public sealed class AuthService(
             return null;
         }
 
-        return new AuthProfileDto
-        {
-            User = MapToResponse(user),
-            Permissions = PermissionChecker.GetEffectivePermissions(user)
-        };
+        return await MapProfileAsync(user, cancellationToken);
     }
 
     public async Task<AuthProfileDto?> UpdateProfileAsync(
@@ -403,11 +399,7 @@ public sealed class AuthService(
         personRepository.Update(person);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new AuthProfileDto
-        {
-            User = MapToResponse(user),
-            Permissions = PermissionChecker.GetEffectivePermissions(user)
-        };
+        return await MapProfileAsync(user, cancellationToken);
     }
 
     public async Task<bool> ChangePasswordAsync(
@@ -575,6 +567,24 @@ public sealed class AuthService(
             ExpiresAtUtc = expiresAtUtc,
             User = MapToResponse(user),
             Permissions = PermissionChecker.GetEffectivePermissions(user)
+        };
+    }
+
+    private async Task<AuthProfileDto> MapProfileAsync(
+        UserEntity user,
+        CancellationToken cancellationToken)
+    {
+        var googleLogin = await externalLoginRepository.GetByUserAndProviderAsync(
+            user.Id,
+            GoogleProvider,
+            cancellationToken);
+
+        return new AuthProfileDto
+        {
+            User = MapToResponse(user),
+            Permissions = PermissionChecker.GetEffectivePermissions(user),
+            GoogleLinked = googleLogin is not null,
+            GoogleEmail = googleLogin?.ProviderEmail
         };
     }
 
