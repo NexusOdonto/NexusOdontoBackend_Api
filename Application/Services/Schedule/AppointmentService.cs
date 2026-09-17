@@ -155,22 +155,31 @@ public sealed class AppointmentService(
         var startsAt = request.StartsAt == default ? entity.StartsAt : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
-        if (startsAt != entity.StartsAt || endsAt != entity.EndsAt)
+        var isCancelling = request.AppointmentStatusId == StatusCancelled ||
+                           !string.IsNullOrWhiteSpace(request.CancellationReason);
+
+        if (!isCancelling)
         {
-            ValidateAppointmentSchedule(startsAt, GetColombiaNow());
-        }
+            if (startsAt != entity.StartsAt || endsAt != entity.EndsAt)
+            {
+                ValidateAppointmentSchedule(startsAt, GetColombiaNow());
+            }
 
-        await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
+            if (professionalId != Guid.Empty)
+            {
+                await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
 
-        var overlapping = await repository.GetByProfessionalInRangeAsync(
-            professionalId,
-            startsAt,
-            endsAt);
+                var overlapping = await repository.GetByProfessionalInRangeAsync(
+                    professionalId,
+                    startsAt,
+                    endsAt);
 
-        if (overlapping.Any(a => a.Id != id && a.CancelledAt == null && a.AppointmentStatusId != StatusCancelled && a.AppointmentStatusId != StatusNoShow))
-        {
-            throw new ConflictException(
-                "The professional already has another appointment scheduled during the requested time range.");
+                if (overlapping.Any(a => a.Id != id && a.CancelledAt == null && a.AppointmentStatusId != StatusCancelled && a.AppointmentStatusId != StatusNoShow))
+                {
+                    throw new ConflictException(
+                        "The professional already has another appointment scheduled during the requested time range.");
+                }
+            }
         }
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
