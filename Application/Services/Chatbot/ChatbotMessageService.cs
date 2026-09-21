@@ -1,4 +1,5 @@
-using Application.Contracts.Repositories.Common;
+﻿using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Chatbot;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Chatbot.ChatbotMessage;
 using Domain.Entities.Chatbot;
@@ -7,6 +8,7 @@ namespace Application.Services.Chatbot;
 
 public sealed class ChatbotMessageService(
     IRepository<ChatbotMessageEntity> repository,
+    IChatbotConversationRepository conversationRepository,
     IUnitOfWork unitOfWork) : IChatbotMessageService
 {
     public async Task<IReadOnlyList<ChatbotMessageResponseDto>> GetAllAsync()
@@ -32,6 +34,19 @@ public sealed class ChatbotMessageService(
                 request.Content,
                 request.RagConfidence);
             await repository.AddAsync(entity);
+
+            // Actualizar la última interacción y reabrir conversación si estaba cerrada
+            var conv = await conversationRepository.GetByIdAsync(request.ChatbotConversationId);
+            if (conv is not null)
+            {
+                conv.LastInteractionAt = DateTime.UtcNow;
+                if (conv.ClosedAt is not null)
+                {
+                    conv.ClosedAt = null;
+                }
+                conversationRepository.Update(conv);
+            }
+
             return Map(entity);
         });
     }
