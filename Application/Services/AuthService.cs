@@ -534,8 +534,30 @@ public sealed class AuthService(
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id.ToString())
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new("personId", user.PersonId.ToString())
         };
+
+        var person = user.PersonEntity;
+        if (person is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(person.DocumentNumber))
+            {
+                claims.Add(new Claim("documentNumber", person.DocumentNumber.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(person.Email))
+            {
+                claims.Add(new Claim(ClaimTypes.Email, person.Email.Trim().ToLowerInvariant()));
+                claims.Add(new Claim(JwtRegisteredClaimNames.Email, person.Email.Trim().ToLowerInvariant()));
+            }
+
+            var fullName = $"{person.FirstName} {person.LastName}".Trim();
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                claims.Add(new Claim(ClaimTypes.Name, fullName));
+            }
+        }
 
         foreach (var userRole in user.UserRoles)
         {

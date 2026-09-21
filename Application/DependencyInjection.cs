@@ -8,6 +8,7 @@ using Application.Contracts.Services.Clinical;
 using Application.Contracts.Services.Notifications;
 using Application.Contracts.Services.Odontogram;
 using Application.Contracts.Services.People;
+using Application.Contracts.Services.Presence;
 using Application.Contracts.Services.Schedule;
 using Application.Contracts.Services.Security;
 using Application.Services;
@@ -18,6 +19,7 @@ using Application.Services.Clinical;
 using Application.Services.Notifications;
 using Application.Services.Odontogram;
 using Application.Services.People;
+using Application.Services.Presence;
 using Application.Services.Schedule;
 using Application.Services.Security;
 using Microsoft.Extensions.Configuration;
@@ -54,6 +56,9 @@ public static class DependencyInjection
 
         // Auth
         services.AddScoped<IAuthService, AuthService>();
+
+        // Presence (in-memory, process-local — no DB / no migrations)
+        services.AddSingleton<IPresenceTracker, PresenceTracker>();
 
         // Catalogs
         services.AddScoped<IDocumentTypeService, DocumentTypeService>();
