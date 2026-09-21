@@ -55,6 +55,10 @@ crear un `.env` en la raíz del proyecto con estas variables:
 `APPLY_MIGRATIONS=false` la API puede iniciar aunque una migración Oracle
 esté rota (`ORA-02000`, etc.). Pon `true` solo después de corregir el SQL.
 
+**Oracle MERGE:** no uses `WHEN NOT MATCHED AND <predicado> THEN` (estilo SQL
+Server). Eso produce `ORA-02000: missing THEN keyword`. Usa
+`WHEN NOT MATCHED THEN INSERT ... WHERE <predicado>`.
+
 Si las tablas ya existen pero están vacías (login 401 sin AD001), usa
 `RUN_SEEDERS=true` con `APPLY_MIGRATIONS=false` para poblar sin migrar.
 Cambiar `Program.cs` o el `.env` no basta en el VPS: hay que reconstruir la

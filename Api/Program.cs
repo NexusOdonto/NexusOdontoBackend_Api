@@ -207,7 +207,20 @@ static async Task ApplyMigrationsAsync(IServiceProvider services)
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation("Aplicando migraciones pendientes...");
+    var pending = (await context.Database.GetPendingMigrationsAsync()).ToList();
+    if (pending.Count == 0)
+    {
+        logger.LogInformation("No hay migraciones pendientes.");
+        return;
+    }
+
+    logger.LogInformation(
+        "Aplicando {Count} migraciones pendientes: {Migrations}",
+        pending.Count,
+        string.Join(", ", pending));
+
+    // Oracle rejects SQL Server-style MERGE "WHEN NOT MATCHED AND <predicate> THEN".
+    // Pending migration SQL must use "WHEN NOT MATCHED THEN INSERT ... WHERE <predicate>".
     await context.Database.MigrateAsync();
     logger.LogInformation("Migraciones aplicadas.");
 }

@@ -56,11 +56,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1c000000-0000-0000-0000-000000000006"))}, {Raw(new Guid("20000000-0000-0000-0000-000000000001"))}, {Raw(new Guid("11000000-0000-0000-0000-000000000004"))}, N'BOT001', {Ts(HireDate)}, 1, {Ts(SeedDate)} FROM dual
                 ) s
                 ON (t."id" = s."id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "persons" p WHERE p."id" = s."person_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("id", "person_id", "job_position_id", "employee_code", "hire_date", "is_active", "created_at")
-                  VALUES (s."id", s."person_id", s."job_position_id", s."employee_code", s."hire_date", s."is_active", s."created_at");
+                  VALUES (s."id", s."person_id", s."job_position_id", s."employee_code", s."hire_date", s."is_active", s."created_at")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "persons" p WHERE p."id" = s."person_id"
+                  );
                 """);
 
             // 3. Professionals
@@ -72,11 +73,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1d000000-0000-0000-0000-000000000003"))}, {Raw(new Guid("1c000000-0000-0000-0000-000000000004"))}, N'TP-OD-1098767', 1, {Ts(SeedDate)} FROM dual
                 ) s
                 ON (t."id" = s."id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "employees" e WHERE e."id" = s."employee_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("id", "employee_id", "professional_license", "is_active", "created_at")
-                  VALUES (s."id", s."employee_id", s."professional_license", s."is_active", s."created_at");
+                  VALUES (s."id", s."employee_id", s."professional_license", s."is_active", s."created_at")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "employees" e WHERE e."id" = s."employee_id"
+                  );
                 """);
 
             // 4a. Users (hashes from AdminUserSeeder / UserSeeder)
@@ -90,11 +92,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("21000000-0000-0000-0000-000000000001"))}, {Raw(new Guid("20000000-0000-0000-0000-000000000001"))}, N'$2a$11$7exqDQzqUbvt70Ph/7ySpev0OU8YKHaW81fEbDdAyhlUqRKD0Y6mW', CAST(NULL AS TIMESTAMP(7)), 1, {Ts(SeedDate)} FROM dual
                 ) s
                 ON (t."id" = s."id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "persons" p WHERE p."id" = s."person_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("id", "person_id", "password_hash", "last_access_at", "is_active", "created_at")
-                  VALUES (s."id", s."person_id", s."password_hash", s."last_access_at", s."is_active", s."created_at");
+                  VALUES (s."id", s."person_id", s."password_hash", s."last_access_at", s."is_active", s."created_at")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "persons" p WHERE p."id" = s."person_id"
+                  );
                 """);
 
             // 4b. User roles
@@ -108,11 +111,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("21000000-0000-0000-0000-000000000001"))}, {Raw(new Guid("13000000-0000-0000-0000-000000000006"))}, {Ts(SeedDate)} FROM dual
                 ) s
                 ON (t."user_id" = s."user_id" AND t."role_id" = s."role_id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "users" u WHERE u."id" = s."user_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("user_id", "role_id", "assigned_at")
-                  VALUES (s."user_id", s."role_id", s."assigned_at");
+                  VALUES (s."user_id", s."role_id", s."assigned_at")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "users" u WHERE u."id" = s."user_id"
+                  );
                 """);
 
             // 4c. Patients
@@ -125,11 +129,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1e000000-0000-0000-0000-000000000004"))}, {Raw(new Guid("1b000000-0000-0000-0000-000000000015"))}, N'Carlos Mendoza (Hermano)', N'+573134567890', {Ts(SeedDate)}, 1 FROM dual
                 ) s
                 ON (t."id" = s."id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "persons" p WHERE p."id" = s."person_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("id", "person_id", "emergency_contact", "emergency_phone", "registration_date", "is_active")
-                  VALUES (s."id", s."person_id", s."emergency_contact", s."emergency_phone", s."registration_date", s."is_active");
+                  VALUES (s."id", s."person_id", s."emergency_contact", s."emergency_phone", s."registration_date", s."is_active")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "persons" p WHERE p."id" = s."person_id"
+                  );
                 """);
 
             // 4d. Availabilities
@@ -142,11 +147,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1f000000-0000-0000-0000-000000000004"))}, {Raw(new Guid("1d000000-0000-0000-0000-000000000003"))}, 1, 5, N'09:00', N'13:00', N'14:00', N'18:00', 1 FROM dual
                 ) s
                 ON (t."id" = s."id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "professionals" p WHERE p."id" = s."professional_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("id", "professional_id", "start_day", "end_day", "start_time", "lunch_start_time", "lunch_end_time", "end_time", "is_active")
-                  VALUES (s."id", s."professional_id", s."start_day", s."end_day", s."start_time", s."lunch_start_time", s."lunch_end_time", s."end_time", s."is_active");
+                  VALUES (s."id", s."professional_id", s."start_day", s."end_day", s."start_time", s."lunch_start_time", s."lunch_end_time", s."end_time", s."is_active")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "professionals" p WHERE p."id" = s."professional_id"
+                  );
                 """);
 
             // 5. Professional specialties (redundant with SeedProfessionalSpecialties; safe after professionals exist)
@@ -161,11 +167,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1d000000-0000-0000-0000-000000000003"))}, {Raw(new Guid("18000000-0000-0000-0000-000000000005"))} FROM dual
                 ) s
                 ON (t."professional_id" = s."professional_id" AND t."specialty_id" = s."specialty_id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "professionals" p WHERE p."id" = s."professional_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("professional_id", "specialty_id")
-                  VALUES (s."professional_id", s."specialty_id");
+                  VALUES (s."professional_id", s."specialty_id")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "professionals" p WHERE p."id" = s."professional_id"
+                  );
                 """);
         }
 

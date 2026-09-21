@@ -23,11 +23,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1d000000-0000-0000-0000-000000000003"))}, {Raw(new Guid("1c000000-0000-0000-0000-000000000004"))}, N'TP-OD-1098767', 1, {Ts(SeedDate)} FROM dual
                 ) s
                 ON (t."id" = s."id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "employees" e WHERE e."id" = s."employee_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("id", "employee_id", "professional_license", "is_active", "created_at")
-                  VALUES (s."id", s."employee_id", s."professional_license", s."is_active", s."created_at");
+                  VALUES (s."id", s."employee_id", s."professional_license", s."is_active", s."created_at")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "employees" e WHERE e."id" = s."employee_id"
+                  );
                 """);
 
             // Idempotent Oracle MERGE: safe when DatabaseInitializer already linked specialties to professionals.
@@ -42,11 +43,12 @@ namespace Infrastructure.Data.Migrations
                   SELECT {Raw(new Guid("1d000000-0000-0000-0000-000000000003"))}, {Raw(new Guid("18000000-0000-0000-0000-000000000005"))} FROM dual
                 ) s
                 ON (t."professional_id" = s."professional_id" AND t."specialty_id" = s."specialty_id")
-                WHEN NOT MATCHED AND EXISTS (
-                  SELECT 1 FROM "professionals" p WHERE p."id" = s."professional_id"
-                ) THEN
+                WHEN NOT MATCHED THEN
                   INSERT ("professional_id", "specialty_id")
-                  VALUES (s."professional_id", s."specialty_id");
+                  VALUES (s."professional_id", s."specialty_id")
+                  WHERE EXISTS (
+                  SELECT 1 FROM "professionals" p WHERE p."id" = s."professional_id"
+                  );
                 """);
         }
 
