@@ -91,6 +91,14 @@ public static class RolePermissionSeeder
                 AddPermission(RoleSeeder.Receptionist, m, 2);
                 AddPermission(RoleSeeder.Receptionist, m, 3);
             }
+            else if (m is 5)
+            {
+                // Recepción registra antecedentes (alergias) al dar de alta al
+                // paciente, así que necesita CLINICAL:CREATE. Deliberadamente no
+                // recibe EDIT ni DELETE: corregir historia clínica ya registrada
+                // sigue siendo del odontólogo.
+                AddPermission(RoleSeeder.Receptionist, m, 2);
+            }
             if (m is 1 or 2)
             {
                 AddPermission(RoleSeeder.Receptionist, m, 4);
