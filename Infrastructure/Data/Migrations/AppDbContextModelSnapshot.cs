@@ -6042,6 +6042,11 @@ namespace Infrastructure.Data.Migrations
                         new
                         {
                             role_id = new Guid("13000000-0000-0000-0000-000000000003"),
+                            permission_id = new Guid("14000000-0000-0000-0005-000000000002")
+                        },
+                        new
+                        {
+                            role_id = new Guid("13000000-0000-0000-0000-000000000003"),
                             permission_id = new Guid("14000000-0000-0000-0007-000000000001")
                         },
                         new
