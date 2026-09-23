@@ -56,7 +56,7 @@ public sealed class ChatbotConversationService(
         {
             entity.Update(
                 request.ConversationStatusId,
-                DateTime.UtcNow,
+                entity.LastInteractionAt,
                 request.ClosedAt,
                 request.PatientId);
             repository.Update(entity);
