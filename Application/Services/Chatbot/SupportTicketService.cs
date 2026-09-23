@@ -154,15 +154,14 @@ public sealed class SupportTicketService(
             ? await ServiceWrite.ResolveCatalogIdAsync(conversationStatusCatalog, "ACTIVE", "ACTIVA")
             : await ServiceWrite.ResolveCatalogIdAsync(conversationStatusCatalog, "CLOSED", "CERRADA");
 
-        string? chatIdentifier = null;
         if (ticket.ChatbotConversationId != Guid.Empty)
         {
             var conversation = await conversationRepository.GetByIdAsync(ticket.ChatbotConversationId);
             if (conversation is not null)
             {
-                chatIdentifier = conversation.ChatIdentifier;
+                // Keep LastInteractionAt — status change alone should not reorder the chat list.
                 var closedAt = returnToBot ? (DateTime?)null : DateTime.UtcNow;
-                conversation.Update(targetConvStatusId, DateTime.UtcNow, closedAt, conversation.PatientId);
+                conversation.Update(targetConvStatusId, conversation.LastInteractionAt, closedAt, conversation.PatientId);
                 conversationRepository.Update(conversation);
             }
         }
@@ -184,13 +183,7 @@ public sealed class SupportTicketService(
             return Task.CompletedTask;
         });
 
-        // Only resume the bot when returning the case to automatic attention.
-        // Closing a case must leave the conversation CERRADA — resume would reopen it as ACTIVA.
-        if (returnToBot && !string.IsNullOrWhiteSpace(chatIdentifier))
-        {
-            await chatbotClient.ResumeConversationAsync(chatIdentifier, clearHistory: false, cancellationToken);
-        }
-
+        // WhatsApp "bot reactivado" notice: only FastAPI /conversations/resume (called once from front).
         return true;
     }
 
