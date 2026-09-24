@@ -20,6 +20,7 @@ namespace Application.Services;
 public sealed class AuthService(
     IUserRepository userRepository,
     IPersonRepository personRepository,
+    IPatientRepository patientRepository,
     IUserExternalLoginRepository externalLoginRepository,
     ISessionRepository sessionRepository,
     IRepository<AuditEventEntity> auditEventRepository,
@@ -292,7 +293,7 @@ public sealed class AuthService(
         session.LastUsedAt = DateTime.UtcNow;
         sessionRepository.Update(session);
 
-        var response = BuildAccessTokenResponse(user);
+        var response = await BuildAccessTokenResponseAsync(user, cancellationToken);
         response.RefreshToken = newRefreshToken;
         response.RefreshExpiresAtUtc = session.ExpiresAt;
 
@@ -435,7 +436,7 @@ public sealed class AuthService(
             user.Id);
         await auditEventRepository.AddAsync(auditEvent);
 
-        var response = BuildAccessTokenResponse(user);
+        var response = await BuildAccessTokenResponseAsync(user, cancellationToken);
         await AttachNewSessionAsync(user.Id, response, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -526,7 +527,9 @@ public sealed class AuthService(
                session.SessionStatusId == SessionStatusIds.Active;
     }
 
-    private AuthResponseDto BuildAccessTokenResponse(UserEntity user)
+    private async Task<AuthResponseDto> BuildAccessTokenResponseAsync(
+        UserEntity user,
+        CancellationToken cancellationToken)
     {
         ValidateJwtSettings();
 
@@ -587,7 +590,7 @@ public sealed class AuthService(
         {
             Token = new JwtSecurityTokenHandler().WriteToken(token),
             ExpiresAtUtc = expiresAtUtc,
-            User = MapToResponse(user),
+            User = await MapToResponseAsync(user, cancellationToken),
             Permissions = PermissionChecker.GetEffectivePermissions(user)
         };
     }
@@ -603,7 +606,7 @@ public sealed class AuthService(
 
         return new AuthProfileDto
         {
-            User = MapToResponse(user),
+            User = await MapToResponseAsync(user, cancellationToken),
             Permissions = PermissionChecker.GetEffectivePermissions(user),
             GoogleLinked = googleLogin is not null,
             GoogleEmail = googleLogin?.ProviderEmail
@@ -627,6 +630,20 @@ public sealed class AuthService(
             Email = person?.Email ?? string.Empty,
             RoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList()
         };
+    }
+
+    private async Task<UserResponseDto> MapToResponseAsync(
+        UserEntity user,
+        CancellationToken cancellationToken)
+    {
+        var dto = MapToResponse(user);
+        var patient = await patientRepository.GetByPersonIdAsync(user.PersonId, cancellationToken);
+        if (patient is not null)
+        {
+            dto.PatientId = patient.Id;
+        }
+
+        return dto;
     }
 
     private void ValidateJwtSettings()

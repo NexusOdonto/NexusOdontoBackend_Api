@@ -6,6 +6,12 @@ public sealed class UserResponseDto
 
     public Guid PersonId { get; set; }
 
+    /// <summary>
+    /// Clinical patient record id when the user is registered as a patient.
+    /// Distinct from <see cref="Id"/> (auth user) and <see cref="PersonId"/>.
+    /// </summary>
+    public Guid? PatientId { get; set; }
+
     public string Name { get; set; } = string.Empty;
 
     public string FirstName { get; set; } = string.Empty;
