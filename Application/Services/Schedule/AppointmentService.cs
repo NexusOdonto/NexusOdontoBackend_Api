@@ -116,7 +116,7 @@ public sealed class AppointmentService(
         var startsAt = request.StartsAt == default ? nowColombia.AddHours(1) : request.StartsAt;
         var endsAt = request.EndsAt <= startsAt ? startsAt.AddMinutes(30) : request.EndsAt;
 
-        ValidateAppointmentSchedule(startsAt, nowColombia);
+        ValidateAppointmentSchedule(startsAt, endsAt, nowColombia);
 
         var professionalId = request.AutoAssignProfessional
             ? await ResolveAvailableProfessionalAsync(request.ProfessionalId, startsAt, endsAt)
@@ -162,7 +162,7 @@ public sealed class AppointmentService(
         {
             if (startsAt != entity.StartsAt || endsAt != entity.EndsAt)
             {
-                ValidateAppointmentSchedule(startsAt, GetColombiaNow());
+                ValidateAppointmentSchedule(startsAt, endsAt, GetColombiaNow());
             }
 
             if (professionalId != Guid.Empty)
@@ -406,8 +406,10 @@ public sealed class AppointmentService(
 
     /// <summary>
     /// Past-date check (Colombia local) and clinic business hours are separate validations.
+    /// Accepts an appointment only when start+duration fits before lunch or clinic close
+    /// (weekdays 17:00 / Saturdays 12:00). Ending exactly at close is allowed.
     /// </summary>
-    public static void ValidateAppointmentSchedule(DateTime startsAt, DateTime? nowColombia = null)
+    public static void ValidateAppointmentSchedule(DateTime startsAt, DateTime endsAt, DateTime? nowColombia = null)
     {
         var now = nowColombia ?? GetColombiaNow();
 
@@ -417,22 +419,61 @@ public sealed class AppointmentService(
             throw new ValidationException("No se pueden programar citas en fechas u horas pasadas.");
         }
 
+        if (endsAt <= startsAt)
+        {
+            endsAt = startsAt.AddMinutes(30);
+        }
+
         var startTime = TimeOnly.FromDateTime(startsAt);
+        var endTime = TimeOnly.FromDateTime(endsAt);
+        var dayOfWeek = startsAt.DayOfWeek;
+
         var morningOpen = new TimeOnly(8, 0);
         var lunchStart = new TimeOnly(12, 0);
         var afternoonOpen = new TimeOnly(14, 0);
-        var lastStart = new TimeOnly(16, 30);
+        var weekdayClose = new TimeOnly(17, 0);
+        var saturdayClose = new TimeOnly(12, 0);
+
+        if (dayOfWeek == DayOfWeek.Sunday)
+        {
+            throw new ValidationException(
+                "Los domingos la clínica permanece cerrada (día no laboral).");
+        }
+
+        if (dayOfWeek == DayOfWeek.Saturday)
+        {
+            if (startTime < morningOpen || startTime >= saturdayClose || endTime > saturdayClose)
+            {
+                throw new ValidationException(
+                    "Los sábados se atiende únicamente de 08:00 a 12:00. El horario no cabe en la jornada según la duración del tratamiento.");
+            }
+
+            return;
+        }
 
         if (startTime >= lunchStart && startTime < afternoonOpen)
         {
             throw new ValidationException(
-                "El horario de 12:00 a 14:00 corresponde al receso de almuerzo clínico. La jornada es 08:00-12:00 | 14:00-17:00 (última cita 16:30).");
+                "El horario de 12:00 a 14:00 corresponde al receso de almuerzo clínico. La jornada es 08:00-12:00 | 14:00-17:00.");
         }
 
-        if (startTime < morningOpen || startTime > lastStart)
+        // Morning block: must finish by lunch (12:00).
+        if (startTime < lunchStart)
+        {
+            if (startTime < morningOpen || endTime > lunchStart)
+            {
+                throw new ValidationException(
+                    "La cita no cabe en la jornada de la mañana (08:00-12:00) según la duración del tratamiento. La jornada es 08:00-12:00 | 14:00-17:00.");
+            }
+
+            return;
+        }
+
+        // Afternoon block: must finish by clinic close (17:00).
+        if (startTime < afternoonOpen || startTime >= weekdayClose || endTime > weekdayClose)
         {
             throw new ValidationException(
-                "La cita está fuera de la jornada de atención (08:00-12:00 | 14:00-17:00, última cita 16:30).");
+                "La cita no cabe en la jornada de la tarde (14:00-17:00) según la duración del tratamiento. La jornada es 08:00-12:00 | 14:00-17:00.");
         }
     }
 
