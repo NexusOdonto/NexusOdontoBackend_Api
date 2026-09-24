@@ -24,6 +24,19 @@ public sealed class PersonService(
         return entity is null ? null : Map(entity);
     }
 
+    public async Task<PersonResponseDto?> GetByDocumentNumberAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(documentNumber))
+            return null;
+
+        var entity = await personRepository.GetByDocumentNumberAsync(
+            documentNumber.Trim(),
+            cancellationToken);
+        return entity is null ? null : Map(entity);
+    }
+
     public async Task<PersonResponseDto> CreateAsync(CreatePersonDto request)
     {
         ArgumentNullException.ThrowIfNull(request);

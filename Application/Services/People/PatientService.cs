@@ -28,6 +28,31 @@ public sealed class PatientService(
         return entity is null ? null : Map(entity);
     }
 
+    public async Task<PatientResponseDto?> GetByPersonIdAsync(
+        Guid personId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await patientRepository.GetByPersonIdAsync(personId, cancellationToken);
+        return entity is null ? null : Map(entity);
+    }
+
+    public async Task<PatientResponseDto?> GetByDocumentNumberAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(documentNumber))
+            return null;
+
+        var person = await personRepository.GetByDocumentNumberAsync(
+            documentNumber.Trim(),
+            cancellationToken);
+        if (person is null)
+            return null;
+
+        var patient = await patientRepository.GetByPersonIdAsync(person.Id, cancellationToken);
+        return patient is null ? null : Map(patient);
+    }
+
     public async Task<PatientResponseDto> CreateAsync(CreatePatientDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -35,8 +60,18 @@ public sealed class PatientService(
         var person = await personRepository.GetByIdAsync(request.PersonId)
             ?? throw new BusinessRuleException($"Person {request.PersonId} was not found.");
 
+        // One patient per person — never create a second clinical record for the same identity.
+        var existing = await patientRepository.GetByPersonIdAsync(person.Id);
+        if (existing is not null)
+            return Map(existing);
+
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
+            // Re-check inside the transaction to avoid races.
+            var raced = await patientRepository.GetByPersonIdAsync(person.Id);
+            if (raced is not null)
+                return Map(raced);
+
             var patient = new PatientEntity(
                 person.Id,
                 request.EmergencyContact,
