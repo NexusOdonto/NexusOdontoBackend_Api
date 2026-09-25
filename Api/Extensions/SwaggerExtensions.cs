@@ -1,4 +1,5 @@
 using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Api.Extensions;
 
@@ -10,6 +11,10 @@ public static class SwaggerExtensions
         {
             options.AddServer(new OpenApiServer { Url = "/" });
 
+            // Keep only application/json in the OpenAPI doc to avoid tripling size
+            // (text/plain + application/json + text/json on every response).
+            options.DocumentFilter<JsonOnlyMediaTypesDocumentFilter>();
+
             options.MapType<TimeOnly>(() => new OpenApiSchema
             {
                 Type = JsonSchemaType.String,
@@ -18,11 +23,12 @@ public static class SwaggerExtensions
                 Example = "09:00"
             });
 
+            // OpenAPI http scheme must be lowercase "bearer" (not "Bearer").
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
                 Type = SecuritySchemeType.Http,
-                Scheme = "Bearer",
+                Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
                 Description =
@@ -45,10 +51,65 @@ public static class SwaggerExtensions
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "NexusOdonto API v1");
+            // Relative to /swagger/index.html so reverse-proxy path bases stay correct.
+            options.SwaggerEndpoint("v1/swagger.json", "NexusOdonto API v1");
             options.RoutePrefix = "swagger";
         });
 
         return app;
+    }
+}
+
+/// <summary>
+/// Drops non-JSON media types from the OpenAPI document to shrink swagger.json.
+/// </summary>
+file sealed class JsonOnlyMediaTypesDocumentFilter : IDocumentFilter
+{
+    private static readonly HashSet<string> Keep =
+        new(StringComparer.OrdinalIgnoreCase) { "application/json" };
+
+    public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
+    {
+        if (swaggerDoc.Paths is null)
+        {
+            return;
+        }
+
+        foreach (var pathItem in swaggerDoc.Paths.Values)
+        {
+            if (pathItem?.Operations is null)
+            {
+                continue;
+            }
+
+            foreach (var operation in pathItem.Operations.Values)
+            {
+                TrimContent(operation.RequestBody?.Content);
+
+                if (operation.Responses is null)
+                {
+                    continue;
+                }
+
+                foreach (var response in operation.Responses.Values)
+                {
+                    TrimContent(response.Content);
+                }
+            }
+        }
+    }
+
+    private static void TrimContent(IDictionary<string, OpenApiMediaType>? content)
+    {
+        if (content is null || content.Count == 0)
+        {
+            return;
+        }
+
+        var remove = content.Keys.Where(k => !Keep.Contains(k)).ToList();
+        foreach (var key in remove)
+        {
+            content.Remove(key);
+        }
     }
 }
