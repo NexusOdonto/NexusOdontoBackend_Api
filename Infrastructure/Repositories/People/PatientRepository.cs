@@ -15,7 +15,10 @@ public sealed class PatientRepository : Common.Repository<PatientEntity>, IPatie
         Guid personId,
         CancellationToken cancellationToken = default)
     {
-        return await Set.FirstOrDefaultAsync(p => p.PersonId == personId, cancellationToken);
+        // Include inactive so cascade soft-delete / reactivation can find the clinical row.
+        return await Set
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.PersonId == personId, cancellationToken);
     }
 
     public async Task<PatientEntity?> GetByIdWithPersonAsync(

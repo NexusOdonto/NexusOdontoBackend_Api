@@ -10,6 +10,8 @@ namespace Application.Services.People;
 
 public sealed class PersonService(
     IPersonRepository personRepository,
+    IPatientRepository patientRepository,
+    IUserRepository userRepository,
     IUnitOfWork unitOfWork) : IPersonService
 {
     public async Task<IReadOnlyList<PersonResponseDto>> GetAllAsync()
@@ -42,10 +44,13 @@ public sealed class PersonService(
         ArgumentNullException.ThrowIfNull(request);
 
         var documentNumber = request.DocumentNumber.Trim();
-        var existingPerson = await personRepository.GetByDocumentNumberAsync(documentNumber);
+        var existingPerson = await personRepository.GetByDocumentNumberIncludingInactiveAsync(documentNumber);
         if (existingPerson is not null)
         {
-            throw new ConflictException("A person with this document number already exists.");
+            throw new ConflictException(
+                existingPerson.IsActive
+                    ? "A person with this document number already exists."
+                    : "A deactivated person with this document number already exists and cannot be re-registered.");
         }
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
@@ -72,10 +77,13 @@ public sealed class PersonService(
         if (entity is null) return null;
 
         var documentNumber = request.DocumentNumber.Trim();
-        var existingPerson = await personRepository.GetByDocumentNumberAsync(documentNumber);
+        var existingPerson = await personRepository.GetByDocumentNumberIncludingInactiveAsync(documentNumber);
         if (existingPerson is not null && existingPerson.Id != id)
         {
-            throw new ConflictException("A person with this document number already exists.");
+            throw new ConflictException(
+                existingPerson.IsActive
+                    ? "A person with this document number already exists."
+                    : "A deactivated person with this document number already exists.");
         }
 
         if (SeedAdminGuard.IsProtectedPerson(entity.Id) && !request.IsActive)
@@ -97,6 +105,10 @@ public sealed class PersonService(
                 request.Address);
             entity.IsActive = request.IsActive;
             personRepository.Update(entity);
+
+            if (!request.IsActive)
+                await DeactivateLinkedPatientAndUserAsync(entity.Id);
+
             return Map(entity);
         });
     }
@@ -111,13 +123,30 @@ public sealed class PersonService(
             throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
         }
 
-        await ServiceWrite.InTransactionAsync(unitOfWork, () =>
+        await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.Deactivate();
             personRepository.Update(entity);
-            return Task.CompletedTask;
+            await DeactivateLinkedPatientAndUserAsync(entity.Id);
         });
         return true;
+    }
+
+    private async Task DeactivateLinkedPatientAndUserAsync(Guid personId)
+    {
+        var patient = await patientRepository.GetByPersonIdAsync(personId);
+        if (patient is not null && patient.IsActive)
+        {
+            patient.Deactivate();
+            patientRepository.Update(patient);
+        }
+
+        var user = await userRepository.GetByPersonIdAsync(personId);
+        if (user is not null && user.IsActive)
+        {
+            user.Deactivate();
+            userRepository.Update(user);
+        }
     }
 
     private static PersonResponseDto Map(PersonEntity e) => new()

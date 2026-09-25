@@ -24,8 +24,9 @@ public class Repository<TEntity> : IRepository<TEntity>
 
     public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync()
     {
-        // Admin CRUD lists need inactive rows so toggles can reactivate them.
-        return await Set.IgnoreQueryFilters().ToListAsync();
+        // Respect soft-delete (IsActive) so admin/patient lists never surface deactivated rows.
+        // GetByIdAsync still uses IgnoreQueryFilters for targeted reactivation/update.
+        return await Set.ToListAsync();
     }
 
     public virtual async Task AddAsync(TEntity entity)

@@ -72,10 +72,8 @@ public sealed class UserRepository : Common.Repository<UserEntity>, IUserReposit
     public async Task<IReadOnlyList<UserEntity>> GetAllWithRolesAsync(
         CancellationToken cancellationToken = default)
     {
-        // Include inactive users so /usuarios can list and reactivate them.
-        return await WithRoles()
-            .IgnoreQueryFilters()
-            .ToListAsync(cancellationToken);
+        // Soft-deleted / inactive users must not appear in admin lists.
+        return await WithRoles().ToListAsync(cancellationToken);
     }
 
     public async Task<UserEntity?> GetByIdWithRolesAsync(

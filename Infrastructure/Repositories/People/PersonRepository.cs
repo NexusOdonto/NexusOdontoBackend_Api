@@ -30,6 +30,18 @@ public sealed class PersonRepository : Common.Repository<PersonEntity>, IPersonR
             cancellationToken);
     }
 
+    public async Task<PersonEntity?> GetByDocumentNumberIncludingInactiveAsync(
+        string documentNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedDocument = documentNumber.Trim();
+        return await Set
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(
+                p => p.DocumentNumber == normalizedDocument,
+                cancellationToken);
+    }
+
     public async Task<PersonEntity?> GetByEmailAsync(
         string email,
         CancellationToken cancellationToken = default)

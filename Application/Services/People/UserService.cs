@@ -11,12 +11,19 @@ namespace Application.Services.People;
 
 public sealed class UserService(
     IUserRepository userRepository,
+    IPersonRepository personRepository,
+    IPatientRepository patientRepository,
     IUnitOfWork unitOfWork) : IUserService
 {
     public async Task<IReadOnlyList<UserDetailResponseDto>> GetAllAsync()
     {
         var items = await userRepository.GetAllWithRolesAsync();
-        return items.Select(Map).ToList();
+        // Hide users whose person was soft-deleted even if the user row is still flagged active.
+        // Related PersonEntity is omitted by EF when the person fails the IsActive filter.
+        return items
+            .Where(u => u.IsActive && u.PersonEntity is not null && u.PersonEntity.IsActive)
+            .Select(Map)
+            .ToList();
     }
 
     public async Task<UserDetailResponseDto?> GetByIdAsync(Guid id)
@@ -94,11 +101,24 @@ public sealed class UserService(
             throw new BusinessRuleException(SeedAdminGuard.CannotDeactivateOrDeleteMessage);
         }
 
-        await ServiceWrite.InTransactionAsync(unitOfWork, () =>
+        await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             entity.Deactivate();
             userRepository.Update(entity);
-            return Task.CompletedTask;
+
+            var person = await personRepository.GetByIdAsync(entity.PersonId);
+            if (person is not null && person.IsActive && !SeedAdminGuard.IsProtectedPerson(person.Id))
+            {
+                person.Deactivate();
+                personRepository.Update(person);
+            }
+
+            var patient = await patientRepository.GetByPersonIdAsync(entity.PersonId);
+            if (patient is not null && patient.IsActive)
+            {
+                patient.Deactivate();
+                patientRepository.Update(patient);
+            }
         });
         return true;
     }

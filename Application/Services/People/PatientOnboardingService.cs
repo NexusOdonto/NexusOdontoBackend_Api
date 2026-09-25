@@ -51,12 +51,19 @@ public sealed class PatientOnboardingService(
         var documentNumber = request.DocumentNumber.Trim();
 
         // Cédula is the unique identity key: never create a second person for the same document.
-        var existingPerson = await personRepository.GetByDocumentNumberAsync(
+        // Include inactive so deactivated orphans (e.g. fake chatbot docs) are not recreated.
+        var existingPerson = await personRepository.GetByDocumentNumberIncludingInactiveAsync(
             documentNumber,
             cancellationToken);
 
         if (existingPerson is not null)
         {
+            if (!existingPerson.IsActive)
+            {
+                throw new BusinessRuleException(
+                    "A deactivated person already exists for this document number and cannot be re-registered.");
+            }
+
             return await ServiceWrite.InTransactionAsync(
                 unitOfWork,
                 () => EnsurePatientAndUserForPersonAsync(existingPerson, request, alreadyExisted: true, cancellationToken));
@@ -65,11 +72,17 @@ public sealed class PatientOnboardingService(
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             // Race: another request may have created the person between the check and now.
-            var racedPerson = await personRepository.GetByDocumentNumberAsync(
+            var racedPerson = await personRepository.GetByDocumentNumberIncludingInactiveAsync(
                 documentNumber,
                 cancellationToken);
             if (racedPerson is not null)
             {
+                if (!racedPerson.IsActive)
+                {
+                    throw new BusinessRuleException(
+                        "A deactivated person already exists for this document number and cannot be re-registered.");
+                }
+
                 return await EnsurePatientAndUserForPersonAsync(
                     racedPerson, request, alreadyExisted: true, cancellationToken);
             }
@@ -131,6 +144,11 @@ public sealed class PatientOnboardingService(
             var history = new ClinicalHistoryEntity(patient.Id);
             await clinicalHistoryRepository.AddAsync(history);
         }
+        else if (!patient.IsActive)
+        {
+            patient.IsActive = true;
+            patientRepository.Update(patient);
+        }
 
         var user = await userRepository.GetByPersonIdAsync(existingPerson.Id, cancellationToken);
         if (user is null)
@@ -139,6 +157,12 @@ public sealed class PatientOnboardingService(
             user = new UserEntity(existingPerson.Id, passwordHash);
             user.UserRoles.Add(new UserRoleEntity(user.Id, PatientRoleId));
             await userRepository.AddAsync(user);
+        }
+        else if (!user.IsActive)
+        {
+            user.IsActive = true;
+            user.UpdatedAt = DateTime.UtcNow;
+            userRepository.Update(user);
         }
 
         return new OnboardPatientResponseDto

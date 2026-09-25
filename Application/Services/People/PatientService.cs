@@ -18,7 +18,21 @@ public sealed class PatientService(
     public async Task<IReadOnlyList<PatientResponseDto>> GetAllAsync()
     {
         var items = await patientRepository.GetAllAsync();
-        return items.Select(Map).ToList();
+        var result = new List<PatientResponseDto>(items.Count);
+        foreach (var patient in items)
+        {
+            if (!patient.IsActive)
+                continue;
+
+            // GetById ignores soft-delete filters so we can detect orphaned active patients.
+            var person = await personRepository.GetByIdAsync(patient.PersonId);
+            if (person is null || !person.IsActive)
+                continue;
+
+            result.Add(Map(patient));
+        }
+
+        return result;
     }
 
     public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
