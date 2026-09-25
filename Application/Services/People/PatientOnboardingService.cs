@@ -127,6 +127,7 @@ public sealed class PatientOnboardingService(
         }
 
         MaybeRefreshDisplayName(existingPerson, request);
+        MaybeRefreshPhone(existingPerson, request);
 
         var patient = await patientRepository.GetByPersonIdAsync(existingPerson.Id, cancellationToken);
         if (patient is null)
@@ -208,6 +209,89 @@ public sealed class PatientOnboardingService(
             person.Email,
             person.Address);
         personRepository.Update(person);
+    }
+
+    private static readonly HashSet<string> PlaceholderPhoneDigits = new(StringComparer.Ordinal)
+    {
+        "3000000000",
+        "0000000000",
+        "1111111111",
+        "1234567890",
+        "3001234567",
+        "573000000000",
+        "573001234567",
+        "573002345678",
+    };
+
+    private void MaybeRefreshPhone(PersonEntity person, OnboardPatientDto request)
+    {
+        var incoming = NormalizeWhatsAppPhone(request.Phone);
+        if (string.IsNullOrWhiteSpace(incoming))
+            return;
+
+        if (!IsPlaceholderPhone(person.Phone) && !string.IsNullOrWhiteSpace(person.Phone))
+            return; // keep user-edited / already-real phone
+
+        if (string.Equals(DigitsOnly(person.Phone), DigitsOnly(incoming), StringComparison.Ordinal))
+            return;
+
+        person.Update(
+            person.FirstName,
+            person.LastName,
+            person.DateOfBirth,
+            person.SexId,
+            incoming,
+            person.Email,
+            person.Address);
+        personRepository.Update(person);
+    }
+
+    private static string? NormalizeWhatsAppPhone(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        var trimmed = raw.Trim();
+        if (trimmed.Contains("@lid", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var userPart = trimmed.Contains('@') ? trimmed.Split('@')[0] : trimmed;
+        var digits = DigitsOnly(userPart);
+        if (string.IsNullOrEmpty(digits) || IsPlaceholderPhone(digits))
+            return null;
+
+        // WhatsApp LID opaque ids are typically 14+ digits — never treat as E.164
+        if (digits.Length >= 14)
+            return null;
+
+        if (digits.Length == 10 && digits.StartsWith('3'))
+            return "+57" + digits;
+        if (digits.Length == 12 && digits.StartsWith("573", StringComparison.Ordinal))
+            return "+" + digits;
+        if (digits.Length is >= 10 and <= 13)
+            return "+" + digits;
+
+        return null;
+    }
+
+    private static bool IsPlaceholderPhone(string? phone)
+    {
+        var digits = DigitsOnly(phone);
+        if (string.IsNullOrEmpty(digits))
+            return true;
+        if (PlaceholderPhoneDigits.Contains(digits))
+            return true;
+        var local = digits.StartsWith("57", StringComparison.Ordinal) && digits.Length > 2
+            ? digits[2..]
+            : digits;
+        return PlaceholderPhoneDigits.Contains(local);
+    }
+
+    private static string DigitsOnly(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        return new string(value.Where(char.IsDigit).ToArray());
     }
 
     private static bool IsPlaceholderName(string fullName)

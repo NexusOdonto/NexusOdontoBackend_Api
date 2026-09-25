@@ -46,4 +46,11 @@ public class ChatbotConversationEntity : Entity
         ClosedAt = closedAt;
         PatientId = patientId;
     }
+
+    public void SetChatIdentifier(string chatIdentifier)
+    {
+        if (string.IsNullOrWhiteSpace(chatIdentifier))
+            return;
+        ChatIdentifier = chatIdentifier.Trim();
+    }
 }

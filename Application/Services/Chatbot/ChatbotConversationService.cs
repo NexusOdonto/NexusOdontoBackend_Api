@@ -59,6 +59,8 @@ public sealed class ChatbotConversationService(
                 entity.LastInteractionAt,
                 request.ClosedAt,
                 request.PatientId);
+            if (!string.IsNullOrWhiteSpace(request.ChatIdentifier))
+                entity.SetChatIdentifier(request.ChatIdentifier);
             repository.Update(entity);
             return Map(entity);
         });
