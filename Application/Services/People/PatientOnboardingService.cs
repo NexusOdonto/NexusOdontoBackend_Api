@@ -9,6 +9,8 @@ using Domain.Entities.Clinical;
 using Domain.Entities.People;
 using Domain.Entities.Security;
 using FluentValidation;
+using System.Globalization;
+using System.Text;
 
 namespace Application.Services.People;
 
@@ -159,21 +161,34 @@ public sealed class PatientOnboardingService(
         if (string.IsNullOrWhiteSpace(incoming) || IsPlaceholderName(incoming))
             return;
 
-        // Prefer a longer/more complete real name when the stored one is placeholder or shorter.
-        if (IsPlaceholderName(current) ||
+        // Keep canonical registered name when the typed name is a token-subset
+        // (e.g. "Alejandro Escobar" ⊆ "Jhon Alejandro Escobar Lozada").
+        if (!IsPlaceholderName(current) && IsNameTokenSubset(incoming, current))
+            return;
+
+        // Prefer a longer/more complete real name when the stored one is placeholder,
+        // or when the registered name is itself a subset of a richer incoming name.
+        var shouldRefresh =
+            IsPlaceholderName(current) ||
+            (IsNameTokenSubset(current, incoming) &&
+             incoming.Length > current.Length + 2 &&
+             !string.Equals(current, incoming, StringComparison.OrdinalIgnoreCase)) ||
             (incoming.Length > current.Length + 2 &&
-             !string.Equals(current, incoming, StringComparison.OrdinalIgnoreCase)))
-        {
-            person.Update(
-                incomingFirst,
-                string.IsNullOrWhiteSpace(incomingLast) ? person.LastName : incomingLast,
-                person.DateOfBirth,
-                person.SexId,
-                person.Phone,
-                person.Email,
-                person.Address);
-            personRepository.Update(person);
-        }
+             NamesShareSignificantToken(current, incoming) &&
+             !string.Equals(current, incoming, StringComparison.OrdinalIgnoreCase));
+
+        if (!shouldRefresh)
+            return;
+
+        person.Update(
+            incomingFirst,
+            string.IsNullOrWhiteSpace(incomingLast) ? person.LastName : incomingLast,
+            person.DateOfBirth,
+            person.SexId,
+            person.Phone,
+            person.Email,
+            person.Address);
+        personRepository.Update(person);
     }
 
     private static bool IsPlaceholderName(string fullName)
@@ -183,6 +198,60 @@ public sealed class PatientOnboardingService(
 
         var lower = fullName.ToLowerInvariant();
         return PlaceholderNameTokens.Any(t => lower.Contains(t, StringComparison.Ordinal));
+    }
+
+    private static readonly HashSet<string> NameTitleTokens = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "dr", "dra", "doctor", "doctora", "sr", "sra", "srta", "don", "dona", "doña", "mr", "mrs", "ms"
+    };
+
+    private static readonly HashSet<string> NameStopwords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "de", "del", "la", "las", "los", "y", "e", "da", "do", "dos"
+    };
+
+    private static IReadOnlyList<string> SignificantNameTokens(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            return Array.Empty<string>();
+
+        var normalized = fullName.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            var cat = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (cat == UnicodeCategory.NonSpacingMark)
+                continue;
+            sb.Append(char.IsLetterOrDigit(c) ? c : ' ');
+        }
+
+        return sb.ToString()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(t => t.Length >= 2 && !NameTitleTokens.Contains(t) && !NameStopwords.Contains(t))
+            .ToArray();
+    }
+
+    /// <summary>
+    /// True when every significant token of <paramref name="needle"/> appears in
+    /// <paramref name="haystack"/> (order-independent containment).
+    /// </summary>
+    private static bool IsNameTokenSubset(string needle, string haystack)
+    {
+        var needleTokens = SignificantNameTokens(needle);
+        var haystackTokens = SignificantNameTokens(haystack);
+        if (needleTokens.Count == 0 || haystackTokens.Count == 0)
+            return false;
+
+        var hay = haystackTokens.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return needleTokens.All(t => hay.Contains(t));
+    }
+
+    private static bool NamesShareSignificantToken(string a, string b)
+    {
+        var setA = SignificantNameTokens(a).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (setA.Count == 0)
+            return false;
+        return SignificantNameTokens(b).Any(t => setA.Contains(t));
     }
 
     private static string NormalizeEmergencyContact(string? value) =>
