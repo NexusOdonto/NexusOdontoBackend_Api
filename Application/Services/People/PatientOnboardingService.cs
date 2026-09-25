@@ -51,19 +51,13 @@ public sealed class PatientOnboardingService(
         var documentNumber = request.DocumentNumber.Trim();
 
         // Cédula is the unique identity key: never create a second person for the same document.
-        // Include inactive so deactivated orphans (e.g. fake chatbot docs) are not recreated.
+        // Include inactive so soft-deleted identities are reactivated instead of blocked/duplicated.
         var existingPerson = await personRepository.GetByDocumentNumberIncludingInactiveAsync(
             documentNumber,
             cancellationToken);
 
         if (existingPerson is not null)
         {
-            if (!existingPerson.IsActive)
-            {
-                throw new BusinessRuleException(
-                    "A deactivated person already exists for this document number and cannot be re-registered.");
-            }
-
             return await ServiceWrite.InTransactionAsync(
                 unitOfWork,
                 () => EnsurePatientAndUserForPersonAsync(existingPerson, request, alreadyExisted: true, cancellationToken));
@@ -77,12 +71,6 @@ public sealed class PatientOnboardingService(
                 cancellationToken);
             if (racedPerson is not null)
             {
-                if (!racedPerson.IsActive)
-                {
-                    throw new BusinessRuleException(
-                        "A deactivated person already exists for this document number and cannot be re-registered.");
-                }
-
                 return await EnsurePatientAndUserForPersonAsync(
                     racedPerson, request, alreadyExisted: true, cancellationToken);
             }
@@ -130,6 +118,14 @@ public sealed class PatientOnboardingService(
         bool alreadyExisted,
         CancellationToken cancellationToken)
     {
+        // Chatbot/portal booking must succeed for returning soft-deleted patients:
+        // reactivate person + clinical row + login instead of failing with a technical error.
+        if (!existingPerson.IsActive)
+        {
+            existingPerson.SetActive(true);
+            personRepository.Update(existingPerson);
+        }
+
         MaybeRefreshDisplayName(existingPerson, request);
 
         var patient = await patientRepository.GetByPersonIdAsync(existingPerson.Id, cancellationToken);
@@ -146,7 +142,7 @@ public sealed class PatientOnboardingService(
         }
         else if (!patient.IsActive)
         {
-            patient.IsActive = true;
+            patient.SetActive(true);
             patientRepository.Update(patient);
         }
 
@@ -160,8 +156,7 @@ public sealed class PatientOnboardingService(
         }
         else if (!user.IsActive)
         {
-            user.IsActive = true;
-            user.UpdatedAt = DateTime.UtcNow;
+            user.SetActive(true);
             userRepository.Update(user);
         }
 
