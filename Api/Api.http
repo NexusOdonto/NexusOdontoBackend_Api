@@ -1,6 +1,38 @@
 @Api_HostAddress = http://localhost:5170
 
-GET {{Api_HostAddress}}/weatherforecast/
+### Get Clinic Settings (Public / Anonymous)
+GET {{Api_HostAddress}}/api/v1/clinic-settings
 Accept: application/json
 
-###
+### Update Clinic Settings (Requires Bearer Token)
+PUT {{Api_HostAddress}}/api/v1/clinic-settings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombreClinica": "NexusOdonto Dental Clinic",
+  "razonSocial": "NexusOdonto Salud Oral S.A.S.",
+  "nit": "901.458.729-3",
+  "telefono": "+57 (601) 745-9000",
+  "whatsapp": "+57 324 6030217",
+  "email": "NexusOdonto@nexus.co",
+  "direccion": "Calle 100 # 15-20, Centro Médico Odontológico",
+  "ciudad": "Bogotá, Colombia",
+  "horaApertura": "08:00",
+  "horaCierre": "17:00",
+  "duracionCitaDefault": 45,
+  "diasHabiles": [
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado"
+  ],
+  "moneda": "COP ($)",
+  "prefijoRecibo": "REC-",
+  "notificarWhatsApp": true,
+  "notificarEmail": true,
+  "horasAnticipacionRecordatorio": 24,
+  "backupAutomatico": true
+}
