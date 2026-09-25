@@ -41,11 +41,7 @@ public static class SwaggerExtensions
 
     public static WebApplication UseSwaggerWithJwtBearerUi(this WebApplication app)
     {
-        if (!app.Environment.IsDevelopment())
-        {
-            return app;
-        }
-
+        // Enabled in all environments so HTTPS Swagger is reachable behind nginx in prod.
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
