@@ -5,6 +5,19 @@ namespace Infrastructure.Data.Seeder.WhatsAppNotificationType;
 
 public static class WhatsAppNotificationTypeSeeder
 {
+    public static readonly Guid ScheduleChangeId = new("70000000-0000-0000-0000-000000000005");
+
+    /// <summary>
+    /// Rows inserted idempotently at startup (DatabaseInitializer.EnsureRuntimeCatalogRowsAsync)
+    /// instead of HasData, so production gets them without a migration.
+    /// </summary>
+    public static readonly (Guid Id, string Code, string Name, string Description, string DefaultTemplate, int SortOrder)[] RuntimeRows =
+    [
+        (ScheduleChangeId, "CAMBIO_HORARIO", "Schedule Change",
+            "Informs a patient that the professional's schedule changed and the appointment must be rescheduled.",
+            "schedule_change", 5)
+    ];
+
     public static void Seed(ModelBuilder modelBuilder)
     {
         var seedCreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);

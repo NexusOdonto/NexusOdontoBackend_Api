@@ -20,4 +20,14 @@ public sealed class ChatbotConversationRepository : Common.Repository<ChatbotCon
             c => c.ChatChannelId == chatChannelId && c.ChatIdentifier == chatIdentifier,
             cancellationToken);
     }
+
+    public async Task<ChatbotConversationEntity?> GetLatestByPatientIdAsync(
+        Guid patientId,
+        CancellationToken cancellationToken = default)
+    {
+        return await Set
+            .Where(c => c.PatientId == patientId && c.ChatIdentifier != null)
+            .OrderByDescending(c => c.LastInteractionAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

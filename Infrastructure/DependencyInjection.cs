@@ -2,6 +2,7 @@ using Application.Contracts.Repositories.Catalogs;
 using Application.Contracts.Repositories.Chatbot;
 using Application.Contracts.Repositories.Clinical;
 using Application.Contracts.Repositories.Common;
+using Application.Contracts.Repositories.Notifications;
 using Application.Contracts.Repositories.Odontogram;
 using Application.Contracts.Repositories.People;
 using Application.Contracts.Repositories.Schedule;
@@ -14,6 +15,7 @@ using Infrastructure.Repositories.Catalogs;
 using Infrastructure.Repositories.Chatbot;
 using Infrastructure.Repositories.Clinical;
 using Infrastructure.Repositories.Common;
+using Infrastructure.Repositories.Notifications;
 using Infrastructure.Repositories.Odontogram;
 using Infrastructure.Repositories.People;
 using Infrastructure.Repositories.Schedule;
@@ -63,6 +65,8 @@ public static class DependencyInjection
 
         services.AddScoped<IChatbotConversationRepository, ChatbotConversationRepository>();
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
+
+        services.AddScoped<IWhatsAppNotificationRepository, WhatsAppNotificationRepository>();
 
         services.AddScoped<IToothRepository, ToothRepository>();
 

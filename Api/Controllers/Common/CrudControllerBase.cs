@@ -88,7 +88,7 @@ public abstract class CrudControllerBase<TService, TResponse, TCreate, TUpdate>(
             : throw new InvalidOperationException($"Type {typeof(TResponse).Name}.Id must be a Guid.");
     }
 
-    private async Task<bool> HasPermissionAsync(PermissionAction action)
+    protected async Task<bool> HasPermissionAsync(PermissionAction action)
     {
         var userRepository = HttpContext.RequestServices.GetRequiredService<IUserRepository>();
         var principal = HttpContext.User;

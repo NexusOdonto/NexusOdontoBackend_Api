@@ -87,6 +87,8 @@ else
         "Set APPLY_MIGRATIONS=true only after Oracle migration SQL is fixed.");
 }
 
+await DatabaseInitializer.EnsureRuntimeCatalogRowsAsync(app.Services);
+
 if (ShouldRunSeeders())
 {
     await DatabaseInitializer.SeedBotUserAsync(app.Services);

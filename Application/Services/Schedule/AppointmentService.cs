@@ -20,6 +20,7 @@ public sealed class AppointmentService(
     IClinicalHistoryRepository clinicalHistoryRepository,
     IRepository<OdontogramEntity> odontogramRepository,
     IRepository<ServiceEntity> serviceRepository,
+    IScheduleChangeService scheduleChangeService,
     IUnitOfWork unitOfWork) : IAppointmentService
 {
     public static readonly Guid StatusScheduled = new("10000000-0000-0000-0000-000000000001");
@@ -158,14 +159,19 @@ public sealed class AppointmentService(
         var isCancelling = request.AppointmentStatusId == StatusCancelled ||
                            !string.IsNullOrWhiteSpace(request.CancellationReason);
 
+        var timeChanged = startsAt != entity.StartsAt || endsAt != entity.EndsAt;
+        var slotChanged = timeChanged || professionalId != entity.ProfessionalId;
+
         if (!isCancelling)
         {
-            if (startsAt != entity.StartsAt || endsAt != entity.EndsAt)
+            if (timeChanged)
             {
                 ValidateAppointmentSchedule(startsAt, endsAt, GetColombiaNow());
             }
 
-            if (professionalId != Guid.Empty)
+            // Only re-check availability when the slot moves, so appointments left outside a
+            // new schedule (pending reschedule) can still be confirmed or annotated.
+            if (slotChanged && professionalId != Guid.Empty)
             {
                 await ValidateAvailabilityAsync(professionalId, startsAt, endsAt);
 
@@ -201,6 +207,16 @@ public sealed class AppointmentService(
                 request.CancellationReason);
 
             repository.Update(entity);
+
+            if (isCancelling || entity.AppointmentStatusId == StatusCancelled)
+            {
+                await scheduleChangeService.ResolveMarksAsync([entity.Id], "cita cancelada");
+            }
+            else if (slotChanged)
+            {
+                await scheduleChangeService.ResolveMarksAsync([entity.Id], "cita reprogramada");
+            }
+
             return Map(entity);
         });
     }
@@ -209,9 +225,16 @@ public sealed class AppointmentService(
     {
         var entity = await repository.GetByIdAsync(id);
         if (entity is null) return false;
-        await ServiceWrite.InTransactionAsync(unitOfWork, () => { repository.Remove(entity); return Task.CompletedTask; });
+        await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
+        {
+            await scheduleChangeService.ResolveMarksAsync([entity.Id], "cita eliminada", detachAppointment: true);
+            repository.Remove(entity);
+        });
         return true;
     }
+
+    public Task<IReadOnlyList<RequiresRescheduleAppointmentDto>> GetRequiresRescheduleAsync(CancellationToken cancellationToken = default) =>
+        scheduleChangeService.GetRequiresRescheduleAsync(cancellationToken);
 
     public async Task<AppointmentClinicalContextDto?> GetClinicalContextAsync(Guid appointmentId, CancellationToken cancellationToken = default)
     {
@@ -580,7 +603,7 @@ public sealed class AppointmentService(
         var activeAvailabilities = availabilities.Where(a => a.IsActive).ToList();
 
         return activeAvailabilities.Count > 0 &&
-               activeAvailabilities.Any(a => IsWithinAvailability(startsAt, endsAt, a));
+               activeAvailabilities.Any(a => AvailabilityRules.IsWithinAvailability(startsAt, endsAt, a));
     }
 
     private async Task ValidateAvailabilityAsync(Guid professionalId, DateTime startsAt, DateTime endsAt)
@@ -590,47 +613,6 @@ public sealed class AppointmentService(
             throw new ConflictException(
                 "The appointment time is outside the professional's active availability.");
         }
-    }
-
-    private static bool IsWithinAvailability(DateTime startsAt, DateTime endsAt, AvailabilityEntity availability)
-    {
-        var startIsoDay = ToIsoDayOfWeek(startsAt.DayOfWeek);
-        var endIsoDay = ToIsoDayOfWeek(endsAt.DayOfWeek);
-
-        if (startIsoDay < availability.StartDay || startIsoDay > availability.EndDay)
-        {
-            return false;
-        }
-
-        if (endsAt.Date != startsAt.Date)
-        {
-            if (endIsoDay < availability.StartDay || endIsoDay > availability.EndDay)
-            {
-                return false;
-            }
-        }
-
-        var startTime = TimeOnly.FromDateTime(startsAt);
-        var endTime = TimeOnly.FromDateTime(endsAt);
-
-        if (startTime < availability.StartTime || endTime > availability.EndTime)
-        {
-            return false;
-        }
-
-        if (availability.LunchStartTime < availability.LunchEndTime &&
-            startTime < availability.LunchEndTime &&
-            endTime > availability.LunchStartTime)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private static int ToIsoDayOfWeek(DayOfWeek dayOfWeek)
-    {
-        return dayOfWeek == DayOfWeek.Sunday ? 7 : (int)dayOfWeek;
     }
 
     private async Task<Guid> ResolvePatientIdAsync(Guid inputId)
@@ -667,14 +649,20 @@ public sealed class AppointmentService(
         throw new KeyNotFoundException($"No se encontró un profesional odontólogo activo correspondiente al ID '{inputId}'.");
     }
 
-    private static AppointmentResponseDto Map(AppointmentEntity e)
-    {
-        var evaluation = EvaluateAttendanceWindow(e);
-        var effectiveStatusId = (evaluation.IsExpired &&
+    internal static string GetEffectiveStatusCode(AppointmentEntity e) =>
+        GetStatusCode(GetEffectiveStatusId(e, EvaluateAttendanceWindow(e)));
+
+    private static Guid GetEffectiveStatusId(AppointmentEntity e, (bool CanAttend, string StatusMessage, bool IsExpired) evaluation) =>
+        (evaluation.IsExpired &&
             e.AppointmentStatusId != StatusNoShow &&
             e.AppointmentStatusId != StatusCompleted &&
             e.AppointmentStatusId != StatusCancelled &&
             e.CancelledAt == null) ? StatusNoShow : e.AppointmentStatusId;
+
+    private static AppointmentResponseDto Map(AppointmentEntity e)
+    {
+        var evaluation = EvaluateAttendanceWindow(e);
+        var effectiveStatusId = GetEffectiveStatusId(e, evaluation);
 
         return new AppointmentResponseDto
         {

@@ -9,4 +9,8 @@ public interface IChatbotConversationRepository : IRepository<ChatbotConversatio
         Guid chatChannelId,
         string chatIdentifier,
         CancellationToken cancellationToken = default);
+
+    Task<ChatbotConversationEntity?> GetLatestByPatientIdAsync(
+        Guid patientId,
+        CancellationToken cancellationToken = default);
 }

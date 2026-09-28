@@ -8,6 +8,8 @@ using Infrastructure.Data.Seeder.Professional;
 using Infrastructure.Data.Seeder.Patient;
 using Infrastructure.Data.Seeder.Role;
 using Infrastructure.Data.Seeder.User;
+using Infrastructure.Data.Seeder.WhatsAppNotificationStatus;
+using Infrastructure.Data.Seeder.WhatsAppNotificationType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,6 +36,51 @@ public static class DatabaseInitializer
     public static async Task SeedBotUserAsync(IServiceProvider serviceProvider)
     {
         await SeedAllDataAsync(serviceProvider);
+    }
+
+    /// <summary>
+    /// Idempotent insert of catalog rows added after the initial migrations. Safe to run on every startup.
+    /// </summary>
+    public static async Task EnsureRuntimeCatalogRowsAsync(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetService<ILogger<AppDbContext>>();
+
+        try
+        {
+            foreach (var row in WhatsAppNotificationTypeSeeder.RuntimeRows)
+            {
+                var exists = await context.Set<WhatsAppNotificationTypeEntity>()
+                    .IgnoreQueryFilters()
+                    .AnyAsync(t => t.Id == row.Id || t.Code == row.Code);
+                if (exists) continue;
+
+                var entity = new WhatsAppNotificationTypeEntity(row.Code, row.Name, row.Description, row.DefaultTemplate, row.SortOrder);
+                entity.Id = row.Id;
+                await context.Set<WhatsAppNotificationTypeEntity>().AddAsync(entity);
+                await context.SaveChangesAsync();
+                logger?.LogInformation("DatabaseInitializer: inserted WhatsApp notification type {Code}.", row.Code);
+            }
+
+            foreach (var row in WhatsAppNotificationStatusSeeder.RuntimeRows)
+            {
+                var exists = await context.Set<WhatsAppNotificationStatusEntity>()
+                    .IgnoreQueryFilters()
+                    .AnyAsync(s => s.Id == row.Id || s.Code == row.Code);
+                if (exists) continue;
+
+                var entity = new WhatsAppNotificationStatusEntity(row.Code, row.Name, row.Description, row.SortOrder);
+                entity.Id = row.Id;
+                await context.Set<WhatsAppNotificationStatusEntity>().AddAsync(entity);
+                await context.SaveChangesAsync();
+                logger?.LogInformation("DatabaseInitializer: inserted WhatsApp notification status {Code}.", row.Code);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error asegurando filas de catalogo en tiempo de arranque.");
+        }
     }
 
     public static async Task SeedAllDataAsync(IServiceProvider serviceProvider)

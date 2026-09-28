@@ -1,4 +1,5 @@
 using Api.Controllers.Common;
+using Api.Filters;
 using Application.Contracts.Services.Schedule;
 using Application.DTOs.Appointments;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,15 @@ public sealed class AppointmentsController(IAppointmentService service)
         }
         return await base.Create(request);
     }
+    [HttpGet("requires-reschedule")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyList<RequiresRescheduleAppointmentDto>>> GetRequiresReschedule(CancellationToken cancellationToken)
+    {
+        if (!await HasPermissionAsync(PermissionAction.View)) return Forbid();
+        return Ok(await Service.GetRequiresRescheduleAsync(cancellationToken));
+    }
+
     [HttpGet("{id:guid}/clinical-context")]
     public async Task<ActionResult<AppointmentClinicalContextDto>> GetClinicalContext(Guid id, CancellationToken cancellationToken)
     {

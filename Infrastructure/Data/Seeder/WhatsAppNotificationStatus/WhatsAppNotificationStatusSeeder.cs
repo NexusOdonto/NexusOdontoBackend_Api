@@ -5,6 +5,18 @@ namespace Infrastructure.Data.Seeder.WhatsAppNotificationStatus;
 
 public static class WhatsAppNotificationStatusSeeder
 {
+    public static readonly Guid ResolvedId = new("80000000-0000-0000-0000-000000000006");
+
+    /// <summary>
+    /// Rows inserted idempotently at startup (DatabaseInitializer.EnsureRuntimeCatalogRowsAsync)
+    /// instead of HasData, so production gets them without a migration.
+    /// </summary>
+    public static readonly (Guid Id, string Code, string Name, string Description, int SortOrder)[] RuntimeRows =
+    [
+        (ResolvedId, "RESUELTA", "Resolved",
+            "The situation that triggered the notification was resolved (e.g. appointment rescheduled or cancelled).", 6)
+    ];
+
     public static void Seed(ModelBuilder modelBuilder)
     {
         var seedCreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);

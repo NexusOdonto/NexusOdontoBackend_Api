@@ -33,4 +33,24 @@ public sealed class AppointmentRepository : Common.Repository<AppointmentEntity>
             .Where(a => a.PatientId == patientId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AppointmentEntity>> GetWithDetailsAsync(
+        IReadOnlyCollection<Guid> appointmentIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (appointmentIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = appointmentIds.Distinct().ToList();
+        return await Set
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Include(a => a.PatientEntity!).ThenInclude(p => p.PersonEntity)
+            .Include(a => a.ProfessionalEntity!).ThenInclude(p => p.EmployeeEntity!).ThenInclude(e => e.PersonEntity)
+            .Include(a => a.ServiceEntity)
+            .Where(a => ids.Contains(a.Id))
+            .ToListAsync(cancellationToken);
+    }
 }

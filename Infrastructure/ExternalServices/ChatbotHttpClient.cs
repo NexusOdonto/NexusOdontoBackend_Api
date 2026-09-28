@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Application.Contracts.Services;
 using Application.Contracts.Services.Chatbot;
 using Application.DTOs.Chats.Chat;
+using Application.DTOs.Chats.ScheduleChange;
 
 namespace Infrastructure.ExternalServices
 {
@@ -18,6 +20,8 @@ namespace Infrastructure.ExternalServices
     /// </summary>
     public class ChatbotHttpClient : IChatbotClient
     {
+        private static readonly TimeSpan ScheduleChangeTimeout = TimeSpan.FromSeconds(20);
+
         private readonly HttpClient _httpClient;
         private readonly ILogger<ChatbotHttpClient> _logger;
         private readonly TimeSpan _timeout;
@@ -127,6 +131,99 @@ namespace Infrastructure.ExternalServices
                 return false;
             }
         }
+
+        public async Task<ScheduleChangeNotifyResult> NotifyScheduleChangeAsync(
+            ScheduleChangeNotificationDto notification,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(notification);
+
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(ScheduleChangeTimeout);
+
+                var payload = new
+                {
+                    appointment_id = notification.AppointmentId,
+                    patient_id = notification.PatientId,
+                    patient_name = notification.PatientName,
+                    phone = notification.Phone,
+                    service_id = notification.ServiceId,
+                    service = notification.Service,
+                    professional_id = notification.ProfessionalId,
+                    professional = notification.Professional,
+                    starts_at = notification.StartsAt.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
+                    ends_at = notification.EndsAt.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture)
+                };
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/agent/schedule-change")
+                {
+                    Content = JsonContent.Create(payload)
+                };
+
+                if (!string.IsNullOrWhiteSpace(_internalSecret))
+                {
+                    request.Headers.Add("X-Internal-Secret", _internalSecret);
+                }
+
+                using var response = await _httpClient.SendAsync(request, cts.Token);
+                var body = await response.Content.ReadAsStringAsync(cts.Token);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "Chatbot rechazo aviso de cambio de horario para cita {AppointmentId} (HTTP {Status})",
+                        notification.AppointmentId, (int)response.StatusCode);
+                    return new ScheduleChangeNotifyResult
+                    {
+                        Success = false,
+                        Error = Truncate($"HTTP {(int)response.StatusCode}: {body}", 900)
+                    };
+                }
+
+                string? status = null;
+                try
+                {
+                    using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
+                    if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                        doc.RootElement.TryGetProperty("status", out var statusProp) &&
+                        statusProp.ValueKind == JsonValueKind.String)
+                    {
+                        status = statusProp.GetString();
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Non-JSON 2xx body: treat as sent.
+                }
+
+                status = string.IsNullOrWhiteSpace(status) ? "sent" : status.Trim().ToLowerInvariant();
+                if (status is not ("sent" or "queued"))
+                {
+                    return new ScheduleChangeNotifyResult
+                    {
+                        Success = false,
+                        Status = status,
+                        Error = Truncate($"Estado inesperado del chatbot: {body}", 900)
+                    };
+                }
+
+                return new ScheduleChangeNotifyResult { Success = true, Status = status };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando aviso de cambio de horario al chatbot para cita {AppointmentId}", notification.AppointmentId);
+                return new ScheduleChangeNotifyResult
+                {
+                    Success = false,
+                    Error = Truncate(ex is OperationCanceledException ? "Timeout llamando al chatbot" : ex.Message, 900)
+                };
+            }
+        }
+
+        private static string Truncate(string value, int max) =>
+            value.Length <= max ? value : value[..max];
 
         public async Task<bool> ResumeConversationAsync(string phoneNumber, bool clearHistory = false, CancellationToken cancellationToken = default)
         {

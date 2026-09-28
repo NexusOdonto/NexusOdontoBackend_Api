@@ -14,4 +14,9 @@ public interface IAppointmentRepository : IRepository<AppointmentEntity>
     Task<IReadOnlyList<AppointmentEntity>> GetByPatientAsync(
         Guid patientId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Loads appointments with patient/professional person, and service navigations (no tracking).</summary>
+    Task<IReadOnlyList<AppointmentEntity>> GetWithDetailsAsync(
+        IReadOnlyCollection<Guid> appointmentIds,
+        CancellationToken cancellationToken = default);
 }

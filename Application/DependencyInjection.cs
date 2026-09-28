@@ -112,6 +112,7 @@ public static class DependencyInjection
         // Schedule
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IAvailabilityService, AvailabilityService>();
+        services.AddScoped<IScheduleChangeService, ScheduleChangeService>();
 
         // OdontogramEntity
         services.AddScoped<IOdontogramService, OdontogramService>();
