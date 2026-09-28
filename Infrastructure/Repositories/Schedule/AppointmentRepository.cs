@@ -1,4 +1,6 @@
 using Application.Contracts.Repositories.Schedule;
+using Domain.Entities.Catalogs;
+using Domain.Entities.People;
 using Domain.Entities.Schedule;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
@@ -44,13 +46,47 @@ public sealed class AppointmentRepository : Common.Repository<AppointmentEntity>
         }
 
         var ids = appointmentIds.Distinct().ToList();
-        return await Set
+        var appointments = await Set
             .AsNoTracking()
             .IgnoreQueryFilters()
-            .Include(a => a.PatientEntity!).ThenInclude(p => p.PersonEntity)
-            .Include(a => a.ProfessionalEntity!).ThenInclude(p => p.EmployeeEntity!).ThenInclude(e => e.PersonEntity)
-            .Include(a => a.ServiceEntity)
             .Where(a => ids.Contains(a.Id))
             .ToListAsync(cancellationToken);
+        if (appointments.Count == 0)
+        {
+            return appointments;
+        }
+
+        // The appointment navigations are bound to unused shadow FK columns, so Include() never
+        // loads them; the related rows are fetched through the real FK columns instead.
+        var patientIds = appointments.Select(a => a.PatientId).Distinct().ToList();
+        var professionalIds = appointments.Select(a => a.ProfessionalId).Distinct().ToList();
+        var serviceIds = appointments.Select(a => a.ServiceId).Distinct().ToList();
+
+        var patients = await Context.Set<PatientEntity>()
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Include(p => p.PersonEntity)
+            .Where(p => patientIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, cancellationToken);
+        var professionals = await Context.Set<ProfessionalEntity>()
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Include(p => p.EmployeeEntity!).ThenInclude(e => e.PersonEntity)
+            .Where(p => professionalIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, cancellationToken);
+        var services = await Context.Set<ServiceEntity>()
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(s => serviceIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, cancellationToken);
+
+        foreach (var a in appointments)
+        {
+            a.PatientEntity = patients.GetValueOrDefault(a.PatientId);
+            a.ProfessionalEntity = professionals.GetValueOrDefault(a.ProfessionalId);
+            a.ServiceEntity = services.GetValueOrDefault(a.ServiceId);
+        }
+
+        return appointments;
     }
 }
