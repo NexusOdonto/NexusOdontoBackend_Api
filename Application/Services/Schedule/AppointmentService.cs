@@ -159,6 +159,13 @@ public sealed class AppointmentService(
         var isCancelling = request.AppointmentStatusId == StatusCancelled ||
                            !string.IsNullOrWhiteSpace(request.CancellationReason);
 
+        var wasCancelled = entity.CancelledAt != null || entity.AppointmentStatusId == StatusCancelled;
+        var attending = request.AppointmentStatusId == StatusInWaitingRoom || request.AppointmentStatusId == StatusCompleted;
+        if (wasCancelled && attending)
+        {
+            throw new BusinessRuleException("La cita está cancelada y no puede ser atendida. Agenda una nueva cita.");
+        }
+
         var timeChanged = startsAt != entity.StartsAt || endsAt != entity.EndsAt;
         var slotChanged = timeChanged || professionalId != entity.ProfessionalId;
 
