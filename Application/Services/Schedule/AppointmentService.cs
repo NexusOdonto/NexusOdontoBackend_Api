@@ -165,6 +165,10 @@ public sealed class AppointmentService(
         {
             throw new BusinessRuleException("La cita está cancelada y no puede ser atendida. Agenda una nueva cita.");
         }
+        if (entity.AppointmentStatusId == StatusNoShow && attending)
+        {
+            throw new BusinessRuleException("El paciente no asistió a esta cita y no puede ser atendida. Agenda una nueva cita.");
+        }
 
         var timeChanged = startsAt != entity.StartsAt || endsAt != entity.EndsAt;
         var slotChanged = timeChanged || professionalId != entity.ProfessionalId;
