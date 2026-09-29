@@ -4804,6 +4804,14 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("RAW(16)")
                         .HasColumnName("id");
 
+                    b.Property<DateTime?>("EffectiveFrom")
+                        .HasColumnType("DATE")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("DATE")
+                        .HasColumnName("effective_to");
+
                     b.Property<int>("EndDay")
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("end_day");

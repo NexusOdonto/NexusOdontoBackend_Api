@@ -1,5 +1,7 @@
 using Application.Contracts.Repositories.Common;
 using Application.Contracts.Repositories.Catalogs;
+using Application.Contracts.Repositories.Notifications;
+using Application.Contracts.Repositories.People;
 using Application.Contracts.Services.Notifications;
 using Application.DTOs.Notifications.HubNotification;
 using Domain.Entities.Catalogs;
@@ -9,12 +11,26 @@ namespace Application.Services.Notifications;
 
 public sealed class HubNotificationService(
     IRepository<HubNotificationEntity> repository,
+    IHubNotificationRepository hubNotificationRepository,
+    IUserRepository userRepository,
     ICatalogRepository<HubNotificationStatusEntity> statusCatalog,
     IUnitOfWork unitOfWork) : IHubNotificationService
 {
+    private const int MineWindowDays = 30;
+    private const int MineMaxItems = 30;
+
     public async Task<IReadOnlyList<HubNotificationResponseDto>> GetAllAsync()
     {
         var items = await repository.GetAllAsync();
+        return items.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<HubNotificationResponseDto>> GetMineAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.GetByIdWithRolesAsync(userId, cancellationToken);
+        var roleIds = user?.UserRoles.Select(r => r.RoleId).ToList() ?? [];
+        var items = await hubNotificationRepository.GetForRecipientAsync(
+            userId, roleIds, DateTime.UtcNow.AddDays(-MineWindowDays), MineMaxItems, cancellationToken);
         return items.Select(Map).ToList();
     }
 

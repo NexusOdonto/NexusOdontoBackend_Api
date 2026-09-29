@@ -600,7 +600,7 @@ public sealed class AppointmentService(
         DateTime endsAt)
     {
         var availabilities = await availabilityRepository.GetByProfessionalAsync(professionalId);
-        var activeAvailabilities = availabilities.Where(a => a.IsActive).ToList();
+        var activeAvailabilities = AvailabilityRules.EffectiveOn(availabilities, DateOnly.FromDateTime(startsAt));
 
         return activeAvailabilities.Count > 0 &&
                activeAvailabilities.Any(a => AvailabilityRules.IsWithinAvailability(startsAt, endsAt, a));

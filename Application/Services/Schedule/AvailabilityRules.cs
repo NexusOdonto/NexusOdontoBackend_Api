@@ -4,6 +4,21 @@ namespace Application.Services.Schedule;
 
 public static class AvailabilityRules
 {
+    /// <summary>
+    /// A row applies to a date when it is active and the date falls inside its inclusive
+    /// [EffectiveFrom, EffectiveTo] range; a null bound is open.
+    /// </summary>
+    public static bool IsEffectiveOn(AvailabilityEntity availability, DateOnly date) =>
+        IsEffectiveOn(availability.IsActive, availability.EffectiveFrom, availability.EffectiveTo, date);
+
+    public static bool IsEffectiveOn(bool isActive, DateOnly? effectiveFrom, DateOnly? effectiveTo, DateOnly date) =>
+        isActive &&
+        (effectiveFrom is null || effectiveFrom.Value <= date) &&
+        (effectiveTo is null || effectiveTo.Value >= date);
+
+    public static IReadOnlyList<AvailabilityEntity> EffectiveOn(IEnumerable<AvailabilityEntity> availabilities, DateOnly date) =>
+        availabilities.Where(a => IsEffectiveOn(a, date)).ToList();
+
     public static bool IsWithinAvailability(DateTime startsAt, DateTime endsAt, AvailabilityEntity availability) =>
         IsWithinAvailability(
             startsAt,

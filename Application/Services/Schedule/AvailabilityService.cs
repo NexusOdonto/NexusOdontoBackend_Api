@@ -16,6 +16,7 @@ using Application.DTOs.Notifications.HubNotification;
 using Application.Exceptions;
 using Domain.Entities.Catalogs;
 using Domain.Entities.Notifications;
+using Domain.Entities.People;
 using Domain.Entities.Schedule;
 using Microsoft.Extensions.Logging;
 
@@ -30,6 +31,9 @@ public sealed class AvailabilityService(
     IChatbotClient chatbotClient,
     INotificationPublisherService notificationPublisher,
     IRoleRepository roleRepository,
+    IEmployeeRepository employeeRepository,
+    IUserRepository userRepository,
+    IRepository<PersonEntity> personRepository,
     ICatalogRepository<HubNotificationTypeEntity> hubTypeCatalog,
     ICatalogRepository<NotificationPriorityEntity> priorityCatalog,
     IUnitOfWork unitOfWork,
@@ -47,9 +51,28 @@ public sealed class AvailabilityService(
         var rows = ValidateRows(request.Rows);
         var professionalId = await ResolveProfessionalIdAsync(request.ProfessionalId);
 
-        var (affected, _) = await FindAffectedAppointmentsAsync(professionalId, rows, cancellationToken);
+        var (affected, _) = await FindAffectedAppointmentsAsync(professionalId, rows, GetEffectiveFromDate(), cancellationToken);
         return await scheduleChangeService.BuildAffectedAsync(affected.Select(a => a.Id).ToList(), cancellationToken);
     }
+
+    public async Task<IReadOnlyList<AvailabilityResponseDto>> GetEffectiveForProfessionalAsync(
+        Guid professionalId,
+        DateOnly? date,
+        CancellationToken cancellationToken = default)
+    {
+        var resolvedProfessionalId = await ResolveProfessionalIdAsync(professionalId);
+        var day = date ?? GetColombiaToday();
+        var rows = await repository.GetByProfessionalAsync(resolvedProfessionalId, cancellationToken);
+        return AvailabilityRules.EffectiveOn(rows, day)
+            .OrderBy(r => r.StartDay)
+            .Select(Map)
+            .ToList();
+    }
+
+    private static DateOnly GetColombiaToday() => DateOnly.FromDateTime(AppointmentService.GetColombiaNow());
+
+    /// <summary>Schedule changes never apply the same day: they start the next Colombia day.</summary>
+    private static DateOnly GetEffectiveFromDate() => GetColombiaToday().AddDays(1);
 
     public async Task<ReplaceProfessionalAvailabilityResultDto> ReplaceForProfessionalAsync(
         Guid professionalId,
@@ -60,8 +83,10 @@ public sealed class AvailabilityService(
         ArgumentNullException.ThrowIfNull(request);
         var rows = ValidateRows(request.Rows);
         var resolvedProfessionalId = await ResolveProfessionalIdAsync(professionalId);
+        var today = GetColombiaToday();
+        var effectiveFrom = today.AddDays(1);
 
-        var (affectedEntities, upcoming) = await FindAffectedAppointmentsAsync(resolvedProfessionalId, rows, cancellationToken);
+        var (affectedEntities, upcoming) = await FindAffectedAppointmentsAsync(resolvedProfessionalId, rows, effectiveFrom, cancellationToken);
         var affectedIds = affectedEntities.Select(a => a.Id).ToList();
         var affected = await scheduleChangeService.BuildAffectedAsync(affectedIds, cancellationToken);
         var catalogIds = await scheduleChangeService.GetCatalogIdsAsync(cancellationToken);
@@ -76,28 +101,59 @@ public sealed class AvailabilityService(
         var nowUtc = DateTime.UtcNow;
         var marks = new Dictionary<Guid, WhatsAppNotificationEntity>();
         var savedRows = new List<AvailabilityEntity>();
+        var reverted = false;
+        var hadPending = false;
 
         await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
             var current = await repository.GetByProfessionalAsync(resolvedProfessionalId, cancellationToken);
-            foreach (var old in current.Where(a => a.IsActive))
+            var currentToday = AvailabilityRules.EffectiveOn(current, today);
+
+            // A second save the same day overrides the change still waiting to start.
+            var pending = current.Where(a => a.IsActive && a.EffectiveFrom > today).ToList();
+            hadPending = pending.Count > 0;
+            foreach (var p in pending)
             {
-                old.Update(old.StartDay, old.EndDay, old.StartTime, old.LunchStartTime, old.LunchEndTime, old.EndTime, false);
-                repository.Update(old);
+                p.IsActive = false;
+                repository.Update(p);
             }
 
-            foreach (var row in rows)
+            if (currentToday.Count > 0 && SameWeeklySchedule(currentToday, rows))
             {
-                var entity = new AvailabilityEntity(
-                    resolvedProfessionalId,
-                    row.StartDay,
-                    row.EndDay,
-                    row.StartTime,
-                    row.LunchStartTime,
-                    row.LunchEndTime,
-                    row.EndTime);
-                await repository.AddAsync(entity);
-                savedRows.Add(entity);
+                // Saving the schedule already in force just keeps it open-ended.
+                reverted = true;
+                foreach (var r in currentToday.Where(r => r.EffectiveTo is not null))
+                {
+                    r.EffectiveTo = null;
+                    repository.Update(r);
+                }
+                savedRows.AddRange(currentToday);
+            }
+            else
+            {
+                // Today's rows keep applying until the end of today (inclusive).
+                foreach (var r in currentToday.Where(r => r.EffectiveTo is null || r.EffectiveTo > today))
+                {
+                    r.EffectiveTo = today;
+                    repository.Update(r);
+                }
+
+                foreach (var row in rows)
+                {
+                    var entity = new AvailabilityEntity(
+                        resolvedProfessionalId,
+                        row.StartDay,
+                        row.EndDay,
+                        row.StartTime,
+                        row.LunchStartTime,
+                        row.LunchEndTime,
+                        row.EndTime)
+                    {
+                        EffectiveFrom = effectiveFrom
+                    };
+                    await repository.AddAsync(entity);
+                    savedRows.Add(entity);
+                }
             }
 
             // Previously marked appointments that fit the new schedule no longer need rescheduling;
@@ -142,27 +198,198 @@ public sealed class AvailabilityService(
             await PublishReceptionSummaryAsync(affected, notified, failed, request.NotifyPatients, requestedByUserId);
         }
 
+        var notifiedVia = await NotifyProfessionalAsync(
+            resolvedProfessionalId,
+            rows,
+            effectiveFrom,
+            reverted,
+            hadPending,
+            affected.Count,
+            notified,
+            failed,
+            request.NotifyPatients,
+            requestedByUserId,
+            cancellationToken);
+
         return new ReplaceProfessionalAvailabilityResultDto
         {
             Rows = savedRows.Select(Map).ToList(),
             Affected = affected,
             Notified = notified,
-            Failed = failed
+            Failed = failed,
+            EffectiveFrom = effectiveFrom,
+            RevertedToCurrent = reverted,
+            ProfessionalNotifiedVia = notifiedVia
         };
+    }
+
+    /// <summary>
+    /// Tells the professional (their own user account) that their schedule changed. Falls back to the
+    /// admin and reception roles when the professional has no linked user.
+    /// </summary>
+    private async Task<string> NotifyProfessionalAsync(
+        Guid professionalId,
+        IReadOnlyList<AvailabilityRowDto> rows,
+        DateOnly effectiveFrom,
+        bool reverted,
+        bool hadPending,
+        int affectedCount,
+        int notified,
+        int failed,
+        bool notifyPatients,
+        Guid? requestedByUserId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var hubType = await hubTypeCatalog.GetByCodeAsync("HORARIO_ACTUALIZADO")
+                ?? await hubTypeCatalog.GetByCodeAsync("CITA_CANCELADA")
+                ?? (await hubTypeCatalog.GetAllAsync()).FirstOrDefault();
+            var priority = await priorityCatalog.GetByCodeAsync(affectedCount > 0 ? "ALTA" : "NORMAL")
+                ?? (await priorityCatalog.GetAllAsync()).FirstOrDefault();
+            if (hubType is null || priority is null) return "none";
+
+            var (userId, professionalName) = await ResolveProfessionalUserAsync(professionalId, cancellationToken);
+
+            var schedule = ScheduleText.Describe(rows);
+            var dateText = ScheduleText.FormatTomorrow(effectiveFrom);
+            var patientsText = BuildPatientsText(affectedCount, notified, failed, notifyPatients);
+
+            string title;
+            string body;
+            if (reverted && hadPending)
+            {
+                title = "Se canceló tu cambio de horario";
+                body = $"El cambio de horario que iba a regir desde {dateText} se canceló. Sigues con tu horario actual: {schedule}.";
+            }
+            else if (reverted)
+            {
+                title = "Tu horario se guardó sin cambios";
+                body = $"Tu horario se guardó sin cambios: {schedule}.";
+            }
+            else
+            {
+                title = "Tu horario cambió";
+                body = $"Tu horario cambió. Rige desde {dateText}: {schedule}. Hoy sigues con tu horario anterior.";
+            }
+
+            if (userId is Guid recipient)
+            {
+                await notificationPublisher.SendNotificationToUserAsync(recipient, new NotificacionDto
+                {
+                    EmisorUsuarioId = requestedByUserId,
+                    HubNotificationTypeId = hubType.Id,
+                    NotificationPriorityId = priority.Id,
+                    Title = title,
+                    Content = Truncate($"{body} {patientsText}", 1000),
+                    EntityType = "PROFESSIONAL_SCHEDULE",
+                    EntityId = professionalId
+                });
+                return "user";
+            }
+
+            logger.LogWarning(
+                "El profesional {ProfessionalId} no tiene usuario vinculado; el aviso de cambio de horario va a administración y recepción.",
+                professionalId);
+
+            var fallback = new NotificacionDto
+            {
+                EmisorUsuarioId = requestedByUserId,
+                HubNotificationTypeId = hubType.Id,
+                NotificationPriorityId = priority.Id,
+                Title = $"{title} ({professionalName})",
+                Content = Truncate($"Horario de {professionalName}. {body} {patientsText}", 1000),
+                EntityType = "PROFESSIONAL_SCHEDULE",
+                EntityId = professionalId
+            };
+            var sent = false;
+            foreach (var code in new[] { "ADMINISTRADOR", "RECEPCIONISTA" })
+            {
+                var role = await roleRepository.GetByCodeAsync(code);
+                if (role is null) continue;
+                await notificationPublisher.SendNotificationToRoleAsync(role.Id, fallback);
+                sent = true;
+            }
+            return sent ? "roles" : "none";
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "No se pudo notificar al profesional {ProfessionalId} el cambio de horario.", professionalId);
+            return "none";
+        }
+    }
+
+    private async Task<(Guid? UserId, string Name)> ResolveProfessionalUserAsync(Guid professionalId, CancellationToken cancellationToken)
+    {
+        var professional = await professionalRepository.GetByIdAsync(professionalId);
+        if (professional is null) return (null, "el odontólogo");
+
+        var employee = await employeeRepository.GetByIdAsync(professional.EmployeeId);
+        if (employee is null) return (null, "el odontólogo");
+
+        var person = await personRepository.GetByIdAsync(employee.PersonId);
+        var name = person is null ? "el odontólogo" : $"{person.FirstName} {person.LastName}".Trim();
+
+        var user = await userRepository.GetByPersonIdAsync(employee.PersonId, cancellationToken);
+        return (user is { IsActive: true } ? user.Id : null, name);
+    }
+
+    private static string BuildPatientsText(int affectedCount, int notified, int failed, bool notifyPatients)
+    {
+        if (affectedCount == 0)
+            return "Ninguna cita queda por fuera del nuevo horario. Las citas de hoy no cambian.";
+
+        var citas = affectedCount == 1 ? "1 cita" : $"{affectedCount} citas";
+        var quedan = affectedCount == 1 ? "queda" : "quedan";
+        if (!notifyPatients)
+            return $"{citas} desde mañana {quedan} por fuera y {(affectedCount == 1 ? "quedó marcada" : "quedaron marcadas")} como \"Requiere reprogramación\" sin aviso al paciente. Las citas de hoy no cambian.";
+
+        var avisos = failed > 0
+            ? $"avisamos por WhatsApp a {notified} paciente(s) y {failed} aviso(s) no se pudieron enviar"
+            : $"avisamos por WhatsApp a {notified} paciente(s) para reprogramar";
+        return $"{citas} desde mañana {quedan} por fuera; {avisos}. Las citas de hoy no cambian.";
+    }
+
+    /// <summary>Compares two weekly schedules day by day, regardless of how the rows group the days.</summary>
+    private static bool SameWeeklySchedule(IReadOnlyList<AvailabilityEntity> current, IReadOnlyList<AvailabilityRowDto> proposed)
+    {
+        static string Slot(TimeOnly start, TimeOnly lunchStart, TimeOnly lunchEnd, TimeOnly end) =>
+            lunchStart < lunchEnd
+                ? $"{start:HH\\:mm}-{lunchStart:HH\\:mm}-{lunchEnd:HH\\:mm}-{end:HH\\:mm}"
+                : $"{start:HH\\:mm}-{end:HH\\:mm}";
+
+        for (var day = 1; day <= 7; day++)
+        {
+            var a = current
+                .Where(r => r.StartDay <= day && day <= r.EndDay)
+                .Select(r => Slot(r.StartTime, r.LunchStartTime, r.LunchEndTime, r.EndTime))
+                .Distinct()
+                .OrderBy(s => s, StringComparer.Ordinal);
+            var b = proposed
+                .Where(r => r.StartDay <= day && day <= r.EndDay)
+                .Select(r => Slot(r.StartTime, r.LunchStartTime, r.LunchEndTime, r.EndTime))
+                .Distinct()
+                .OrderBy(s => s, StringComparer.Ordinal);
+            if (!a.SequenceEqual(b)) return false;
+        }
+
+        return true;
     }
 
     private async Task<(List<AppointmentEntity> Affected, List<AppointmentEntity> Upcoming)> FindAffectedAppointmentsAsync(
         Guid professionalId,
         IReadOnlyList<AvailabilityRowDto> rows,
+        DateOnly effectiveFrom,
         CancellationToken cancellationToken)
     {
-        var now = AppointmentService.GetColombiaNow();
+        // Appointments before the new schedule starts (today's) keep the schedule they were booked under.
+        var from = effectiveFrom.ToDateTime(TimeOnly.MinValue);
         var inRange = await appointmentRepository.GetByProfessionalInRangeAsync(
-            professionalId, now, now.AddDays(ImpactWindowDays), cancellationToken);
+            professionalId, from, from.AddDays(ImpactWindowDays), cancellationToken);
 
         var upcoming = inRange
             .Where(a =>
-                a.StartsAt >= now &&
+                a.StartsAt >= from &&
                 a.CancelledAt == null &&
                 (a.AppointmentStatusId == AppointmentService.StatusScheduled ||
                  a.AppointmentStatusId == AppointmentService.StatusConfirmed))
@@ -476,6 +703,8 @@ public sealed class AvailabilityService(
         LunchStartTime = e.LunchStartTime,
         LunchEndTime = e.LunchEndTime,
         EndTime = e.EndTime,
-        IsActive = e.IsActive
+        IsActive = e.IsActive,
+        EffectiveFrom = e.EffectiveFrom,
+        EffectiveTo = e.EffectiveTo
     };
 }

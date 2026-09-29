@@ -47,5 +47,13 @@ public class AvailabilityConfiguration : IEntityTypeConfiguration<AvailabilityEn
             .HasColumnName("is_active")
             .HasDefaultValueSql("1")
             .IsRequired();
+
+        builder.Property(c => c.EffectiveFrom)
+            .HasColumnName("effective_from")
+            .HasColumnType("DATE");
+
+        builder.Property(c => c.EffectiveTo)
+            .HasColumnName("effective_to")
+            .HasColumnType("DATE");
     }
 }

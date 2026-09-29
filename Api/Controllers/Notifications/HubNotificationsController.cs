@@ -3,6 +3,8 @@ using Application.Contracts.Services.Notifications;
 using Application.DTOs.Notifications.HubNotification;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Api.Controllers.Notifications;
 
@@ -16,6 +18,18 @@ public sealed class HubNotificationsController(IHubNotificationService service) 
     [ProducesResponseType(typeof(IReadOnlyList<HubNotificationResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<HubNotificationResponseDto>>> List()
         => Ok(await service.GetAllAsync());
+
+    /// <summary>Recent notifications addressed to the signed-in user or to one of their roles.</summary>
+    [HttpGet("mine")]
+    [ProducesResponseType(typeof(IReadOnlyList<HubNotificationResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<HubNotificationResponseDto>>> Mine(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
+        return Ok(await service.GetMineAsync(userId, cancellationToken));
+    }
 
     [HttpGet("{id:guid}")]
     [RequirePermission("NOTIFICATIONS", PermissionAction.View)]

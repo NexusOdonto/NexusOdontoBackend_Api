@@ -5,6 +5,19 @@ namespace Infrastructure.Data.Seeder.HubNotificationType;
 
 public static class HubNotificationTypeSeeder
 {
+    public static readonly Guid ScheduleUpdatedId = new("40000000-0000-0000-0000-000000000005");
+
+    /// <summary>
+    /// Types added after the initial migrations. Inserted idempotently at startup by
+    /// DatabaseInitializer.EnsureRuntimeCatalogRowsAsync instead of HasData, so production gets them without a migration.
+    /// </summary>
+    public static readonly (Guid Id, string Code, string Name, string Description, string Icon, int SortOrder)[] RuntimeRows =
+    [
+        (ScheduleUpdatedId, "HORARIO_ACTUALIZADO", "Schedule Updated",
+            "A professional's weekly schedule was changed; it applies from the next day.",
+            "calendar-clock", 5)
+    ];
+
     public static void Seed(ModelBuilder modelBuilder)
     {
         var seedCreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);

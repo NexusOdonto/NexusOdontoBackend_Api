@@ -27,6 +27,20 @@ public sealed class AvailabilitiesController(IAvailabilityService service)
         return Ok(await Service.GetImpactAsync(request, cancellationToken));
     }
 
+    /// <summary>Rows that apply to the professional on <paramref name="date"/> (yyyy-MM-dd, Colombia today by default).</summary>
+    [HttpGet("professional/{professionalId:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<AvailabilityResponseDto>>> GetEffectiveForProfessional(
+        Guid professionalId,
+        [FromQuery] DateOnly? date,
+        CancellationToken cancellationToken)
+    {
+        if (!await HasPermissionAsync(PermissionAction.View)) return Forbid();
+        return Ok(await Service.GetEffectiveForProfessionalAsync(professionalId, date, cancellationToken));
+    }
+
     [HttpPut("professional/{professionalId:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -28,4 +28,13 @@ public sealed class ReplaceProfessionalAvailabilityResultDto
     public IReadOnlyList<Appointments.AffectedAppointmentDto> Affected { get; set; } = [];
     public int Notified { get; set; }
     public int Failed { get; set; }
+
+    /// <summary>Date (Colombia) the saved schedule starts to apply; always the day after the save.</summary>
+    public DateOnly EffectiveFrom { get; set; }
+
+    /// <summary>True when the save only cancelled a pending change and kept the current schedule.</summary>
+    public bool RevertedToCurrent { get; set; }
+
+    /// <summary>"user" when the professional's own account was notified, "roles" for the admin/reception fallback, "none" on failure.</summary>
+    public string ProfessionalNotifiedVia { get; set; } = "none";
 }

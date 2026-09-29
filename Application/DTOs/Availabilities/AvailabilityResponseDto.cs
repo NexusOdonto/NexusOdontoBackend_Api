@@ -11,4 +11,6 @@ public sealed class AvailabilityResponseDto
     public TimeOnly LunchEndTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public bool IsActive { get; set; }
+    public DateOnly? EffectiveFrom { get; set; }
+    public DateOnly? EffectiveTo { get; set; }
 }

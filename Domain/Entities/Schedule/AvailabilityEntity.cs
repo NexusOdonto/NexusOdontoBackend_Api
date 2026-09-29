@@ -14,6 +14,12 @@ public class AvailabilityEntity : Entity
     public TimeOnly EndTime { get; set; }
     public bool IsActive { get; set; } = true;
 
+    /// <summary>First date (inclusive) the row applies; null means since always.</summary>
+    public DateOnly? EffectiveFrom { get; set; }
+
+    /// <summary>Last date (inclusive) the row applies; null means open-ended.</summary>
+    public DateOnly? EffectiveTo { get; set; }
+
     public ProfessionalEntity? ProfessionalEntity { get; set; }
 
     private AvailabilityEntity()

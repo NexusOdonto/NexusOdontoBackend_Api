@@ -10,6 +10,12 @@ namespace Application.Contracts.Services.Schedule
             AvailabilityImpactRequestDto request,
             CancellationToken cancellationToken = default);
 
+        /// <summary>Rows of the professional that apply on the given date (Colombia today when null).</summary>
+        Task<IReadOnlyList<AvailabilityResponseDto>> GetEffectiveForProfessionalAsync(
+            Guid professionalId,
+            DateOnly? date,
+            CancellationToken cancellationToken = default);
+
         Task<ReplaceProfessionalAvailabilityResultDto> ReplaceForProfessionalAsync(
             Guid professionalId,
             ReplaceProfessionalAvailabilityDto request,

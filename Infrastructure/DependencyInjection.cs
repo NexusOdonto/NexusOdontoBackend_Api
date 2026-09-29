@@ -67,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 
         services.AddScoped<IWhatsAppNotificationRepository, WhatsAppNotificationRepository>();
+        services.AddScoped<IHubNotificationRepository, HubNotificationRepository>();
 
         services.AddScoped<IToothRepository, ToothRepository>();
 

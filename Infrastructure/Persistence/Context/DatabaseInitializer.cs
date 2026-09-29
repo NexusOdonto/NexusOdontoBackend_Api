@@ -4,6 +4,7 @@ using Domain.Entities.Security;
 using Domain.Entities.Schedule;
 using Infrastructure.Data.Seeder.AdminUser;
 using Infrastructure.Data.Seeder.Employee;
+using Infrastructure.Data.Seeder.HubNotificationType;
 using Infrastructure.Data.Seeder.Professional;
 using Infrastructure.Data.Seeder.Patient;
 using Infrastructure.Data.Seeder.Role;
@@ -75,6 +76,20 @@ public static class DatabaseInitializer
                 await context.Set<WhatsAppNotificationStatusEntity>().AddAsync(entity);
                 await context.SaveChangesAsync();
                 logger?.LogInformation("DatabaseInitializer: inserted WhatsApp notification status {Code}.", row.Code);
+            }
+
+            foreach (var row in HubNotificationTypeSeeder.RuntimeRows)
+            {
+                var exists = await context.Set<HubNotificationTypeEntity>()
+                    .IgnoreQueryFilters()
+                    .AnyAsync(t => t.Id == row.Id || t.Code == row.Code);
+                if (exists) continue;
+
+                var entity = new HubNotificationTypeEntity(row.Code, row.Name, row.Description, row.Icon, row.SortOrder);
+                entity.Id = row.Id;
+                await context.Set<HubNotificationTypeEntity>().AddAsync(entity);
+                await context.SaveChangesAsync();
+                logger?.LogInformation("DatabaseInitializer: inserted hub notification type {Code}.", row.Code);
             }
         }
         catch (Exception ex)
