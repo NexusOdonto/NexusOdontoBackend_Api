@@ -32,7 +32,7 @@ public sealed class ChatbotConversationService(
     public async Task<ChatbotConversationResponseDto> CreateAsync(CreateChatbotConversationRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var statusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "OPEN", "ACTIVE", "NEW");
+        var statusId = await ServiceWrite.ResolveCatalogIdAsync(statusCatalog, "ACTIVA", "ACTIVE", "OPEN", "NEW");
 
         return await ServiceWrite.InTransactionAsync(unitOfWork, async () =>
         {
