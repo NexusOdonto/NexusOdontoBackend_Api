@@ -1,25 +1,20 @@
-using System;
-using System.Globalization;
-using System.Net.Http;
+﻿using System.Globalization;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Application.Contracts.Services;
 using Application.Contracts.Services.Chatbot;
+using Application.DTOs.Chatbot.Gateway;
 using Application.DTOs.Chats.Chat;
 using Application.DTOs.Chats.ScheduleChange;
 
-namespace Infrastructure.ExternalServices
+namespace Infrastructure.ExternalServices;
+
+/// <summary>
+/// Cliente HTTP hacia el chatbot de FastAPI (NexusOdonto_ChatBot_AI).
+/// </summary>
+public class ChatbotHttpClient : IChatbotClient
 {
-    /// <summary>
-    /// Cliente HTTP hacia el chatbot de FastAPI (NexusOdonto_ChatBot_AI).
-    /// </summary>
-    public class ChatbotHttpClient : IChatbotClient
-    {
         private static readonly TimeSpan ScheduleChangeTimeout = TimeSpan.FromSeconds(20);
 
         private readonly HttpClient _httpClient;
@@ -77,7 +72,7 @@ namespace Infrastructure.ExternalServices
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Chatbot devolvio HTTP status {StatusCode} en {Path}", response.StatusCode, _messagePath);
-                    return new ChatBotResponseDto { Response = "Error de comunicaci�n con chatbot", State = "ERROR" };
+                    return new ChatBotResponseDto { Response = "Error de comunicacion con chatbot", State = "ERROR" };
                 }
 
                 return new ChatBotResponseDto { Response = "OK", State = "COMPLETED" };
@@ -85,7 +80,7 @@ namespace Infrastructure.ExternalServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error llamando al chatbot");
-                return new ChatBotResponseDto { Response = "Error de comunicaci�n", State = "ERROR" };
+                return new ChatBotResponseDto { Response = "Error de comunicacion", State = "ERROR" };
             }
         }
 
@@ -251,19 +246,137 @@ namespace Infrastructure.ExternalServices
                 var response = await _httpClient.SendAsync(request, cts.Token);
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Conversaci�n reactivada exitosamente en FastAPI para {Phone}", phoneNumber);
+                    _logger.LogInformation("Conversacion reactivada exitosamente en FastAPI para {Phone}", phoneNumber);
                     return true;
                 }
 
                 var errText = await response.Content.ReadAsStringAsync(cts.Token);
-                _logger.LogWarning("No se pudo reactivar conversaci�n en FastAPI (HTTP {Status}): {Err}", response.StatusCode, errText);
+                _logger.LogWarning("No se pudo reactivar conversacion en FastAPI (HTTP {Status}): {Err}", response.StatusCode, errText);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al notificar reanudaci�n de conversaci�n a FastAPI para {Phone}", phoneNumber);
+                _logger.LogError(ex, "Error al notificar reanudacion de conversacion a FastAPI para {Phone}", phoneNumber);
                 return false;
             }
         }
+
+        public async Task<bool> ResumeAllConversationsAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(_timeout);
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/conversations/resume-all");
+                if (!string.IsNullOrWhiteSpace(_internalSecret))
+                {
+                    request.Headers.Add("X-Internal-Secret", _internalSecret);
+                }
+
+                var response = await _httpClient.SendAsync(request, cts.Token);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error llamando a resume-all en FastAPI");
+                return false;
+            }
+        }
+
+        public async Task<QrDataResponseDto?> GetQrDataAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(10));
+
+                var request = new HttpRequestMessage(HttpMethod.Get, "/qr/data");
+                var response = await _httpClient.SendAsync(request, cts.Token);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new QrDataResponseDto { Connected = false, State = "error" };
+                }
+
+                return await response.Content.ReadFromJsonAsync<QrDataResponseDto>(cancellationToken: cts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error obteniendo datos QR de FastAPI");
+                return new QrDataResponseDto { Connected = false, State = "error" };
+            }
+        }
+
+        public async Task<bool> RestartQrAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(15));
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "/qr/restart");
+                var response = await _httpClient.SendAsync(request, cts.Token);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al reiniciar instancia QR en FastAPI");
+                return false;
+            }
+        }
+
+        public async Task<bool> LogoutQrAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(15));
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "/qr/logout");
+                var response = await _httpClient.SendAsync(request, cts.Token);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cerrar sesión QR en FastAPI");
+                return false;
+            }
+        }
+
+        public async Task<ResolveIdentityResponseDto?> ResolveIdentityAsync(string identifier, Guid? conversationId = null, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(10));
+
+                var payload = new
+                {
+                    identifier = identifier,
+                    conversation_id = conversationId?.ToString()
+                };
+
+                var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/whatsapp/resolve-identity")
+                {
+                    Content = JsonContent.Create(payload)
+                };
+                if (!string.IsNullOrWhiteSpace(_internalSecret))
+                {
+                    request.Headers.Add("X-Internal-Secret", _internalSecret);
+                }
+
+                var response = await _httpClient.SendAsync(request, cts.Token);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ResolveIdentityResponseDto { Status = "unresolved", Phone = null, Identifier = identifier };
+                }
+
+                return await response.Content.ReadFromJsonAsync<ResolveIdentityResponseDto>(cancellationToken: cts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error al resolver identidad en FastAPI para {Ident}", identifier);
+                return new ResolveIdentityResponseDto { Status = "unresolved", Phone = null, Identifier = identifier };
+            }
+        }
     }
-}

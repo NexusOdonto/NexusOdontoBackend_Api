@@ -128,6 +128,7 @@ public static class DependencyInjection
         services.AddScoped<IChatbotConversationService, ChatbotConversationService>();
         services.AddScoped<IChatbotMessageService, ChatbotMessageService>();
         services.AddScoped<ISupportTicketService, SupportTicketService>();
+        services.AddScoped<IChatbotGatewayService, ChatbotGatewayService>();
 
         // Audit
         services.AddScoped<IAuditEventService, AuditEventService>();

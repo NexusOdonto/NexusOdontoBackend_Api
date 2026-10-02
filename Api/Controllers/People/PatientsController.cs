@@ -25,7 +25,7 @@ public sealed class PatientsController(
         string documentNumber,
         CancellationToken cancellationToken)
     {
-        var patient = await service.GetByDocumentNumberAsync(documentNumber, cancellationToken);
+        var patient = await Service.GetByDocumentNumberAsync(documentNumber, cancellationToken);
         return patient is null ? NotFound() : Ok(patient);
     }
 
@@ -40,7 +40,7 @@ public sealed class PatientsController(
         Guid personId,
         CancellationToken cancellationToken)
     {
-        var patient = await service.GetByPersonIdAsync(personId, cancellationToken);
+        var patient = await Service.GetByPersonIdAsync(personId, cancellationToken);
         return patient is null ? NotFound() : Ok(patient);
     }
 

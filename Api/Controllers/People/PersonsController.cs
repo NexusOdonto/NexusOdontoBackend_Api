@@ -23,7 +23,7 @@ public sealed class PersonsController(IPersonService service)
         string documentNumber,
         CancellationToken cancellationToken)
     {
-        var person = await service.GetByDocumentNumberAsync(documentNumber, cancellationToken);
+        var person = await Service.GetByDocumentNumberAsync(documentNumber, cancellationToken);
         return person is null ? NotFound() : Ok(person);
     }
 }
